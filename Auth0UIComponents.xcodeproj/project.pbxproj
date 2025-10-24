@@ -1,0 +1,1946 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D4011D872E901A8E002F57A0 /* JWTDecode.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; };
+		D4011D882E901A8E002F57A0 /* JWTDecode.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4011D892E901A8E002F57A0 /* SimpleKeychain.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; };
+		D4011D8A2E901A8E002F57A0 /* SimpleKeychain.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3EFFB2E95119300D5A06D /* Auth0.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; };
+		D4C3EFFC2E95119300D5A06D /* Auth0.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F0062E95313400D5A06D /* Auth0.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; };
+		D4C3F0072E95313400D5A06D /* Auth0.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F0082E95313400D5A06D /* JWTDecode.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; };
+		D4C3F0092E95313400D5A06D /* JWTDecode.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F00A2E95313400D5A06D /* SimpleKeychain.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; };
+		D4C3F00B2E95313400D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F26D2E9D2EE200D5A06D /* Auth0.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; };
+		D4C3F26E2E9D2EE200D5A06D /* Auth0.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F26F2E9D2EE200D5A06D /* JWTDecode.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; };
+		D4C3F2702E9D2EE200D5A06D /* JWTDecode.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2712E9D2EE200D5A06D /* SimpleKeychain.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; };
+		D4C3F2722E9D2EE200D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2742E9D2EEB00D5A06D /* Auth0.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; };
+		D4C3F2752E9D2EEB00D5A06D /* Auth0.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2762E9D2EEB00D5A06D /* JWTDecode.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; };
+		D4C3F2772E9D2EEB00D5A06D /* JWTDecode.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2792E9D2EEE00D5A06D /* SimpleKeychain.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; };
+		D4C3F27A2E9D2EEE00D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F27B2E9D2EF500D5A06D /* Auth0.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; };
+		D4C3F27C2E9D2EF500D5A06D /* Auth0.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F27D2E9D2EF500D5A06D /* JWTDecode.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; };
+		D4C3F27E2E9D2EF500D5A06D /* JWTDecode.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F27F2E9D2EF500D5A06D /* SimpleKeychain.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; };
+		D4C3F2802E9D2EF500D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2822E9D2EFA00D5A06D /* Auth0.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; };
+		D4C3F2832E9D2EFA00D5A06D /* Auth0.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF672E70374D008E02F8 /* Auth0.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2842E9D2EFA00D5A06D /* JWTDecode.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; };
+		D4C3F2852E9D2EFA00D5A06D /* JWTDecode.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F2862E9D2EFA00D5A06D /* SimpleKeychain.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; };
+		D4C3F2872E9D2EFA00D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4C3F73D2E9E6BAF00D5A06D /* Auth0UIComponents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */; platformFilter = ios; };
+		D4C3F73E2E9E6BAF00D5A06D /* Auth0UIComponents.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D4C3F0A82E979AD700D5A06D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4C3EFB62E94F33E00D5A06D;
+			remoteInfo = Auth0UIComponents.iOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D4011D8B2E901A8E002F57A0 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D4C3EFFC2E95119300D5A06D /* Auth0.xcframework in Embed Frameworks */,
+				D4C3F73E2E9E6BAF00D5A06D /* Auth0UIComponents.framework in Embed Frameworks */,
+				D4011D882E901A8E002F57A0 /* JWTDecode.xcframework in Embed Frameworks */,
+				D4011D8A2E901A8E002F57A0 /* SimpleKeychain.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F00C2E95313400D5A06D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D4C3F0072E95313400D5A06D /* Auth0.xcframework in Embed Frameworks */,
+				D4C3F0092E95313400D5A06D /* JWTDecode.xcframework in Embed Frameworks */,
+				D4C3F00B2E95313400D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F2732E9D2EE200D5A06D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D4C3F26E2E9D2EE200D5A06D /* Auth0.xcframework in Embed Frameworks */,
+				D4C3F2702E9D2EE200D5A06D /* JWTDecode.xcframework in Embed Frameworks */,
+				D4C3F2722E9D2EE200D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F2782E9D2EEB00D5A06D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D4C3F2752E9D2EEB00D5A06D /* Auth0.xcframework in Embed Frameworks */,
+				D4C3F2772E9D2EEB00D5A06D /* JWTDecode.xcframework in Embed Frameworks */,
+				D4C3F27A2E9D2EEE00D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F2812E9D2EF500D5A06D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D4C3F27C2E9D2EF500D5A06D /* Auth0.xcframework in Embed Frameworks */,
+				D4C3F27E2E9D2EF500D5A06D /* JWTDecode.xcframework in Embed Frameworks */,
+				D4C3F2802E9D2EF500D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F2882E9D2EFA00D5A06D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D4C3F2832E9D2EFA00D5A06D /* Auth0.xcframework in Embed Frameworks */,
+				D4C3F2852E9D2EFA00D5A06D /* JWTDecode.xcframework in Embed Frameworks */,
+				D4C3F2872E9D2EFA00D5A06D /* SimpleKeychain.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D4011CAC2E8FEA60002F57A0 /* Auth0UIComponents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Auth0UIComponents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4011CCE2E8FECE8002F57A0 /* Auth0UIComponents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Auth0UIComponents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4011D292E9013AF002F57A0 /* AppUIComponents.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppUIComponents.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4011D602E9019D7002F57A0 /* Auth0UIComponents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Auth0UIComponents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4011D912E901AA9002F57A0 /* Auth0UIComponents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Auth0UIComponents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Auth0UIComponents.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C3F04B2E96834F00D5A06D /* Auth0UIComponentsTests.iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Auth0UIComponentsTests.iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C3F05B2E9683B700D5A06D /* Auth0UIComponentsTests.macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Auth0UIComponentsTests.macOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C3F0662E9683F100D5A06D /* Auth0UIComponentsTests.visionOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Auth0UIComponentsTests.visionOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C3F0712E96842C00D5A06D /* Auth0UIComponentsTests.watchOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Auth0UIComponentsTests.watchOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C3F07C2E96843D00D5A06D /* Auth0UIComponentsTests.tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Auth0UIComponentsTests.tvOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4EDCF672E70374D008E02F8 /* Auth0.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Auth0.xcframework; path = Carthage/Build/Auth0.xcframework; sourceTree = "<group>"; };
+		D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SimpleKeychain.xcframework; path = Carthage/Build/SimpleKeychain.xcframework; sourceTree = "<group>"; };
+		D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = JWTDecode.xcframework; path = Carthage/Build/JWTDecode.xcframework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D4C3F2892E9D2F4400D5A06D /* Exceptions for "AppUIComponents" folder in "AppUIComponents" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4011D282E9013AF002F57A0 /* AppUIComponents */;
+		};
+		D4C3F3522E9D5E3F00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.iOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */;
+		};
+		D4C3F3532E9D5E4400D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.tvOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4011D902E901AA9002F57A0 /* Auth0UIComponents.tvOS */;
+		};
+		D4C3F3542E9D5E4800D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.visionOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4011D5F2E9019D7002F57A0 /* Auth0UIComponents.visionOS */;
+		};
+		D4C3F3552E9D5E4A00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.watchOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4011CCD2E8FECE8002F57A0 /* Auth0UIComponents.watchOS */;
+		};
+		D4C3F3562E9D5E4C00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.macOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4011CAB2E8FEA60002F57A0 /* Auth0UIComponents.macOS */;
+		};
+		D4C3F3F02E9D5F3E00D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.iOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4C3F04A2E96834F00D5A06D /* Auth0UIComponentsTests.iOS */;
+		};
+		D4C3F3F12E9D5F4000D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.macOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4C3F05A2E9683B700D5A06D /* Auth0UIComponentsTests.macOS */;
+		};
+		D4C3F3F22E9D5F4200D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.visionOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4C3F0652E9683F100D5A06D /* Auth0UIComponentsTests.visionOS */;
+		};
+		D4C3F3F32E9D5F4400D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.watchOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4C3F0702E96842C00D5A06D /* Auth0UIComponentsTests.watchOS */;
+		};
+		D4C3F3F42E9D5F4500D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.tvOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4C3F07B2E96843D00D5A06D /* Auth0UIComponentsTests.tvOS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D4011D9F2E901AD6002F57A0 /* AppUIComponents */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D4C3F2892E9D2F4400D5A06D /* Exceptions for "AppUIComponents" folder in "AppUIComponents" target */,
+			);
+			path = AppUIComponents;
+			sourceTree = "<group>";
+		};
+		D4011DA22E901ADC002F57A0 /* Auth0UIComponents */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D4C3F3562E9D5E4C00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.macOS" target */,
+				D4C3F3552E9D5E4A00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.watchOS" target */,
+				D4C3F3542E9D5E4800D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.visionOS" target */,
+				D4C3F3532E9D5E4400D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.tvOS" target */,
+				D4C3F3522E9D5E3F00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.iOS" target */,
+			);
+			path = Auth0UIComponents;
+			sourceTree = "<group>";
+		};
+		D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D4C3F3F02E9D5F3E00D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.iOS" target */,
+				D4C3F3F12E9D5F4000D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.macOS" target */,
+				D4C3F3F22E9D5F4200D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.visionOS" target */,
+				D4C3F3F32E9D5F4400D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.watchOS" target */,
+				D4C3F3F42E9D5F4500D5A06D /* Exceptions for "Auth0UIComponentsTests" folder in "Auth0UIComponentsTests.tvOS" target */,
+			);
+			path = Auth0UIComponentsTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D4011CA92E8FEA60002F57A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C3F2822E9D2EFA00D5A06D /* Auth0.xcframework in Frameworks */,
+				D4C3F2842E9D2EFA00D5A06D /* JWTDecode.xcframework in Frameworks */,
+				D4C3F2862E9D2EFA00D5A06D /* SimpleKeychain.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011CCB2E8FECE8002F57A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C3F27B2E9D2EF500D5A06D /* Auth0.xcframework in Frameworks */,
+				D4C3F27D2E9D2EF500D5A06D /* JWTDecode.xcframework in Frameworks */,
+				D4C3F27F2E9D2EF500D5A06D /* SimpleKeychain.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D262E9013AF002F57A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C3EFFB2E95119300D5A06D /* Auth0.xcframework in Frameworks */,
+				D4C3F73D2E9E6BAF00D5A06D /* Auth0UIComponents.framework in Frameworks */,
+				D4011D872E901A8E002F57A0 /* JWTDecode.xcframework in Frameworks */,
+				D4011D892E901A8E002F57A0 /* SimpleKeychain.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D5D2E9019D7002F57A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C3F2742E9D2EEB00D5A06D /* Auth0.xcframework in Frameworks */,
+				D4C3F2762E9D2EEB00D5A06D /* JWTDecode.xcframework in Frameworks */,
+				D4C3F2792E9D2EEE00D5A06D /* SimpleKeychain.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D8E2E901AA9002F57A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C3F26D2E9D2EE200D5A06D /* Auth0.xcframework in Frameworks */,
+				D4C3F26F2E9D2EE200D5A06D /* JWTDecode.xcframework in Frameworks */,
+				D4C3F2712E9D2EE200D5A06D /* SimpleKeychain.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3EFB42E94F33E00D5A06D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C3F0062E95313400D5A06D /* Auth0.xcframework in Frameworks */,
+				D4C3F0082E95313400D5A06D /* JWTDecode.xcframework in Frameworks */,
+				D4C3F00A2E95313400D5A06D /* SimpleKeychain.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0482E96834F00D5A06D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0582E9683B700D5A06D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0632E9683F100D5A06D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F06E2E96842C00D5A06D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0792E96843D00D5A06D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D499DA542E6AF789000E7E2F = {
+			isa = PBXGroup;
+			children = (
+				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
+				D4011D9F2E901AD6002F57A0 /* AppUIComponents */,
+				D4011DA22E901ADC002F57A0 /* Auth0UIComponents */,
+				D499DA5F2E6AF789000E7E2F /* Products */,
+				D499DAB22E6B2EDD000E7E2F /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		D499DA5F2E6AF789000E7E2F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D4011CAC2E8FEA60002F57A0 /* Auth0UIComponents.framework */,
+				D4011CCE2E8FECE8002F57A0 /* Auth0UIComponents.framework */,
+				D4011D292E9013AF002F57A0 /* AppUIComponents.app */,
+				D4011D602E9019D7002F57A0 /* Auth0UIComponents.framework */,
+				D4011D912E901AA9002F57A0 /* Auth0UIComponents.framework */,
+				D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */,
+				D4C3F04B2E96834F00D5A06D /* Auth0UIComponentsTests.iOS.xctest */,
+				D4C3F05B2E9683B700D5A06D /* Auth0UIComponentsTests.macOS.xctest */,
+				D4C3F0662E9683F100D5A06D /* Auth0UIComponentsTests.visionOS.xctest */,
+				D4C3F0712E96842C00D5A06D /* Auth0UIComponentsTests.watchOS.xctest */,
+				D4C3F07C2E96843D00D5A06D /* Auth0UIComponentsTests.tvOS.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D499DAB22E6B2EDD000E7E2F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D4EDCF702E713D57008E02F8 /* JWTDecode.xcframework */,
+				D4EDCF6F2E713D57008E02F8 /* SimpleKeychain.xcframework */,
+				D4EDCF672E70374D008E02F8 /* Auth0.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D4011CA72E8FEA60002F57A0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011CC92E8FECE8002F57A0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D5B2E9019D7002F57A0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D8C2E901AA9002F57A0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3EFB22E94F33E00D5A06D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D4011CAB2E8FEA60002F57A0 /* Auth0UIComponents.macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4011CC32E8FEA60002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.macOS" */;
+			buildPhases = (
+				D4011CA72E8FEA60002F57A0 /* Headers */,
+				D4011CA82E8FEA60002F57A0 /* Sources */,
+				D4011CA92E8FEA60002F57A0 /* Frameworks */,
+				D4011CAA2E8FEA60002F57A0 /* Resources */,
+				D4C3F2882E9D2EFA00D5A06D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4011DA22E901ADC002F57A0 /* Auth0UIComponents */,
+			);
+			name = Auth0UIComponents.macOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponents.macOS;
+			productReference = D4011CAC2E8FEA60002F57A0 /* Auth0UIComponents.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D4011CCD2E8FECE8002F57A0 /* Auth0UIComponents.watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4011CE52E8FECE9002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.watchOS" */;
+			buildPhases = (
+				D4011CC92E8FECE8002F57A0 /* Headers */,
+				D4011CCA2E8FECE8002F57A0 /* Sources */,
+				D4011CCB2E8FECE8002F57A0 /* Frameworks */,
+				D4011CCC2E8FECE8002F57A0 /* Resources */,
+				D4C3F2812E9D2EF500D5A06D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4011DA22E901ADC002F57A0 /* Auth0UIComponents */,
+			);
+			name = Auth0UIComponents.watchOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponents.watchOS;
+			productReference = D4011CCE2E8FECE8002F57A0 /* Auth0UIComponents.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D4011D282E9013AF002F57A0 /* AppUIComponents */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4011D312E9013B0002F57A0 /* Build configuration list for PBXNativeTarget "AppUIComponents" */;
+			buildPhases = (
+				D4011D252E9013AF002F57A0 /* Sources */,
+				D4011D262E9013AF002F57A0 /* Frameworks */,
+				D4011D272E9013AF002F57A0 /* Resources */,
+				D4011D8B2E901A8E002F57A0 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D4C3F0A92E979AD700D5A06D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D4011D9F2E901AD6002F57A0 /* AppUIComponents */,
+			);
+			name = AppUIComponents;
+			packageProductDependencies = (
+			);
+			productName = AppUIComponents;
+			productReference = D4011D292E9013AF002F57A0 /* AppUIComponents.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D4011D5F2E9019D7002F57A0 /* Auth0UIComponents.visionOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4011D6A2E9019D7002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.visionOS" */;
+			buildPhases = (
+				D4011D5B2E9019D7002F57A0 /* Headers */,
+				D4011D5C2E9019D7002F57A0 /* Sources */,
+				D4011D5D2E9019D7002F57A0 /* Frameworks */,
+				D4011D5E2E9019D7002F57A0 /* Resources */,
+				D4C3F2782E9D2EEB00D5A06D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4011DA22E901ADC002F57A0 /* Auth0UIComponents */,
+			);
+			name = Auth0UIComponents.visionOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponents.visionOS;
+			productReference = D4011D602E9019D7002F57A0 /* Auth0UIComponents.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D4011D902E901AA9002F57A0 /* Auth0UIComponents.tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4011D9B2E901AA9002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.tvOS" */;
+			buildPhases = (
+				D4011D8C2E901AA9002F57A0 /* Headers */,
+				D4011D8D2E901AA9002F57A0 /* Sources */,
+				D4011D8E2E901AA9002F57A0 /* Frameworks */,
+				D4011D8F2E901AA9002F57A0 /* Resources */,
+				D4C3F2732E9D2EE200D5A06D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4011DA22E901ADC002F57A0 /* Auth0UIComponents */,
+			);
+			name = Auth0UIComponents.tvOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponents.tvOS;
+			productReference = D4011D912E901AA9002F57A0 /* Auth0UIComponents.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C3EFC12E94F33E00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponents.iOS" */;
+			buildPhases = (
+				D4C3EFB22E94F33E00D5A06D /* Headers */,
+				D4C3EFB32E94F33E00D5A06D /* Sources */,
+				D4C3EFB42E94F33E00D5A06D /* Frameworks */,
+				D4C3EFB52E94F33E00D5A06D /* Resources */,
+				D4C3F00C2E95313400D5A06D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4011DA22E901ADC002F57A0 /* Auth0UIComponents */,
+			);
+			name = Auth0UIComponents.iOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponents.iOS;
+			productReference = D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D4C3F04A2E96834F00D5A06D /* Auth0UIComponentsTests.iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C3F04F2E96834F00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.iOS" */;
+			buildPhases = (
+				D4C3F0472E96834F00D5A06D /* Sources */,
+				D4C3F0482E96834F00D5A06D /* Frameworks */,
+				D4C3F0492E96834F00D5A06D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
+			);
+			name = Auth0UIComponentsTests.iOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponentsTests;
+			productReference = D4C3F04B2E96834F00D5A06D /* Auth0UIComponentsTests.iOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D4C3F05A2E9683B700D5A06D /* Auth0UIComponentsTests.macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C3F05F2E9683B700D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.macOS" */;
+			buildPhases = (
+				D4C3F0572E9683B700D5A06D /* Sources */,
+				D4C3F0582E9683B700D5A06D /* Frameworks */,
+				D4C3F0592E9683B700D5A06D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
+			);
+			name = Auth0UIComponentsTests.macOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponentsTests.macOS;
+			productReference = D4C3F05B2E9683B700D5A06D /* Auth0UIComponentsTests.macOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D4C3F0652E9683F100D5A06D /* Auth0UIComponentsTests.visionOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C3F06A2E9683F100D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.visionOS" */;
+			buildPhases = (
+				D4C3F0622E9683F100D5A06D /* Sources */,
+				D4C3F0632E9683F100D5A06D /* Frameworks */,
+				D4C3F0642E9683F100D5A06D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
+			);
+			name = Auth0UIComponentsTests.visionOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponentsTests.visionOS;
+			productReference = D4C3F0662E9683F100D5A06D /* Auth0UIComponentsTests.visionOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D4C3F0702E96842C00D5A06D /* Auth0UIComponentsTests.watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C3F0752E96842C00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.watchOS" */;
+			buildPhases = (
+				D4C3F06D2E96842C00D5A06D /* Sources */,
+				D4C3F06E2E96842C00D5A06D /* Frameworks */,
+				D4C3F06F2E96842C00D5A06D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
+			);
+			name = Auth0UIComponentsTests.watchOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponentsTests.watchOS;
+			productReference = D4C3F0712E96842C00D5A06D /* Auth0UIComponentsTests.watchOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D4C3F07B2E96843D00D5A06D /* Auth0UIComponentsTests.tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C3F0802E96843D00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.tvOS" */;
+			buildPhases = (
+				D4C3F0782E96843D00D5A06D /* Sources */,
+				D4C3F0792E96843D00D5A06D /* Frameworks */,
+				D4C3F07A2E96843D00D5A06D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
+			);
+			name = Auth0UIComponentsTests.tvOS;
+			packageProductDependencies = (
+			);
+			productName = Auth0UIComponentsTests.tvOS;
+			productReference = D4C3F07C2E96843D00D5A06D /* Auth0UIComponentsTests.tvOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D499DA552E6AF789000E7E2F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					D4011CAB2E8FEA60002F57A0 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4011CCD2E8FECE8002F57A0 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4011D282E9013AF002F57A0 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4011D5F2E9019D7002F57A0 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4011D902E901AA9002F57A0 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4C3EFB62E94F33E00D5A06D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4C3F04A2E96834F00D5A06D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4C3F05A2E9683B700D5A06D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4C3F0652E9683F100D5A06D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4C3F0702E96842C00D5A06D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D4C3F07B2E96843D00D5A06D = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = D499DA582E6AF789000E7E2F /* Build configuration list for PBXProject "Auth0UIComponents" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D499DA542E6AF789000E7E2F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D499DA5F2E6AF789000E7E2F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D4011CAB2E8FEA60002F57A0 /* Auth0UIComponents.macOS */,
+				D4011CCD2E8FECE8002F57A0 /* Auth0UIComponents.watchOS */,
+				D4011D282E9013AF002F57A0 /* AppUIComponents */,
+				D4011D5F2E9019D7002F57A0 /* Auth0UIComponents.visionOS */,
+				D4011D902E901AA9002F57A0 /* Auth0UIComponents.tvOS */,
+				D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */,
+				D4C3F04A2E96834F00D5A06D /* Auth0UIComponentsTests.iOS */,
+				D4C3F05A2E9683B700D5A06D /* Auth0UIComponentsTests.macOS */,
+				D4C3F0652E9683F100D5A06D /* Auth0UIComponentsTests.visionOS */,
+				D4C3F0702E96842C00D5A06D /* Auth0UIComponentsTests.watchOS */,
+				D4C3F07B2E96843D00D5A06D /* Auth0UIComponentsTests.tvOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D4011CAA2E8FEA60002F57A0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011CCC2E8FECE8002F57A0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D272E9013AF002F57A0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D5E2E9019D7002F57A0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D8F2E901AA9002F57A0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3EFB52E94F33E00D5A06D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0492E96834F00D5A06D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0592E9683B700D5A06D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0642E9683F100D5A06D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F06F2E96842C00D5A06D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F07A2E96843D00D5A06D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D4011CA82E8FEA60002F57A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011CCA2E8FECE8002F57A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D252E9013AF002F57A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D5C2E9019D7002F57A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4011D8D2E901AA9002F57A0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3EFB32E94F33E00D5A06D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0472E96834F00D5A06D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0572E9683B700D5A06D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0622E9683F100D5A06D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F06D2E96842C00D5A06D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C3F0782E96843D00D5A06D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D4C3F0A92E979AD700D5A06D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */;
+			targetProxy = D4C3F0A82E979AD700D5A06D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D4011CC42E8FEA60002F57A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_EXPAND_BUILD_SETTINGS = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		D4011CC52E8FEA60002F57A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_EXPAND_BUILD_SETTINGS = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		D4011CE62E8FECE9002F57A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 8.7;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		D4011CE72E8FECE9002F57A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 8.7;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		D4011D322E9013B0002F57A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AppUIComponents/Info.plist;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppUIComponents;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 1.3;
+			};
+			name = Debug;
+		};
+		D4011D332E9013B0002F57A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AppUIComponents/Info.plist;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppUIComponents;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 1.3;
+			};
+			name = Release;
+		};
+		D4011D6B2E9019D7002F57A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = xros;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				XROS_DEPLOYMENT_TARGET = 1.3;
+			};
+			name = Debug;
+		};
+		D4011D6C2E9019D7002F57A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = xros;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 1.3;
+			};
+			name = Release;
+		};
+		D4011D9C2E901AA9002F57A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 15.6;
+			};
+			name = Debug;
+		};
+		D4011D9D2E901AA9002F57A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 15.6;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D499DA702E6AF789000E7E2F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		D499DA712E6AF789000E7E2F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		D4C3EFC22E94F33E00D5A06D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C3EFC32E94F33E00D5A06D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_MODULE_NAME = Auth0UIComponents;
+				PRODUCT_NAME = Auth0UIComponents;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D4C3F0502E96834F00D5A06D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C3F0512E96834F00D5A06D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D4C3F0602E9683B700D5A06D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C3F0612E9683B700D5A06D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D4C3F06B2E9683F100D5A06D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C3F06C2E9683F100D5A06D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D4C3F0762E96842C00D5A06D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C3F0772E96842C00D5A06D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D4C3F0812E96843D00D5A06D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C3F0822E96843D00D5A06D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 86WQXF56BC;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponentsTests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponentsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D4011CC32E8FEA60002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4011CC42E8FEA60002F57A0 /* Debug */,
+				D4011CC52E8FEA60002F57A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4011CE52E8FECE9002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4011CE62E8FECE9002F57A0 /* Debug */,
+				D4011CE72E8FECE9002F57A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4011D312E9013B0002F57A0 /* Build configuration list for PBXNativeTarget "AppUIComponents" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4011D322E9013B0002F57A0 /* Debug */,
+				D4011D332E9013B0002F57A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4011D6A2E9019D7002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.visionOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4011D6B2E9019D7002F57A0 /* Debug */,
+				D4011D6C2E9019D7002F57A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4011D9B2E901AA9002F57A0 /* Build configuration list for PBXNativeTarget "Auth0UIComponents.tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4011D9C2E901AA9002F57A0 /* Debug */,
+				D4011D9D2E901AA9002F57A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D499DA582E6AF789000E7E2F /* Build configuration list for PBXProject "Auth0UIComponents" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D499DA702E6AF789000E7E2F /* Debug */,
+				D499DA712E6AF789000E7E2F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C3EFC12E94F33E00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponents.iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C3EFC22E94F33E00D5A06D /* Debug */,
+				D4C3EFC32E94F33E00D5A06D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C3F04F2E96834F00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C3F0502E96834F00D5A06D /* Debug */,
+				D4C3F0512E96834F00D5A06D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C3F05F2E9683B700D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C3F0602E9683B700D5A06D /* Debug */,
+				D4C3F0612E9683B700D5A06D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C3F06A2E9683F100D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.visionOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C3F06B2E9683F100D5A06D /* Debug */,
+				D4C3F06C2E9683F100D5A06D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C3F0752E96842C00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C3F0762E96842C00D5A06D /* Debug */,
+				D4C3F0772E96842C00D5A06D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C3F0802E96843D00D5A06D /* Build configuration list for PBXNativeTarget "Auth0UIComponentsTests.tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C3F0812E96843D00D5A06D /* Debug */,
+				D4C3F0822E96843D00D5A06D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D499DA552E6AF789000E7E2F /* Project object */;
+}
