@@ -15,7 +15,7 @@ struct ContentView: View {
                 VStack {
                     Button("Login") {
                         Auth0.webAuth()
-                            .useHTTPS()
+//                            .useHTTPS()
                             .scope("openid profile email offline_access")
                             .start { result in
                                 switch result {

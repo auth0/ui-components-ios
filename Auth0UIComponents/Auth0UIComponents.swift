@@ -8,10 +8,19 @@ public func myAcountAuthView(_ session: URLSession = .shared,
                              audience: String? = nil,
                              tokenProvider: any TokenProvider) -> some View {
     let config = plistValues(bundle: Bundle.main)!
-    Dependencies.initialize(audience: audience ?? config.domain.appending("/me/"),
+    let myAccountAudience = (audience?.isEmpty == false) ? (audience ?? config.domain.appending("/me/")) : config.domain.appending("/me/")
+    Dependencies.initialize(audience: ensureHTTPS(myAccountAudience),
                             domain: domain ?? config.domain,
                             tokenProvider: tokenProvider)
     return MyAccountAuthMethodsView(viewModel: MyAccountAuthMethodsViewModel(session: session))
+}
+
+func ensureHTTPS(_ urlString: String) -> String {
+    if urlString.lowercased().hasPrefix("https://") {
+        return urlString
+    } else {
+        return "https://" + urlString
+    }
 }
 
 func plistValues(bundle: Bundle) -> (clientId: String, domain: String)? {

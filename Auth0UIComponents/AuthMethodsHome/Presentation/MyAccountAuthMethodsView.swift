@@ -34,9 +34,7 @@ struct MyAccountAuthMethodsView: View {
                     handleRoute(route: route)
                 }
         }.onAppear {
-            Task {
-                await viewModel.loadMyAccountAuthViewComponentData()
-            }
+            viewModel.loadMyAccountAuthViewComponentData()
         }
     }
 

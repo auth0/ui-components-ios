@@ -25,9 +25,7 @@ struct SavedAuthenticatorsScreen: View {
                                 AuthenticatorView(type: viewModel.type, authenticationMethod: authMethod, showManageBottomSheet: $viewModel.showManageAuthSheet)
                                     .confirmationDialog(viewModel.confirmationDialogTitle, isPresented: $viewModel.showManageAuthSheet, titleVisibility: .visible) {
                                         Button(viewModel.confirmationDialogDestructiveButtonTitle, role: .destructive) {
-                                            Task {
-                                                await viewModel.deleteAuthMethod(authMethod: authMethod)
-                                            }
+                                            viewModel.deleteAuthMethod(authMethod: authMethod)
                                         }
                                         Button("Cancel", role: .cancel) { }
                                     }

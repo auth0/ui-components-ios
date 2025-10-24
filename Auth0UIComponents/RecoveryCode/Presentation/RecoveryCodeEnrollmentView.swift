@@ -75,9 +75,7 @@ struct RecoveryCodeEnrollmentView: View {
                 }.padding()
             }
         }.onAppear {
-            Task {
-                await viewModel.loadData()
-            }
+            viewModel.loadData()
         }
         .navigationTitle(Text("Recovery code"))
         .navigationBarTitleDisplayMode(.inline)

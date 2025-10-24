@@ -8,7 +8,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     private let confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable
     private let dependencies: Dependencies
     
-    @Published var showLoader: Bool = false
+    @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
 
@@ -20,20 +20,19 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         self.dependencies = dependencies
     }
 
-    func loadData() async {
-        showLoader = true
-        errorViewModel = nil
-        do  {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
-            recoveryCodeChallenge = try await startRecoveryCodeEnrollmentUseCase.execute(request: StartRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-            showLoader = false
-        } catch {
-            showLoader = false
-            errorViewModel = ErrorScreenViewModel(title: "Something went wrong", subTitle: "We are unable to process your request. Please try again in a few minutes. If this problem persists, please contact us.", buttonTitle: "Try again", buttonClick: { [weak self] in
-                Task {
-                    await self?.loadData()
+    func loadData() {
+        Task {
+            showLoader = true
+            errorViewModel = nil
+            do  {
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+                recoveryCodeChallenge = try await startRecoveryCodeEnrollmentUseCase.execute(request: StartRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+                showLoader = false
+            } catch {
+                await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                    self?.loadData()
                 }
-            })
+            }
         }
     }
 
@@ -41,13 +40,49 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         Task {
             if let recoveryCodeChallenge {
                 do  {
-                    let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
+                    let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
                     let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: ConfirmRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: recoveryCodeChallenge.authenticationId, authSession: recoveryCodeChallenge.authenticationSession))
                     await NavigationStore.shared.push(.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
                 } catch {
-                    // TODO: error message
+                    await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                        Task {
+                            self?.confirmEnrollment()
+                        }
+                    }
                 }
             }
+        }
+    }
+    
+    @MainActor func handle(error: Error,
+                           scope: String,
+                           retryCallback: @escaping () -> Void) async {
+        showLoader = false
+        if let error = error as? CredentialsManagerError {
+            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
+            if case .mfaRequired = uiComponentError {
+                do {
+                    let credentials = try await Auth0.webAuth()
+                        .audience(dependencies.audience)
+                        .scope(scope)
+                        .start()
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    retryCallback()
+                } catch  {
+                    await handle(error: error,
+                                 scope: scope,
+                                 retryCallback: retryCallback)
+                }
+            } else {
+                errorViewModel = uiComponentError.errorViewModel(completion: {
+                    retryCallback()
+                })
+            }
+        } else if let error  = error as? MyAccountError {
+            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel(completion: {
+                retryCallback()
+            })
         }
     }
 }

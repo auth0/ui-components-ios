@@ -24,41 +24,45 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         self.authenticationMethods = authenticationMethods
     }
 
-    func deleteAuthMethod(authMethod: AuthenticationMethod) async {
-        do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "delete:me:authentication_methods")
-            try await deleteAuthMethodUseCase.execute(request: DeleteAuthMethodRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: authMethod.id))
-            await loadData(true)
-        } catch {
-            // TODO: show error message here
+    func deleteAuthMethod(authMethod: AuthenticationMethod) {
+        Task {
+            do {
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid delete:me:authentication_methods")
+                try await deleteAuthMethodUseCase.execute(request: DeleteAuthMethodRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: authMethod.id))
+                loadData(true)
+            } catch {
+                await handle(error: error, scope: "openid delete:me:authentication_methods") { [weak self] in
+                    self?.deleteAuthMethod(authMethod: authMethod)
+                }
+            }
         }
     }
 
-    func loadData(_ postDeletion: Bool = false) async {
-        viewAuthenticationMethods = []
-        showLoader = true
-        guard authenticationMethods.isEmpty || postDeletion == true else {
-            showLoader = false
-            viewAuthenticationMethods = authenticationMethods
-            return
-        }
-        do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "read:me:authentication_methods")
-            let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-            showLoader = false
-            let filteredAuthMethods = apiAuthMethods.filter { $0.type == type.rawValue }
-            if filteredAuthMethods.isEmpty {
-                NavigationStore.shared.push(type.navigationDestination([]))
-            } else {
-                viewAuthenticationMethods = apiAuthMethods.filter { $0.type == type.rawValue }
+    func loadData(_ postDeletion: Bool = false) {
+        Task {
+            viewAuthenticationMethods = []
+            showLoader = true
+            errorViewModel = nil
+            guard authenticationMethods.isEmpty || postDeletion == true else {
+                showLoader = false
+                viewAuthenticationMethods = authenticationMethods
+                return
             }
-        } catch {
-            showLoader = false
-            errorViewModel = ErrorScreenViewModel(title: "Something went wrong", subTitle: "We are unable to process your request. Please try again in a few minutes. If this problem persists, please contact us.", buttonTitle: "Try again", buttonClick: { [weak self] in
-                Task {
-                    await self?.loadData()
+            do {
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "read:me:authentication_methods")
+                let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+                showLoader = false
+                let filteredAuthMethods = apiAuthMethods.filter { $0.type == type.rawValue }
+                if filteredAuthMethods.isEmpty {
+                    NavigationStore.shared.push(type.navigationDestination([]))
+                } else {
+                    viewAuthenticationMethods = apiAuthMethods.filter { $0.type == type.rawValue }
                 }
-            })
+            } catch {
+                await handle(error: error, scope: "read:me:authentication_methods") { [weak self] in
+                    self?.loadData(postDeletion)
+                }
+            }
         }
     }
 
@@ -119,6 +123,38 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
             "Email OTP"
         case .sms:
             "Phone for SMS OTP"
+        }
+    }
+    
+    @MainActor func handle(error: Error,
+                           scope: String,
+                           retryCallback: @escaping () -> Void) async {
+        showLoader = false
+        if let error = error as? CredentialsManagerError {
+            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
+            if case .mfaRequired = uiComponentError {
+                do {
+                    let credentials = try await Auth0.webAuth()
+                        .audience(dependencies.audience)
+                        .scope(scope)
+                        .start()
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    retryCallback()
+                } catch  {
+                    await handle(error: error,
+                                 scope: scope,
+                                 retryCallback: retryCallback)
+                }
+            } else {
+                errorViewModel = uiComponentError.errorViewModel(completion: {
+                    retryCallback()
+                })
+            }
+        } else if let error  = error as? MyAccountError {
+            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel(completion: {
+                retryCallback()
+            })
         }
     }
 }

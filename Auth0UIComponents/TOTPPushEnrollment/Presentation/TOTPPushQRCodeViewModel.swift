@@ -31,26 +31,25 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         self.type = type
     }
 
-    func fetchEnrollmentChallenge() async {
-        showLoader = true
-        do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
-            if type == .pushNotification {
-                pushEnrollmentChallenge = try await startPushEnrollmentUseCase.execute(request: StartPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-            } else if type == .totp {
-                totpEnrollmentChallenge = try await startTOTPEnrollmentUseCase.execute(request: StartTOTPEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-            }
-            showLoader = false
-            setAuthQRCodeImage()
-            setAuthManualSetupCode()
-        } catch {
-            showLoader = false
-            errorViewModel = ErrorScreenViewModel(title: "Something went wrong", subTitle: "", buttonTitle: "", buttonClick: { [weak self] in
-                Task {
-                    self?.errorViewModel = nil
-                    await self?.fetchEnrollmentChallenge()
+    func fetchEnrollmentChallenge() {
+        Task {
+            showLoader = true
+            errorViewModel = nil
+            do {
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+                if type == .pushNotification {
+                    pushEnrollmentChallenge = try await startPushEnrollmentUseCase.execute(request: StartPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+                } else if type == .totp {
+                    totpEnrollmentChallenge = try await startTOTPEnrollmentUseCase.execute(request: StartTOTPEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
                 }
-            })
+                showLoader = false
+                setAuthQRCodeImage()
+                setAuthManualSetupCode()
+            } catch {
+                await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                    self?.fetchEnrollmentChallenge()
+                }
+            }
         }
     }
     
@@ -59,24 +58,23 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
             if let totpEnrollmentChallenge {
                 await NavigationStore.shared.push(.otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge))
             } else {
-                await confirmEnrollment()
+                confirmEnrollment()
             }
         }
     }
     
-    func confirmEnrollment() async {
-        if let pushEnrollmentChallenge {
-            do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
-                let _ = try await confirmPushEnrollmentUseCase.execute(request: ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: pushEnrollmentChallenge.authenticationId, authSession: pushEnrollmentChallenge.authenticationSession))
-                await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
-            } catch {
-                errorViewModel = ErrorScreenViewModel(title: "Something went wrong", subTitle: "", buttonTitle: "", buttonClick: { [weak self] in
-                    Task {
-                        self?.errorViewModel = nil
-                        // TOOO: hide button loader
+    func confirmEnrollment() {
+        Task {
+            if let pushEnrollmentChallenge {
+                do {
+                    let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+                    let _ = try await confirmPushEnrollmentUseCase.execute(request: ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: pushEnrollmentChallenge.authenticationId, authSession: pushEnrollmentChallenge.authenticationSession))
+                    await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
+                } catch {
+                    await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                        self?.confirmEnrollment()
                     }
-                })
+                }
             }
         }
     }
@@ -108,6 +106,38 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
             return "Add push notification"
         } else {
             return "Add an Authenticator"
+        }
+    }
+
+    @MainActor func handle(error: Error,
+                           scope: String,
+                           retryCallback: @escaping () -> Void) async {
+        showLoader = false
+        if let error = error as? CredentialsManagerError {
+            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
+            if case .mfaRequired = uiComponentError {
+                do {
+                    let credentials = try await Auth0.webAuth()
+                        .audience(dependencies.audience)
+                        .scope(scope)
+                        .start()
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    retryCallback()
+                } catch  {
+                    await handle(error: error,
+                                 scope: scope,
+                                 retryCallback: retryCallback)
+                }
+            } else {
+                errorViewModel = uiComponentError.errorViewModel(completion: {
+                    retryCallback()
+                })
+            }
+        } else if let error  = error as? MyAccountError {
+            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel(completion: {
+                retryCallback()
+            })
         }
     }
 }

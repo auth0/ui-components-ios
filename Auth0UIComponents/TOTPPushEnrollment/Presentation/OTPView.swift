@@ -19,6 +19,7 @@ struct OTPView: View {
                     .padding(.bottom, 76)
             } else {
                 Text("Enter the 6 digit code we sent to \(viewModel.formattedEmailOrPhoneNumber)")
+                    .multilineTextAlignment(.leading)
                     .font(Font.system(size: 20, weight: .semibold))
                     .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
                     .padding(.bottom, 30)
@@ -41,16 +42,12 @@ struct OTPView: View {
                         .font(.system(size: 16))
                         .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
                         .onTapGesture {
-                            Task {
-                                await viewModel.restartEnrollment()
-                            }
+                            viewModel.restartEnrollment()
                         }.padding(EdgeInsets(top: 30, leading: 0, bottom: 100, trailing: 0))
                 }
             }
             Button {
-                Task {
-                    await viewModel.confirmEnrollment(with: code)
-                }
+                viewModel.confirmEnrollment(with: code)
             } label: {
                 Text("Continue")
                     .frame(maxWidth: .infinity)

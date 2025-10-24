@@ -4,22 +4,11 @@ import Combine
 public protocol TokenProvider {
     func fetchCredentials() async throws -> Credentials
     func fetchCredentials() -> AnyPublisher<Credentials, CredentialsManagerError>
-    func storeCredentials(_ credentials: Credentials)
+    func storeCredentials(credentials: Credentials)
+    func store(apiCredentials: APICredentials, for audience: String)
     func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials
     func fetchAPICredentials(audience: String, scope: String) -> AnyPublisher<APICredentials, CredentialsManagerError>
 }
-
-//extension CredentialsManager: @retroactive Hashable {
-//    public func hash(into hasher: inout Hasher) {
-//        hasher.combine()
-//    }
-//}
-//
-//extension CredentialsManager: @retroactive Equatable {
-//    public static func == (lhs: CredentialsManager, rhs: CredentialsManager) -> Bool {
-//        lhs.
-//    }
-//}
 
 extension CredentialsManager: TokenProvider {
 
@@ -31,8 +20,12 @@ extension CredentialsManager: TokenProvider {
         credentials()
     }
 
-    public func storeCredentials(_ credentials: Credentials) {
+    public func storeCredentials(credentials: Credentials) {
         _ = store(credentials: credentials)
+    }
+    
+    public func store(apiCredentials: APICredentials, for audience: String) {
+        _ = store(apiCredentials: apiCredentials, forAudience: audience)
     }
 
     public func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials {
