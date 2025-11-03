@@ -15,42 +15,70 @@ struct SavedAuthenticatorsScreen: View {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
                 VStack(alignment: .leading) {
-                    Text(viewModel.title)
+                    Text(viewModel.type.savedAuthenticatorsTitle)
                         .font(.system(size: 14))
                         .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
                         .padding(.bottom, 8)
-                    ScrollView(showsIndicators: false) {
-                        VStack {
-                            ForEach(viewModel.viewAuthenticationMethods, id: \.self) { authMethod in
-                                AuthenticatorView(type: viewModel.type, authenticationMethod: authMethod, showManageBottomSheet: $viewModel.showManageAuthSheet)
-                                    .confirmationDialog(viewModel.confirmationDialogTitle, isPresented: $viewModel.showManageAuthSheet, titleVisibility: .visible) {
-                                        Button(viewModel.confirmationDialogDestructiveButtonTitle, role: .destructive) {
-                                            viewModel.deleteAuthMethod(authMethod: authMethod)
+                    if viewModel.viewAuthenticationMethods.isEmpty {
+                        Text(viewModel.type.savedAuthenticatorsEmptyStateMessage)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color("000000_24", bundle: ResourceBundle.default))
+                            .padding(.vertical, 25.5)
+                            .frame(maxWidth: .infinity)
+                            .background(Color("F9F9F9", bundle: ResourceBundle.default))
+                        Spacer()
+                    } else {
+                        ScrollView(showsIndicators: false) {
+                            LazyVStack {
+                                ForEach(viewModel.viewAuthenticationMethods, id: \.self) { authMethod in
+                                    AuthenticatorView(type: viewModel.type, authenticationMethod: authMethod, showManageBottomSheet: $viewModel.showManageAuthSheet)
+                                        .confirmationDialog(viewModel.type.confirmationDialogTitle, isPresented: $viewModel.showManageAuthSheet, titleVisibility: .visible) {
+                                            Button(viewModel.type.confirmationDialogDestructiveButtonTitle, role: .destructive) {
+                                                viewModel.deleteAuthMethod(authMethod: authMethod)
+                                            }
                                         }
-                                        Button("Cancel", role: .cancel) { }
-                                    }
+                                }
                             }
                         }
                     }
                 }.padding(EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16))
-                    
             }
-        }.navigationTitle(viewModel.navigationTitle)
+        }.navigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
-                ToolbarItem {
-                   Text("Add")
-                        .font(.system(size: 17))
-                        .foregroundStyle(Color("007AFF", bundle: ResourceBundle.default))
+                ToolbarItem(placement: trailingPlacement) {
+                    Image("plus", bundle: ResourceBundle.default)
                         .onTapGesture {
                             NavigationStore.shared.push(viewModel.type.navigationDestination([]))
                         }
                 }
-            }.onAppear {
-                Task {
-                    await viewModel.loadData()
+                
+                ToolbarItem(placement: leadingPlacement) {
+                    Image("back", bundle: ResourceBundle.default)
+                        .onTapGesture {
+                            NavigationStore.shared.popToRoot()
+                        }
                 }
+            }.onAppear {
+                viewModel.loadData()
             }
     }
+    
+    var trailingPlacement: ToolbarItemPlacement {
+            #if os(macOS)
+            return .automatic
+            #else
+            return .topBarTrailing
+            #endif
+        }
+        
+        var leadingPlacement: ToolbarItemPlacement {
+            #if os(macOS)
+            return . navigation
+            #else
+            return .topBarLeading
+            #endif
+        }
 }
 
 struct AuthenticatorView: View {

@@ -2,19 +2,16 @@
 
 import PackageDescription
 
-let webAuthPlatforms: [Platform] = [.iOS, .macOS, .macCatalyst, .visionOS]
 let swiftSettings: [SwiftSetting] = [
-    .swiftLanguageMode(.v5),
-    .define("WEB_AUTH_PLATFORM", .when(platforms: webAuthPlatforms)),
-    .define("PASSKEYS_PLATFORM", .when(platforms: webAuthPlatforms))
+    .swiftLanguageMode(.v5)
 ]
 
 let package = Package(
     name: "Auth0UIComponents",
-    platforms: [.iOS(.v16), .macOS(.v12), .tvOS(.v15), .watchOS(.v8), .visionOS(.v1)],
+    platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UIComponents", targets: ["Auth0UIComponents"])],
     dependencies: [
-        .package(url: "https://github.com/auth0/Auth0.swift.git", exact:"2.15.1")
+        .package(url: "https://github.com/auth0/Auth0.swift.git", branch:"SDK-6839")
     ],
     targets: [
         .target(

@@ -9,13 +9,13 @@ struct ContentView: View {
         ZStack {
             if viewAuthMethods == true,
                let route = viewModel.route,
-               case let Route.landingScreen(refreshToken, audience) = route {
-                Auth0UIComponents.myAcountAuthView(refreshToken: refreshToken, audience: audience, tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
+               case Route.landingScreen = route {
+                Auth0UIComponents.myAcountAuthView(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
             } else {
                 VStack {
                     Button("Login") {
                         Auth0.webAuth()
-//                            .useHTTPS()
+                            .useHTTPS()
                             .scope("openid profile email offline_access")
                             .start { result in
                                 switch result {

@@ -103,6 +103,80 @@ extension AuthMethodType {
         }
     }
 
+    var savedAuthenticatorsTitle: String  {
+        switch self {
+        case .email:
+            "Saved Emails for OTP"
+        case .sms:
+            "Saved Phones for SMS OTP"
+        case .totp:
+            "Saved Authenticators"
+        case .pushNotification:
+            "Saved Apps for Push"
+        case .recoveryCode:
+            "Generated Recovery code"
+        }
+    }
+
+    var savedAuthenticatorsNavigationTitle : String {
+        switch self {
+        case .pushNotification:
+            "Push Notification"
+        case .totp:
+            "Authenticator"
+        case .recoveryCode:
+            "Recovery Code"
+        case .email:
+            "Email OTP"
+        case .sms:
+            "Phone for SMS OTP"
+        }
+    }
+
+    var confirmationDialogTitle: String {
+        switch self {
+        case .pushNotification:
+            "Manage your Push Notification"
+        case .totp:
+            "Manage your Authenticator"
+        case .recoveryCode:
+            "Manage your Recovery Code"
+        case .email:
+            "Manage your email"
+        case .sms:
+            "Manage your phone for SMS OTP"
+        }
+    }
+
+    var confirmationDialogDestructiveButtonTitle: String {
+        switch self {
+        case .pushNotification:
+            "Revoke"
+        case .totp:
+            "Revoke"
+        case .recoveryCode,
+                .email,
+                .sms:
+            "Remove"
+        }
+    }
+    
+    var savedAuthenticatorsEmptyStateMessage: String {
+        switch self {
+        case .pushNotification:
+            return "No Push Notification was added."
+        case .email:
+            return "No Email was saved."
+        case .recoveryCode:
+            return "No Recovery Code was generated."
+        case .sms:
+            return "No Phone was saved."
+        case .totp:
+            return "No Authenticator was added."
+        }
+    }
+    
+
     private func isAtleastOnceAuthFactorEnrolled(_ authMethods: [AuthenticationMethod]) -> Bool {
         authMethods.first(where: { $0.confirmed == true }) != nil
     }

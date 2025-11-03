@@ -53,9 +53,6 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                     self.viewComponents = viewComponents
                 } else {
                     // TODO: handle factors empty error
-                    errorViewModel = ErrorScreenViewModel(title: "Something went wrong", subTitle: "", buttonTitle: "", buttonClick: { [weak self] in
-                        self?.loadMyAccountAuthViewComponentData()
-                    })
                 }
             } catch  {
                 await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
@@ -72,12 +69,16 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
         if let error = error as? CredentialsManagerError {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
             if case .mfaRequired = uiComponentError {
+                showLoader = true
                 do {
-                    let credentials = try await Auth0.webAuth()
+                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
+                                                              domain: dependencies.domain,
+                                                              session: dependencies.session)
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
                     dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    showLoader = false
                     retryCallback()
                 } catch  {
                     await handle(error: error,
@@ -94,6 +95,11 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
             errorViewModel = uiComponentError.errorViewModel(completion: {
                 retryCallback()
             })
+        } else if let error = error as? WebAuthError {
+            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel {
+                retryCallback()
+            }
         }
     }
 }

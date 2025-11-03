@@ -1,0 +1,56 @@
+name: Run tests
+description: Run library tests for a given platform
+
+inputs:
+  xcode:
+    description: The version of Xcode to use
+    required: true
+
+  scheme:
+    description: The Xcode scheme to use
+    required: true
+
+  platform:
+    description: The platform to build for
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Save Xcode version
+      run: xcodebuild -version | tee .xcode-version
+      shell: bash
+
+    - id: restore-spm-cache
+      name: Restore SPM cache
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+        key: spm-${{ inputs.platform }}-${{ hashFiles('*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('.xcode-version') }}-v1
+
+    - name: Resolve SPM dependencies
+      if: steps.restore-spm-cache.outputs.cache-hit != 'true'
+      run: xcodebuild -resolvePackageDependencies -skipPackageUpdates -onlyUsePackageVersionsFromResolvedFile
+      shell: bash
+
+    - id: restore-carthage-cache
+      name: Restore Carthage cache
+      uses: actions/cache@v4
+      with:
+        path: Carthage
+        key: carthage-${{ inputs.platform }}-${{ hashFiles('Cartfile.resolved') }}-${{ hashFiles('.xcode-version') }}-v1
+
+    - name: Install dependencies
+      if: steps.restore-carthage-cache.outputs.cache-hit != 'true'
+      run: carthage bootstrap --platform ${{ inputs.platform }} --use-xcframeworks --no-use-binaries --cache-builds
+      shell: bash
+
+    - name: Run tests
+      uses: mxcl/xcodebuild@e366f14791346edb74397fe9a762ccee86eddc06 # pin@v3.4.0
+      with:
+        xcode: ${{ inputs.xcode }}
+        scheme: ${{ inputs.scheme }}
+        platform: ${{ inputs.platform }}
+        code-coverage: true
+        verbosity: xcbeautify

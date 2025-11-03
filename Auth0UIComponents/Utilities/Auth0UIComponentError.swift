@@ -1,11 +1,37 @@
 import Auth0
+import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
+
+#if canImport(AppKit)
+import AppKit
+#endif
+import Foundation
 
 enum Auth0UIComponentError {
+    // MARK: Web Auth Errors
+    case idTokenValidationFailed(message: String,
+                                 cause: Error? = nil)
+    
+    case noBundleIdentifier(message: String,
+                            cause: Error? = nil)
+    
+    case userCancelled(message: String = "Something went wrong",
+                       cause: Error? = nil)
+    
+    case transactionActiveAlready(message: String, cause: Error? = nil)
+
+    case pkceNotAllowed(message: String, cause: Error? = nil)
+
+    case invalidInvitationURL(message: String, cause: String? = nil)
+
+    case noAuthorizationCode(message: String, cause: String? = nil)
 
     case accessDenied(message: String = "Access denied",
                       cause: Error? = nil)
 
-    // MFA Related Errors
+    // MARK: MFA Related Errors
     case mfaRequired(message: String = "Multi-factor authentication required",
                      cause: Error? = nil)
 
@@ -18,7 +44,7 @@ enum Auth0UIComponentError {
     case invalidMfaToken(message: String = "Invalid or expired MFA token",
                          cause: Error? = nil)
 
-    // Token & Session Errors
+    // MARK: Token & Session Errors
     case refreshTokenInvalid(message: String = "Invalid or expired refresh token",
                              cause: Error? = nil)
 
@@ -28,51 +54,67 @@ enum Auth0UIComponentError {
     case sessionExpired(message: String = "Session has expired, please login again",
                         cause: Error? = nil)
 
-    // Rate Limiting & Security
+    // MARK: Rate Limiting & Security
     case tooManyAttempts(message: String = "Too many login attempts, account temporarily blocked",
                          cause: Error? = nil)
 
-    // Network Errors
+    // MARK: Network Errors
     case networkError(message: String = "Network connection failed",
                       cause: Error? = nil)
 
     case timeout(message: String = "Request timed out",
                  cause: Error? = nil)
 
-    // Validation Errors
+    // MARK: Validation Errors
     case validationError(
         message: String = "Validation failed",
         cause: Error? = nil,
         errors: [FieldError] = []
     )
 
-    // Server Errors
+    // MARK: Server Errors
     case serverError(message: String = "Server error occurred",
                      statusCode: Int,
                      cause: Error? = nil)
 
-    // Generic/Unknown Errors
+    // MARK: Generic/Unknown Errors
     case unknown(message: String = "An unknown error occurred",
                  cause: Error? = nil)
 }
 
 extension Auth0UIComponentError {
+//    var errorMessage: String {
+//        switch self {
+//            
+//        }
+//    }
+
     func errorViewModel(completion: @escaping () -> Void) -> ErrorScreenViewModel? {
         switch self {
         case  .networkError:
-            return ErrorScreenViewModel(title: "Connection problem", subTitle: "Please check your internet connection", buttonTitle: "Try again", buttonClick: {
+            var subTitleText = AttributedString("Please check your internet connection")
+            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            return ErrorScreenViewModel(title: "Connection problem", subTitle: subTitleText, buttonTitle: "Try again", textTap: {}, buttonClick: {
                 completion()
             })
         case  .invalidMfaCode:
-            return ErrorScreenViewModel(title: "Invalid verification code", subTitle: "The code you entered is incorrect or has expired. Please try again.", buttonTitle: "Try again", buttonClick: {
+            var subTitleText = AttributedString("The code you entered is incorrect or has expired. Please try again.")
+            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            return ErrorScreenViewModel(title: "Invalid verification code", subTitle: subTitleText, buttonTitle: "Try again", textTap: {}, buttonClick: {
                 completion()
             })
         case .sessionExpired:
-            return ErrorScreenViewModel(title: "Session expired", subTitle: "Your session has expired. Please login again to continue.", buttonTitle: "Try again", buttonClick: {
+            var subTitleText = AttributedString("Your session has expired. Please login again to continue.")
+            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            return ErrorScreenViewModel(title: "Session expired", subTitle: subTitleText, buttonTitle: "Try again", textTap: {}, buttonClick: {
                 completion()
             })
         case .tooManyAttempts:
-            return ErrorScreenViewModel(title: "Too many attempts", subTitle: "Your account has been temporarily blocked due to too many failed attempts. Please try again later.", buttonTitle: "Try again", buttonClick: {
+            var subTitleText = AttributedString("Your account has been temporarily blocked due to too many failed attempts. Please try again later.")
+            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            return ErrorScreenViewModel(title: "Too many attempts", subTitle: "Your account has been temporarily blocked due to too many failed attempts. Please try again later.", buttonTitle: "Try again", textTap: {
+                
+            }, buttonClick: {
                 completion()
             })
         case .mfaRequired:
@@ -85,13 +127,41 @@ extension Auth0UIComponentError {
                 .timeout(let message, _),
                 .validationError(let message, _, _),
                 .serverError(let message, _, _),
-                .unknown(let message, _):
-            return ErrorScreenViewModel(title: message, subTitle: "We are unable to process your request. Please try again in a few minutes.", buttonTitle: "Try again", buttonClick: {
+                .unknown(let message, _),
+                .invalidInvitationURL(let message, _),
+                .noBundleIdentifier(let message, _),
+                .pkceNotAllowed(let message, _),
+                .noAuthorizationCode(let message, _),
+                .transactionActiveAlready(let message, _),
+                .idTokenValidationFailed(let message, _),
+                .userCancelled(let message, _):
+            var full = AttributedString("We are unable to process your request. Please try again in a few minutes. If this problem persists, please contact us.")
+            full.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            if let range = full.range(of: "contact us.") {
+                full[range].underlineStyle = .single
+            }
+            return ErrorScreenViewModel(title: message, subTitle: full, buttonTitle: "Try again", textTap: {
+                if let url = URL(string: "https://auth0.com/contact-us") {
+                    #if os(macOS)
+                        NSWorkspace.shared.open(url)
+                    #else
+                        UIApplication.shared.open(url)
+                    #endif
+                }
+            }, buttonClick: {
                 completion()
             })
         }
     }
     
+    static func handleWebAuthError(error: WebAuthError) -> Auth0UIComponentError {
+        if error == WebAuthError.userCancelled {
+            return .userCancelled()
+        }
+        
+        return .unknown(message: error.message, cause: error.cause)
+    }
+
     static func handleCredentialsManagerError(error: CredentialsManagerError) -> Auth0UIComponentError {
         if let authenticationError = error.cause as? AuthenticationError {
             if authenticationError.isMultifactorRequired {
@@ -144,13 +214,8 @@ extension Auth0UIComponentError {
         }
 
         if error.validationErrors?.isEmpty == false {
-            return .validationError(message: error.detail, cause: error, errors: (error.validationErrors ?? []).map { _ in
-                FieldError(field: nil,
-                           detail: "",
-                           pointer: nil,
-                           source: nil)
-                // TODO: change to below
-               // FieldError(field: $0.field, detail: $0.detail, pointer: $0.pointer, source: $0.source)
+            return .validationError(message: error.detail, cause: error, errors: (error.validationErrors ?? []).map {
+                FieldError(field: $0.field, detail: $0.detail, pointer: $0.pointer, source: $0.source)
             })
         }
 

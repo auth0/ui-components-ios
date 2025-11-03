@@ -1,8 +1,14 @@
 import Auth0
 import SwiftUI
-import UIKit
 import Combine
 import CoreImage.CIFilterBuiltins
+#if canImport(UIKit)
+import UIKit
+#endif
+
+#if canImport(AppKit)
+import AppKit
+#endif
 
 @MainActor
 final class TOTPPushQRCodeViewModel: ObservableObject {
@@ -18,6 +24,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String? = nil
     @Published var errorViewModel: ErrorScreenViewModel? = nil
+    @Published var apiCallInProgress: Bool = false
 
     init(startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable = StartTOTPEnrollmentUseCase(),
          startPushEnrolllmentUseCase:StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
@@ -32,9 +39,9 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
     }
 
     func fetchEnrollmentChallenge() {
+        showLoader = true
+        errorViewModel = nil
         Task {
-            showLoader = true
-            errorViewModel = nil
             do {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
                 if type == .pushNotification {
@@ -58,6 +65,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
             if let totpEnrollmentChallenge {
                 await NavigationStore.shared.push(.otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge))
             } else {
+                apiCallInProgress = true
                 confirmEnrollment()
             }
         }
@@ -69,8 +77,10 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
                 do {
                     let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
                     let _ = try await confirmPushEnrollmentUseCase.execute(request: ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: pushEnrollmentChallenge.authenticationId, authSession: pushEnrollmentChallenge.authenticationSession))
+                    apiCallInProgress = false
                     await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
                 } catch {
+                    apiCallInProgress = false
                     await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                         self?.confirmEnrollment()
                     }
@@ -116,11 +126,15 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         if let error = error as? CredentialsManagerError {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
             if case .mfaRequired = uiComponentError {
+                showLoader = true
                 do {
-                    let credentials = try await Auth0.webAuth()
+                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
+                                                              domain: dependencies.domain,
+                                                              session: dependencies.session)
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
+                    showLoader = false
                     dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
@@ -138,6 +152,11 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
             errorViewModel = uiComponentError.errorViewModel(completion: {
                 retryCallback()
             })
+        } else if let error = error as? WebAuthError {
+            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel {
+                retryCallback()
+            }
         }
     }
 }

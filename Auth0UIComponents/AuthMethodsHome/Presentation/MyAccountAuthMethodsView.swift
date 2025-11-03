@@ -19,9 +19,10 @@ struct MyAccountAuthMethodsView: View {
                         .frame(width: 50, height: 50)
                 } else if let errorViewModel = viewModel.errorViewModel {
                     ErrorScreen(viewModel: errorViewModel)
+                        .padding()
                 } else {
                     ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading) {
+                        LazyVStack(alignment: .leading) {
                             ForEach(viewModel.viewComponents, id: \.self) { component in
                                 authMethodView(component)
                             }
@@ -29,7 +30,9 @@ struct MyAccountAuthMethodsView: View {
                     }
                 }
             }.navigationTitle(Text("Login & Security"))
+            #if !os(macOS)
                 .navigationBarTitleDisplayMode(.inline)
+            #endif
                 .navigationDestination(for: Route.self) { route in
                     handleRoute(route: route)
                 }
@@ -54,7 +57,8 @@ struct MyAccountAuthMethodsView: View {
         }
     }
 
-    @ViewBuilder func handleRoute(route: Route) -> some View {
+    @ViewBuilder
+    func handleRoute(route: Route) -> some View {
         switch route {
         case let .totpPushQRScreen(type):
             TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type))

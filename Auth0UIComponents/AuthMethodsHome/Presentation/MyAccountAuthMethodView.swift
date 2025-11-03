@@ -14,7 +14,7 @@ struct MyAccountAuthMethodView: View {
                 .padding(.trailing, 16)
             Spacer()
             if viewModel.isAtleastOnceAuthFactorEnrolled() {
-                Image("checkmark", bundle: ResourceBundle.default)
+                Image("checkmark.green", bundle: ResourceBundle.default)
                     .frame(width: 24, height: 24)
                     .padding(.trailing, 22)
             }

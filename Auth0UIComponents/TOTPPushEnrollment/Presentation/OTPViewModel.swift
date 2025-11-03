@@ -16,6 +16,7 @@ final class OTPViewModel: ObservableObject {
     private let type: AuthMethodType
     private let emailOrPhoneNumber: String?
     @Published var errorMessage: String?
+    @Published var apiCallInProgress: Bool = false
 
     init(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable = StartPhoneEnrollmentUseCase(),
          confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable = ConfirmPhoneEnrollmentUseCase(),
@@ -43,8 +44,9 @@ final class OTPViewModel: ObservableObject {
     }
 
     func confirmEnrollment(with code: String) {
+        apiCallInProgress = true
+        errorMessage = nil
         Task {
-            errorMessage = nil
             do {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
                 if type == .totp, let totpEnrollmentChallenge {
@@ -56,8 +58,10 @@ final class OTPViewModel: ObservableObject {
                 if type == .sms, let phoneEnrollmentChallenge {
                     _ = try await confirmPhoneEnrollmentUseCase.execute(request: ConfirmPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: phoneEnrollmentChallenge.authenticationId, authSession: phoneEnrollmentChallenge.authenticationSession, otpCode: code))
                 }
+                apiCallInProgress = false
                 await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
             } catch {
+                apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                     self?.confirmEnrollment(with: code)
                 }
@@ -70,7 +74,7 @@ final class OTPViewModel: ObservableObject {
             if let emailOrPhoneNumber {
                 do {
                     let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                    if type == .email {
+                    if type == .sms {
                         phoneEnrollmentChallenge = try await
                         startPhoneEnrollmentUseCase.execute(request: StartPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, phoneNumber: emailOrPhoneNumber))
                     } else {
@@ -116,7 +120,9 @@ final class OTPViewModel: ObservableObject {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
             if case .mfaRequired = uiComponentError {
                 do {
-                    let credentials = try await Auth0.webAuth()
+                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
+                                                              domain: dependencies.domain,
+                                                              session: dependencies.session)
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
@@ -128,17 +134,22 @@ final class OTPViewModel: ObservableObject {
                                  retryCallback: retryCallback)
                 }
             } else {
-                // TODO: handle error case
-//                errorViewModel = uiComponentError.errorViewModel(completion: {
-//                    retryCallback()
-//                })
+                
             }
-        } else if let error  = error as? MyAccountError {
-            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-            // TODO: handle error case
-//            errorViewModel = uiComponentError.errorViewModel(completion: {
-//                retryCallback()
-//            })
+        } else if let error = error as? MyAccountError {
+            if error.code == "invalid_grant" ||
+                error.message.localizedStandardContains("invalid") ||
+                error.message.localizedStandardContains("incorrect") {
+                errorMessage = "Invalid passcode. Please try again."
+            } else if error.message.localizedStandardContains("expired") {
+                errorMessage = "Passcode expired. Please request a new one."
+            } else if error.message.localizedStandardContains("rate") {
+                errorMessage = "Too many attempts. Please try again later."
+            } else {
+                errorMessage = error.message
+            }
+        } else if let error = error as? WebAuthError {
+            errorMessage = error.message
         }
     }
 }

@@ -49,83 +49,23 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
                 return
             }
             do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "read:me:authentication_methods")
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:authentication_methods")
                 let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
                 showLoader = false
                 let filteredAuthMethods = apiAuthMethods.filter { $0.type == type.rawValue }
                 if filteredAuthMethods.isEmpty {
-                    NavigationStore.shared.push(type.navigationDestination([]))
+                    viewAuthenticationMethods = []
                 } else {
                     viewAuthenticationMethods = apiAuthMethods.filter { $0.type == type.rawValue }
                 }
             } catch {
-                await handle(error: error, scope: "read:me:authentication_methods") { [weak self] in
+                await handle(error: error, scope: "openid read:me:authentication_methods") { [weak self] in
                     self?.loadData(postDeletion)
                 }
             }
         }
     }
 
-    var title: String  {
-        switch type {
-        case .email:
-            "Saved Emails for OTP"
-        case .sms:
-            "Saved Phones for SMS OTP"
-        case .totp:
-            "Saved Authenticators"
-        case .pushNotification:
-            "Saved Apps for Push"
-        case .recoveryCode:
-            "Generated Recovery code"
-        }
-    }
-
-    var navigationTitle : String {
-        switch type {
-        case .pushNotification:
-            "Push Notification"
-        case .totp:
-            "Authenticator"
-        case .recoveryCode:
-            "Recovery Code"
-        case .email:
-            "Email OTP"
-        case .sms:
-            "Phone for SMS OTP"
-        }
-    }
-
-    var confirmationDialogTitle: String {
-        switch type {
-        case .pushNotification:
-            "Push Notification"
-        case .totp:
-            "Authenticator"
-        case .recoveryCode:
-            "Recovery Code"
-        case .email:
-            "Email OTP"
-        case .sms:
-            "Phone for SMS OTP"
-        }
-    }
-
-    var confirmationDialogDestructiveButtonTitle: String {
-        switch type {
-        case .pushNotification:
-            "Push Notification"
-        case .totp:
-            "Authenticator"
-        case .recoveryCode:
-            "Recovery Code"
-        case .email:
-            "Email OTP"
-        case .sms:
-            "Phone for SMS OTP"
-        }
-    }
-    
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
@@ -133,11 +73,15 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         if let error = error as? CredentialsManagerError {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
             if case .mfaRequired = uiComponentError {
+                showLoader = true
                 do {
-                    let credentials = try await Auth0.webAuth()
+                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
+                                                              domain: dependencies.domain,
+                                                              session: dependencies.session)
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
+                    showLoader = false
                     dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
@@ -152,6 +96,11 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
             }
         } else if let error  = error as? MyAccountError {
             let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel(completion: {
+                retryCallback()
+            })
+        } else if let error = error as? WebAuthError {
+            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
             errorViewModel = uiComponentError.errorViewModel(completion: {
                 retryCallback()
             })

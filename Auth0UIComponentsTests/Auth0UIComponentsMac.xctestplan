@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "A43E72C5-04E3-4856-BE73-D22E9E21D632",
+      "name" : "Configuration",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Auth0UIComponents.xcodeproj",
+        "identifier" : "D4C3F05A2E9683B700D5A06D",
+        "name" : "Auth0UIComponentsTests.macOS"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -30,7 +30,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Auth0UIComponentsTests/Auth0UIComponents.iOS.xctestplan"
+            reference = "container:Auth0UIComponentsTests/Auth0UIComponentsiOS.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>

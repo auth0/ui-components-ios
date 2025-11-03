@@ -3,7 +3,7 @@ import Foundation
 import Auth0
 
 public enum Route: Hashable {
-    case landingScreen(refreshToken: String, audience: String)
+    case landingScreen
 }
 
 @MainActor
@@ -18,7 +18,6 @@ final class ContentViewModel: ObservableObject {
 
     func clearCredentials() {
        _ = credentialsManager.clear()
-       _ = credentialsManager.clear(forAudience: "")
     }
 
     func getCredentials() {
@@ -27,7 +26,7 @@ final class ContentViewModel: ObservableObject {
             .sink { completion in
             } receiveValue: { [weak self] credentials in
                 guard let self else { return }
-                route = .landingScreen(refreshToken: credentials.refreshToken ?? "", audience: "")
+                route = .landingScreen
             }.store(in: &cancellables)
     }
 }

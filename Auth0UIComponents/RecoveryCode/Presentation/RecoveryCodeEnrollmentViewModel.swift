@@ -11,6 +11,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
+    @Published var apiCallInProgress: Bool = false
 
     init(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable = StartRecoveryCodeEnrollmentUseCase(),
          confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable = ConfirmRecoveryCodeEnrollmentUseCase(),
@@ -37,13 +38,16 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     }
 
     func confirmEnrollment() {
+        apiCallInProgress = true
         Task {
             if let recoveryCodeChallenge {
                 do  {
                     let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
                     let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: ConfirmRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: recoveryCodeChallenge.authenticationId, authSession: recoveryCodeChallenge.authenticationSession))
+                    apiCallInProgress = false
                     await NavigationStore.shared.push(.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
                 } catch {
+                    apiCallInProgress = false
                     await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                         Task {
                             self?.confirmEnrollment()
@@ -61,11 +65,15 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         if let error = error as? CredentialsManagerError {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
             if case .mfaRequired = uiComponentError {
+                showLoader = true
                 do {
-                    let credentials = try await Auth0.webAuth()
+                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
+                                                              domain: dependencies.domain,
+                                                              session: dependencies.session)
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
+                    showLoader = false
                     dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
@@ -80,6 +88,11 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
             }
         } else if let error  = error as? MyAccountError {
             let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
+            errorViewModel = uiComponentError.errorViewModel(completion: {
+                retryCallback()
+            })
+        } else if let error = error as? WebAuthError {
+            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
             errorViewModel = uiComponentError.errorViewModel(completion: {
                 retryCallback()
             })

@@ -46,7 +46,12 @@ struct RecoveryCodeEnrollmentView: View {
                     
                     Button {
                         if let recoveryCodeChallenge = viewModel.recoveryCodeChallenge {
-                            UIPasteboard.general.string = recoveryCodeChallenge.recoveryCode
+                            #if os(macOS)
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.writeObjects([recoveryCodeChallenge.recoveryCode as NSString])
+                            #elseif os(iOS) && os(watchOS) && os(visionOS)
+                                UIPasteboard.general.string = recoveryCodeChallenge.recoveryCode
+                            #endif
                         }
                     } label: {
                         Text("Copy Code")
@@ -62,14 +67,32 @@ struct RecoveryCodeEnrollmentView: View {
                     Button {
                         viewModel.confirmEnrollment()
                     } label: {
-                        Text("Continue")
-                            .frame(maxWidth: .infinity)
-                            .foregroundStyle(Color.white)
-                            .font(.system(size: 16, weight: .medium))
+                        HStack {
+                            Spacer()
+                            if viewModel.apiCallInProgress {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                            } else {
+                                Text("Continue")
+                                    .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            Spacer()
+                        }.frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }.frame(height: 48)
-                        .background(Color("262420", bundle: ResourceBundle.default))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .background(
+                            Color("262420", bundle: ResourceBundle.default)
+                        )
+                        .cornerRadius(16)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(
+                                    Color("262420", bundle: ResourceBundle.default),
+                                    lineWidth: 2
+                                )
+                        )
                         .padding(.bottom, 30)
                     Spacer()
                 }.padding()
@@ -78,6 +101,8 @@ struct RecoveryCodeEnrollmentView: View {
             viewModel.loadData()
         }
         .navigationTitle(Text("Recovery code"))
+        #if os(iOS) || os(watchOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }

@@ -44,21 +44,53 @@ struct OTPView: View {
                         .onTapGesture {
                             viewModel.restartEnrollment()
                         }.padding(EdgeInsets(top: 30, leading: 0, bottom: 100, trailing: 0))
+                } else {
+                    Spacer()
                 }
             }
             Button {
                 viewModel.confirmEnrollment(with: code)
             } label: {
-                Text("Continue")
-                    .frame(maxWidth: .infinity)
-                    .foregroundStyle(.white)
+                HStack {
+                    Spacer()
+                    if viewModel.apiCallInProgress {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                    } else {
+                        Text("Continue")
+                            .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
+                            .font(.system(size: 16, weight: .medium))
+                    }
+                    Spacer()
+                }.frame(maxWidth: .infinity)
             }
             .frame(height: 48)
-            .background(Color("262420", bundle: ResourceBundle.default))
+            .background(
+                Color("262420", bundle: ResourceBundle.default)
+            )
             .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        Color("262420", bundle: ResourceBundle.default),
+                        lineWidth: 2
+                    )
+            )
             Spacer()
         }.padding(EdgeInsets(top: 39, leading: 16, bottom: 40, trailing: 16))
+            .ignoresSafeArea(.keyboard)
             .navigationTitle(viewModel.navigationTitle)
+            .toolbar {
+                #if !os(visionOS)
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                    }
+                #endif
+            }
             .onAppear {
                 focusedField = 0
             }
