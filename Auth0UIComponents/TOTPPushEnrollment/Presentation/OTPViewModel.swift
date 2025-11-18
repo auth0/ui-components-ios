@@ -12,21 +12,26 @@ final class OTPViewModel: ObservableObject {
     private let confirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable
     private let startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable
     private let confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable
-    private let dependencies: Dependencies
+    private let dependencies: Auth0UIComponentsSDKInitializer
     private let type: AuthMethodType
     private let emailOrPhoneNumber: String?
+    @Published var showLoader: Bool = false
     @Published var errorMessage: String?
+    @Published var otpText: String = ""
     @Published var apiCallInProgress: Bool = false
+    var buttonEnabled: Bool {
+        otpText.count == 6
+    }
 
     init(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable = StartPhoneEnrollmentUseCase(),
          confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable = ConfirmPhoneEnrollmentUseCase(),
          startEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable = StartEmailEnrollmentUseCase(),
          confirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable = ConfirmEmailEnrollmentUseCase(),
          confirmTOTPEnrollmentUSeCase: ConfirmTOTPEnrollmentUseCaseable = ConfirmTOTPEnrollmentUseCase(),
-         dependencies: Dependencies = .shared,
-         totpEnrollmentChallenge: TOTPEnrollmentChallenge?,
-         emailEnrollmentChallenge: EmailEnrollmentChallenge?,
-         phoneEnrollmentChallenge: PhoneEnrollmentChallenge?,
+         dependencies: Auth0UIComponentsSDKInitializer = .shared,
+         totpEnrollmentChallenge: TOTPEnrollmentChallenge? = nil,
+         emailEnrollmentChallenge: EmailEnrollmentChallenge? = nil,
+         phoneEnrollmentChallenge: PhoneEnrollmentChallenge? = nil,
          type: AuthMethodType,
          emailOrPhoneNumber: String? = nil
     ) {
@@ -43,46 +48,49 @@ final class OTPViewModel: ObservableObject {
         self.totpEnrollmentChallenge = totpEnrollmentChallenge
     }
 
-    func confirmEnrollment(with code: String) {
+    func confirmEnrollment() async {
         apiCallInProgress = true
         errorMessage = nil
-        Task {
-            do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                if type == .totp, let totpEnrollmentChallenge {
-                    _ = try await confirmTOTPEnrollmentUseCase.execute(request: ConfirmTOTPEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: totpEnrollmentChallenge.authenticationId, authSession: totpEnrollmentChallenge.authenticationSession, otpCode: code))
-                }
-                if type == .email, let emailEnrollmentChallenge {
-                    _ = try await confirmEmailEnrollmentUseCase.execute(request: ConfirmEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: emailEnrollmentChallenge.authenticationId, authSession: emailEnrollmentChallenge.authenticationSession, otpCode: code))
-                }
-                if type == .sms, let phoneEnrollmentChallenge {
-                    _ = try await confirmPhoneEnrollmentUseCase.execute(request: ConfirmPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: phoneEnrollmentChallenge.authenticationId, authSession: phoneEnrollmentChallenge.authenticationSession, otpCode: code))
-                }
-                apiCallInProgress = false
-                await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
-            } catch {
-                apiCallInProgress = false
-                await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                    self?.confirmEnrollment(with: code)
+        do {
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+            if type == .totp, let totpEnrollmentChallenge {
+                _ = try await confirmTOTPEnrollmentUseCase.execute(request: ConfirmTOTPEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: totpEnrollmentChallenge.authenticationId, authSession: totpEnrollmentChallenge.authenticationSession, otpCode: otpText))
+            }
+            if type == .email, let emailEnrollmentChallenge {
+                _ = try await confirmEmailEnrollmentUseCase.execute(request: ConfirmEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: emailEnrollmentChallenge.authenticationId, authSession: emailEnrollmentChallenge.authenticationSession, otpCode: otpText))
+            }
+            if type == .sms, let phoneEnrollmentChallenge {
+                _ = try await confirmPhoneEnrollmentUseCase.execute(request: ConfirmPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: phoneEnrollmentChallenge.authenticationId, authSession: phoneEnrollmentChallenge.authenticationSession, otpCode: otpText))
+            }
+            apiCallInProgress = false
+            await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
+        } catch {
+            apiCallInProgress = false
+            await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                Task {
+                    await self?.confirmEnrollment()
                 }
             }
         }
     }
 
-    func restartEnrollment() {
-        Task {
-            if let emailOrPhoneNumber {
-                do {
-                    let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                    if type == .sms {
-                        phoneEnrollmentChallenge = try await
-                        startPhoneEnrollmentUseCase.execute(request: StartPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, phoneNumber: emailOrPhoneNumber))
-                    } else {
-                        emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(request: StartEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, email: emailOrPhoneNumber))
-                    }
-                } catch {
-                    await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                        self?.restartEnrollment()
+    func restartEnrollment() async {
+        if let emailOrPhoneNumber {
+            showLoader = true
+            do {
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+                if type == .sms {
+                    phoneEnrollmentChallenge = try await
+                    startPhoneEnrollmentUseCase.execute(request: StartPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, phoneNumber: emailOrPhoneNumber))
+                } else {
+                    emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(request: StartEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, email: emailOrPhoneNumber))
+                }
+                showLoader = false
+            } catch {
+                showLoader = false
+                await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                    Task {
+                        await self?.restartEnrollment()
                     }
                 }
             }

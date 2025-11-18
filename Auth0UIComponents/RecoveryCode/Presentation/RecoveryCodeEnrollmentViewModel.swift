@@ -6,52 +6,51 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     
     private let startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable
     private let confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable
-    private let dependencies: Dependencies
+    private let dependencies: Auth0UIComponentsSDKInitializer
     
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
     @Published var apiCallInProgress: Bool = false
+    @Published var toast: Toast? = nil
 
     init(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable = StartRecoveryCodeEnrollmentUseCase(),
          confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable = ConfirmRecoveryCodeEnrollmentUseCase(),
-         dependencies: Dependencies = .shared) {
+         dependencies: Auth0UIComponentsSDKInitializer = .shared) {
         self.startRecoveryCodeEnrollmentUseCase = startRecoveryCodeEnrollmentUseCase
         self.confirmRecoveryCodeEnrollmentUseCase = confirmRecoveryCodeEnrollmentUseCase
         self.dependencies = dependencies
     }
 
-    func loadData() {
-        Task {
-            showLoader = true
-            errorViewModel = nil
-            do  {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                recoveryCodeChallenge = try await startRecoveryCodeEnrollmentUseCase.execute(request: StartRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-                showLoader = false
-            } catch {
-                await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                    self?.loadData()
+    func loadData() async {
+        showLoader = true
+        errorViewModel = nil
+        do  {
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+            recoveryCodeChallenge = try await startRecoveryCodeEnrollmentUseCase.execute(request: StartRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+            showLoader = false
+        } catch {
+            await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                Task {
+                    await self?.loadData()
                 }
             }
         }
     }
 
-    func confirmEnrollment() {
+    func confirmEnrollment() async {
         apiCallInProgress = true
-        Task {
-            if let recoveryCodeChallenge {
-                do  {
-                    let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                    let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: ConfirmRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: recoveryCodeChallenge.authenticationId, authSession: recoveryCodeChallenge.authenticationSession))
-                    apiCallInProgress = false
-                    await NavigationStore.shared.push(.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
-                } catch {
-                    apiCallInProgress = false
-                    await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                        Task {
-                            self?.confirmEnrollment()
-                        }
+        if let recoveryCodeChallenge {
+            do  {
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+                let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: ConfirmRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: recoveryCodeChallenge.authenticationId, authSession: recoveryCodeChallenge.authenticationSession))
+                apiCallInProgress = false
+                await NavigationStore.shared.push(.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
+            } catch {
+                apiCallInProgress = false
+                await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                    Task {
+                        await self?.confirmEnrollment()
                     }
                 }
             }
@@ -74,7 +73,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     showLoader = false
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

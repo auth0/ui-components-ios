@@ -2,138 +2,176 @@ import SwiftUI
 
 struct OTPView: View {
     @ObservedObject var viewModel: OTPViewModel
-    @State private var digits: [String] = Array(repeating: "", count: 6)
     @FocusState private var focusedField: Int?
     
     var body: some View {
-        VStack(alignment: .leading) {
-            if viewModel.isEmailOrSMS == false {
-                Text("Enter the 6-digit code")
-                    .font(Font.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                    .padding(.bottom, 8)
-                
-                Text("From your authenticator app")
-                    .font(Font.system(size: 16))
-                    .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                    .padding(.bottom, 76)
+        VStack {
+            if viewModel.showLoader {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
+                    .scaleEffect(1.5 )
+                    .frame(width: 50, height: 50)
             } else {
-                Text("Enter the 6 digit code we sent to \(viewModel.formattedEmailOrPhoneNumber)")
-                    .multilineTextAlignment(.leading)
-                    .font(Font.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                    .padding(.bottom, 30)
-            }
-            
-            Text("One-Time Passcode")
-                .font(Font.system(size: 16, weight: .medium))
-                .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-                .padding(.bottom, 16)
-            
-            otpTextFieldView()
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
-                    .font(.system(size: 16))
-                    .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
-            } else {
-                if viewModel.isEmailOrSMS {
-                    Text(attributedString())
-                        .font(.system(size: 16))
-                        .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                        .onTapGesture {
-                            viewModel.restartEnrollment()
-                        }.padding(EdgeInsets(top: 30, leading: 0, bottom: 100, trailing: 0))
-                } else {
-                    Spacer()
-                }
-            }
-            Button {
-                viewModel.confirmEnrollment(with: code)
-            } label: {
-                HStack {
-                    Spacer()
-                    if viewModel.apiCallInProgress {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                VStack(alignment: .leading) {
+                    if viewModel.isEmailOrSMS == false {
+                        Text("Enter the 6-digit code")
+                            .font(Font.system(size: 20, weight: .semibold))
+                            .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
+                            .padding(.bottom, 8)
+                        
+                        Text("From your authenticator app")
+                            .font(Font.system(size: 16))
+                            .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                            .padding(.bottom, 76)
                     } else {
-                        Text("Continue")
-                            .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
-                            .font(.system(size: 16, weight: .medium))
+                        Text("Enter the 6 digit code we sent to \(viewModel.formattedEmailOrPhoneNumber)")
+                            .multilineTextAlignment(.leading)
+                            .font(Font.system(size: 20, weight: .semibold))
+                            .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
+                            .padding(.bottom, 30)
                     }
-                    Spacer()
-                }.frame(maxWidth: .infinity)
-            }
-            .frame(height: 48)
-            .background(
-                Color("262420", bundle: ResourceBundle.default)
-            )
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        Color("262420", bundle: ResourceBundle.default),
-                        lineWidth: 2
-                    )
-            )
-            Spacer()
-        }.padding(EdgeInsets(top: 39, leading: 16, bottom: 40, trailing: 16))
-            .ignoresSafeArea(.keyboard)
-            .navigationTitle(viewModel.navigationTitle)
-            .toolbar {
-                #if !os(visionOS)
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") {
-                            focusedField = nil
+                    
+                    Text("One-Time Passcode")
+                        .font(Font.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
+                        .padding(.bottom, 16)
+                    
+                    otpTextFieldView()
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
+                            .font(.system(size: 16))
+                            .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
+                    } else {
+                        if viewModel.isEmailOrSMS {
+                            Text(attributedString())
+                                .font(.system(size: 16))
+                                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                                .onTapGesture {
+                                    Task {
+                                        await viewModel.restartEnrollment()
+                                    }
+                                }.padding(EdgeInsets(top: 30, leading: 0, bottom: 100, trailing: 0))
+                        } else {
+                            Spacer()
                         }
                     }
-                #endif
+                    Button(action: {
+                        Task {
+                            await viewModel.confirmEnrollment()
+                        }
+                    }, label: {
+                        HStack {
+                            Spacer()
+                            if viewModel.apiCallInProgress {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                            } else {
+                                Text("Continue")
+                                    .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            Spacer()
+                        }.frame(maxWidth: .infinity)
+                    })
+                    .disabled(!viewModel.buttonEnabled)
+                    .frame(height: 48)
+                    .background(
+                        Color("262420", bundle: ResourceBundle.default).opacity(viewModel.buttonEnabled ? 1.0 : 0.5)
+                    )
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                Color("262420", bundle: ResourceBundle.default).opacity(viewModel.buttonEnabled ? 1.0 : 0.5),
+                                lineWidth: 2
+                            )
+                    )
+                    Spacer()
+                }.padding(EdgeInsets(top: 39, leading: 16, bottom: 40, trailing: 16))
             }
+        }.ignoresSafeArea(.keyboard)
+            .navigationTitle(viewModel.navigationTitle)
             .onAppear {
                 focusedField = 0
             }
     }
     
     private func otpTextFieldView() -> some View {
+        
         HStack(spacing: 8) {
-            ForEach(0..<6, id: \.self) { index in
-                TextField("", text: $digits[index])
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .frame(width: 50, height: 60)
-                    .multilineTextAlignment(.center)
-                    .keyboardType(.numberPad)
-                    .tint(Color.black)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(focusedField == index ? Color.black : Color.gray.opacity(0.5), lineWidth: 2)
-                    )
-                    .cornerRadius(8)
-                    .focused($focusedField, equals: index)
-                    .tag(index)
-                    .onChange(of: digits[index]) { newValue in
-                        handleInputChange(newValue: newValue, index: index)
+            ForEach(0..<6, id: \.self, content: { index in
+                OTPTextField(
+                    fullText: $viewModel.otpText,
+                    index: index,
+                    digitCount: 6,
+                    setText: { string in
+                        self.setTextAtIndex(string, at: index)
+                    },
+                    enterKeyPressed: {
+                        self.enterKeyPressed()
+                    },
+                    emptyBackspaceKeyPressed: {
+                        self.emptyBackspaceKeyPressed()
                     }
-            }
+                )
+                .frame(width: 48, height: 56, alignment: .center)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.gray, lineWidth: 2)
+                )
+                .tag(index)
+                .focused($focusedField, equals: index)
+            })
         }
     }
 
-    private func handleInputChange(newValue: String, index: Int) {
-        if !newValue.isEmpty {
-            if index < digits.count - 1 {
-                focusedField = index + 1
-            }
-        } else {
-            if index > 0 {
-                focusedField = index - 1
-            }
+    private func setTextAtIndex(_ string: String, at index: Int) {
+        
+        let old = viewModel.otpText
+        
+        let strBefore = old._prefix(index)
+        let suffixLength = old.count - index - (string.isEmpty ? 1 : string.count)
+        
+        let strAfter = suffixLength <= 0 ? "" : old._suffix(suffixLength)
+        
+        let new = (strBefore + string + strAfter)._prefix(6)
+        
+        viewModel.otpText = new
+        
+        guard let focusedField = self.focusedField else {
+            return
         }
+        
+        if focusedField <= old.count - 1 {
+            let newFocus = focusedField + (string.isEmpty ? -1 : string.count)
+            
+            self.focusedField = newFocus >= 6 ? nil : newFocus
+            return
+        }
+        
+        
+        let newFocus = new.count
+        if newFocus >= 6 {
+            self.focusedField = nil
+            return
+        }
+        
+        self.focusedField = newFocus
+        
     }
-
-    private var code: String {
-        digits.joined()
+    
+    private func enterKeyPressed() {
+        self.focusedField = nil
+    }
+    
+    private func emptyBackspaceKeyPressed() {
+        guard let focusedField = self.focusedField, focusedField > 0 else {
+            return
+        }
+        self.focusedField = focusedField - 1
     }
 
     func attributedString() -> AttributedString {

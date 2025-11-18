@@ -13,6 +13,7 @@
   },
   "testTargets" : [
     {
+      "parallelizable" : false,
       "target" : {
         "containerPath" : "container:Auth0UIComponents.xcodeproj",
         "identifier" : "D4C3F0652E9683F100D5A06D",

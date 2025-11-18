@@ -6,7 +6,8 @@ on:
         - opened
         - synchronize
 
-permissions: {}
+permissions:
+  contents: read
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,15 +22,15 @@ jobs:
         runs-on: macos-26
 
         env:
-            xcodeproj: Auth0.xcodeproj
+            xcodeproj: Auth0UIComponents.xcodeproj
 
         strategy:
           matrix:
             platform: 
-              - { os: iOS, scheme: Auth0.iOS }
-              - { os: macOS, scheme: Auth0.macOS }
-              - { os: tvOS, scheme: Auth0.tvOS }
-            xcode: 
+              - { os: iOS, scheme: Auth0UIComponents.iOS }
+              - { os: macOS, scheme: Auth0UIComponents.macOS }
+              - { os: visionOS, scheme: Auth0UIComponents.visionOS }
+            xcode:
               - '26.0'
 
         steps:
@@ -79,7 +80,7 @@ jobs:
                 xcode: ${{ matrix.xcode }}
 
             - name: Run tests
-              run: swift test
+              run: swift test --no-parallel
 
     pod-lint:
         name: Lint podspec using Xcode ${{ matrix.xcode }}

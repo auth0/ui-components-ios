@@ -1,12 +1,5 @@
 import Auth0
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
-
-#if canImport(AppKit)
-import AppKit
-#endif
 import Foundation
 
 enum Auth0UIComponentError {
@@ -83,12 +76,6 @@ enum Auth0UIComponentError {
 }
 
 extension Auth0UIComponentError {
-//    var errorMessage: String {
-//        switch self {
-//            
-//        }
-//    }
-
     func errorViewModel(completion: @escaping () -> Void) -> ErrorScreenViewModel? {
         switch self {
         case  .networkError:
@@ -229,7 +216,6 @@ extension Auth0UIComponentError {
            )
     }
 }
-
 
 struct FieldError {
     let field: String?

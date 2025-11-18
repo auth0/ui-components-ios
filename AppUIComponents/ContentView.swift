@@ -10,12 +10,11 @@ struct ContentView: View {
             if viewAuthMethods == true,
                let route = viewModel.route,
                case Route.landingScreen = route {
-                Auth0UIComponents.myAcountAuthView(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
+                MyAccountAuthMethodsView()
             } else {
                 VStack {
                     Button("Login") {
                         Auth0.webAuth()
-                            .useHTTPS()
                             .scope("openid profile email offline_access")
                             .start { result in
                                 switch result {

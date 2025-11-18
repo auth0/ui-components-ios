@@ -21,7 +21,7 @@ struct StartRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseabl
     }
     
     func execute(request: StartRecoveryCodeEnrollmentRequest) async throws  -> RecoveryCodeEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .enrollRecoveryCode()
             .start()

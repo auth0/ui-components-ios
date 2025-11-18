@@ -8,6 +8,9 @@ struct RecoveryCodeEnrollmentView: View {
             if viewModel.showLoader {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
+                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
+                    .scaleEffect(1.5 )
+                    .frame(width: 50, height: 50)
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -38,6 +41,7 @@ struct RecoveryCodeEnrollmentView: View {
                             .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
                         Spacer()
                     }.padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
+                        .frame(height: 52)
                         .cornerRadius(14)
                         .overlay(
                             RoundedRectangle(cornerRadius: 14)
@@ -49,9 +53,10 @@ struct RecoveryCodeEnrollmentView: View {
                             #if os(macOS)
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.writeObjects([recoveryCodeChallenge.recoveryCode as NSString])
-                            #elseif os(iOS) && os(watchOS) && os(visionOS)
+                            #elseif os(iOS) && os(visionOS)
                                 UIPasteboard.general.string = recoveryCodeChallenge.recoveryCode
                             #endif
+                            viewModel.toast = Toast(style: .notify, message: "Copied")
                         }
                     } label: {
                         Text("Copy Code")
@@ -65,7 +70,9 @@ struct RecoveryCodeEnrollmentView: View {
                         .padding(.bottom, 40)
 
                     Button {
-                        viewModel.confirmEnrollment()
+                        Task {
+                            await viewModel.confirmEnrollment()
+                        }
                     } label: {
                         HStack {
                             Spacer()
@@ -98,8 +105,10 @@ struct RecoveryCodeEnrollmentView: View {
                 }.padding()
             }
         }.onAppear {
-            viewModel.loadData()
-        }
+            Task {
+                await viewModel.loadData()
+            }
+        }.toastView(toast: $viewModel.toast)
         .navigationTitle(Text("Recovery code"))
         #if os(iOS) || os(watchOS)
         .navigationBarTitleDisplayMode(.inline)

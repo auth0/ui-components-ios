@@ -22,6 +22,15 @@ let package = Package(
             path: "Auth0UIComponents",
             exclude: ["Info.plist"],
             resources: [.copy("PrivacyInfo.xcprivacy"), .process("Media.xcassets")],
+            swiftSettings: swiftSettings),
+        .testTarget(
+            name: "Auth0UIComponentsTests",
+            dependencies: [
+                "Auth0UIComponents",
+                .product(name: "Auth0", package: "Auth0.swift")
+            ],
+            path: "Auth0UIComponentsTests",
+            exclude: ["Info.plist", "Auth0.plist"],
             swiftSettings: swiftSettings)
     ]
 )

@@ -27,10 +27,10 @@ struct EmailPhoneEnrollmentView: View {
                         viewModel.isPickerVisible.toggle()
                     }) {
                         HStack {
-                            Text(viewModel.selectedCountry?.countryFlag ?? "")
+                            Text(viewModel.selectedCountry?.flag ?? "")
                                 .frame(height: 20)
                             
-                            Text(viewModel.selectedCountry?.countryCode ?? "")
+                            Text(viewModel.selectedCountry?.code ?? "")
                                 .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
                                 .font(.system(size: 20, weight: .semibold))
                         }.padding(5)
@@ -62,7 +62,9 @@ struct EmailPhoneEnrollmentView: View {
                         }.padding(.bottom, 100)
             }
             Button(action: {
-                viewModel.startEnrollment()
+                Task {
+                    await viewModel.startEnrollment()
+                }
             }, label: {
                 HStack {
                     Spacer()
@@ -78,15 +80,16 @@ struct EmailPhoneEnrollmentView: View {
                     Spacer()
                 }.frame(maxWidth: .infinity)
             })
+            .disabled(!viewModel.isButtonEnabled)
             .frame(height: 48)
             .background(
-                Color("262420", bundle: ResourceBundle.default)
+                Color("262420", bundle: ResourceBundle.default).opacity(viewModel.isButtonEnabled ? 1.0 : 0.5)
             )
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(
-                        Color("262420", bundle: ResourceBundle.default),
+                        Color("262420", bundle: ResourceBundle.default).opacity(viewModel.isButtonEnabled ? 1.0 : 0.5),
                         lineWidth: 2
                     )
             )
@@ -105,7 +108,8 @@ struct EmailPhoneEnrollmentView: View {
                 #endif
             }
             .sheet(isPresented: $viewModel.isPickerVisible) {
-                CountryPicker(country: $viewModel.selectedCountry)
+                CountryPickerView(selectedCountry: $viewModel.selectedCountry,
+                                  isPickerVisible: $viewModel.isPickerVisible)
             }.onAppear {
                 textFieldFocused = true
             }.onDisappear {

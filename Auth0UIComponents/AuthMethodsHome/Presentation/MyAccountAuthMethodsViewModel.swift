@@ -7,6 +7,7 @@ enum MyAccountAuthViewComponentData: Hashable {
     case title(text: String)
     case subtitle(text: String)
     case authMethod(model: MyAccountAuthMethodViewModel)
+    case emptyFactors
 }
 
 @MainActor
@@ -17,46 +18,45 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
     @Published var viewComponents: [MyAccountAuthViewComponentData] = []
     @Published var errorViewModel: ErrorScreenViewModel? = nil
     @Published var showLoader: Bool = true
-    private let dependencies: Dependencies
+    private let dependencies: Auth0UIComponentsSDKInitializer
     
-    init (session: URLSession = .shared,
-          factorsUseCase: GetFactorsUseCaseable = GetFactorsUseCase(),
+    init(factorsUseCase: GetFactorsUseCaseable = GetFactorsUseCase(),
           authMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
-          dependencies: Dependencies = .shared) {
+          dependencies: Auth0UIComponentsSDKInitializer = .shared) {
         self.factorsUseCase = factorsUseCase
         self.authMethodsUseCase = authMethodsUseCase
         self.dependencies = dependencies
     }
     
-    func loadMyAccountAuthViewComponentData() {
-        Task {
-            errorViewModel = nil
-            self.viewComponents = []
-            showLoader = true
-            do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:factors read:me:authentication_methods")
-                async let factorsResponse = factorsUseCase.execute(request: GetFactorsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-                async let authMethodsResponse = authMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-                let (authMethods, factors) = try await (authMethodsResponse, factorsResponse)
-                let supportedFactors = factors.compactMap { AuthMethodType(rawValue: $0.type) }
-                showLoader = false
-                if supportedFactors.isEmpty == false {
-                    var viewComponents: [MyAccountAuthViewComponentData] = []
-                    viewComponents.append(.title(text: "Verification methods"))
-                    viewComponents.append(.subtitle(text: "Manage your 2FA methods"))
-                    for factor in supportedFactors  {
-                        let filteredAuthMethods = authMethods.filter { $0.type == factor.rawValue }
-                        viewComponents.append(.authMethod(model: MyAccountAuthMethodViewModel(authMethods: filteredAuthMethods,
-                                                                                              type: factor,
-                                                                                              dependencies: dependencies)))
-                    }
-                    self.viewComponents = viewComponents
-                } else {
-                    // TODO: handle factors empty error
+    func loadMyAccountAuthViewComponentData() async {
+        errorViewModel = nil
+        self.viewComponents = []
+        showLoader = true
+        do {
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:factors read:me:authentication_methods")
+            async let factorsResponse = factorsUseCase.execute(request: GetFactorsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+            async let authMethodsResponse = authMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+            let (authMethods, factors) = try await (authMethodsResponse, factorsResponse)
+            let supportedFactors = factors.compactMap { AuthMethodType(rawValue: $0.type) }
+            showLoader = false
+            if supportedFactors.isEmpty == false {
+                var viewComponents: [MyAccountAuthViewComponentData] = []
+                viewComponents.append(.title(text: "Verification methods"))
+                viewComponents.append(.subtitle(text: "Manage your 2FA methods"))
+                for factor in supportedFactors  {
+                    let filteredAuthMethods = authMethods.filter { $0.type == factor.rawValue }
+                    viewComponents.append(.authMethod(model: MyAccountAuthMethodViewModel(authMethods: filteredAuthMethods,
+                                                                                          type: factor,
+                                                                                          dependencies: dependencies)))
                 }
-            } catch  {
-                await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
-                    self?.loadMyAccountAuthViewComponentData()
+                self.viewComponents = viewComponents
+            } else {
+                self.viewComponents = [.emptyFactors]
+            }
+        } catch  {
+            await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
+                Task {
+                    await self?.loadMyAccountAuthViewComponentData()
                 }
             }
         }
@@ -77,7 +77,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     showLoader = false
                     retryCallback()
                 } catch  {

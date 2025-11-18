@@ -24,7 +24,7 @@ struct ConfirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmEmailEnrollmentRequest) async throws  -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .confirmEmailEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
             .start()

@@ -23,7 +23,7 @@ struct ConfirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmPhoneEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .confirmPhoneEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
             .start()

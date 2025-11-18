@@ -22,7 +22,7 @@ struct StartEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable {
     
     
     func execute(request: StartEmailEnrollmentRequest)  async throws -> EmailEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .enrollEmail(emailAddress: request.email)
             .start()

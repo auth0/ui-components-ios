@@ -15,7 +15,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
     private let startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable
     private let startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable
     private let confirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable
-    private let dependencies: Dependencies
+    private let dependencies: Auth0UIComponentsSDKInitializer
     private let type: AuthMethodType
     private var pushEnrollmentChallenge: PushEnrollmentChallenge?
     private var totpEnrollmentChallenge: TOTPEnrollmentChallenge?
@@ -25,71 +25,85 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
     @Published var manualInputCode: String? = nil
     @Published var errorViewModel: ErrorScreenViewModel? = nil
     @Published var apiCallInProgress: Bool = false
+    @Published var toast: Toast? = nil
 
     init(startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable = StartTOTPEnrollmentUseCase(),
-         startPushEnrolllmentUseCase:StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
+         startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
          confirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCase = ConfirmPushEnrollmentUseCase(),
          type: AuthMethodType,
-         dependencies: Dependencies = .shared) {
+         dependencies: Auth0UIComponentsSDKInitializer = .shared) {
         self.startTOTPEnrollmentUseCase = startTOTPEnrollmentUseCase
-        self.startPushEnrollmentUseCase = startPushEnrolllmentUseCase
+        self.startPushEnrollmentUseCase = startPushEnrollmentUseCase
         self.confirmPushEnrollmentUseCase = confirmPushEnrollmentUseCase
         self.dependencies = dependencies
         self.type = type
     }
 
-    func fetchEnrollmentChallenge() {
+    func fetchEnrollmentChallenge() async {
         showLoader = true
         errorViewModel = nil
-        Task {
+        do {
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                audience: dependencies.audience,
+                scope: "openid create:me:authentication_methods"
+            )
+            if type == .pushNotification {
+                pushEnrollmentChallenge = try await startPushEnrollmentUseCase
+                    .execute(
+                        request: StartPushEnrollmentRequest(
+                            token: apiCredentials.accessToken,
+                            domain: dependencies.domain
+                        )
+                    )
+            } else if type == .totp {
+                totpEnrollmentChallenge = try await startTOTPEnrollmentUseCase
+                    .execute(
+                        request: StartTOTPEnrollmentRequest(
+                            token: apiCredentials.accessToken,
+                            domain: dependencies.domain
+                        )
+                    )
+            }
+            showLoader = false
+            setAuthQRCodeImage()
+            setAuthManualSetupCode()
+        } catch {
+            await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
+                Task {
+                    await self?.fetchEnrollmentChallenge()
+                }
+            }
+        }
+    }
+
+    func handleContinueButtonTap() async {
+        if let totpEnrollmentChallenge {
+            await NavigationStore.shared.push(.otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge))
+        } else {
+            apiCallInProgress = true
+            await confirmEnrollment()
+        }
+    }
+
+    private func confirmEnrollment() async {
+        if let pushEnrollmentChallenge {
             do {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                if type == .pushNotification {
-                    pushEnrollmentChallenge = try await startPushEnrollmentUseCase.execute(request: StartPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-                } else if type == .totp {
-                    totpEnrollmentChallenge = try await startTOTPEnrollmentUseCase.execute(request: StartTOTPEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-                }
-                showLoader = false
-                setAuthQRCodeImage()
-                setAuthManualSetupCode()
+                let _ = try await confirmPushEnrollmentUseCase.execute(request: ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: pushEnrollmentChallenge.authenticationId, authSession: pushEnrollmentChallenge.authenticationSession))
+                apiCallInProgress = false
+                await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
             } catch {
+                apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                    self?.fetchEnrollmentChallenge()
-                }
-            }
-        }
-    }
-    
-    func handleContinueButtonTap() {
-        Task {
-            if let totpEnrollmentChallenge {
-                await NavigationStore.shared.push(.otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge))
-            } else {
-                apiCallInProgress = true
-                confirmEnrollment()
-            }
-        }
-    }
-    
-    func confirmEnrollment() {
-        Task {
-            if let pushEnrollmentChallenge {
-                do {
-                    let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                    let _ = try await confirmPushEnrollmentUseCase.execute(request: ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: pushEnrollmentChallenge.authenticationId, authSession: pushEnrollmentChallenge.authenticationSession))
-                    apiCallInProgress = false
-                    await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
-                } catch {
-                    apiCallInProgress = false
-                    await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                        self?.confirmEnrollment()
+                    Task {
+                        await self?.confirmEnrollment()
                     }
                 }
             }
         }
     }
 
-    func setAuthQRCodeImage() {
+    private func setAuthQRCodeImage() {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
         filter.correctionLevel = "H"
@@ -105,7 +119,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         }
     }
 
-    func setAuthManualSetupCode()  {
+    private func setAuthManualSetupCode()  {
         if let totpEnrollmentChallenge {
             manualInputCode = totpEnrollmentChallenge.authenticatorManualInputCode
         }
@@ -135,7 +149,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     showLoader = false
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

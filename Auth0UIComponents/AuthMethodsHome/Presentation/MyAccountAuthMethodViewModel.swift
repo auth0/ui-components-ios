@@ -5,11 +5,11 @@ import SwiftUI
 final class MyAccountAuthMethodViewModel: ObservableObject {
     private let authMethods: [AuthenticationMethod]
     private let type: AuthMethodType
-    private let dependencies: Dependencies
+    private let dependencies: Auth0UIComponentsSDKInitializer
 
     init(authMethods: [AuthenticationMethod],
          type: AuthMethodType,
-         dependencies: Dependencies) {
+         dependencies: Auth0UIComponentsSDKInitializer) {
         self.authMethods = authMethods
         self.type = type
         self.dependencies = dependencies

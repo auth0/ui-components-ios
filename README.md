@@ -1,161 +1,295 @@
+![Auth0UIComponents.swift](https://cdn.auth0.com/website/sdks/banners/swift-banner.png)
 
-### Auth0 Swift UI Components + Sample App
+![Version](https://img.shields.io/cocoapods/v/Auth0.svg?style=flat)
+![Build Status](https://img.shields.io/github/actions/workflow/status/auth0/Auth0.swift/main.yml?style=flat)
+[![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Auth0.swift/master.svg?style=flat)](https://codecov.io/github/auth0/Auth0.swift)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/auth0/Auth0.swift)
+![License](https://img.shields.io/github/license/auth0/Auth0.swift.svg?style=flat)
 
-UI building blocks for MFA enrollment and verification on Apple platforms built on top of Auth0.swift SDK, plus a runnable sample app that shows how to integrate them in a real app.
+📚 [Documentation](#documentation) • 🚀 [Getting Started](#getting-started) • 💻 [Sample App](#running-the-sample-app) • 📃 [**Support Policy**](#support-policy) • 💬 [**Feedback**](#feedback)
 
-This repo contains:
-- `Auth0UIComponents`: a reusable Swift library (Swift + SwiftUI) that implements MFA flows (TOTP, Push, SMS, Email, Recovery Codes) on top of the Auth0 Swift SDK and My Account APIs.
-- `app`: a minimal sample application that initializes Auth0, logs users in via Universal Login, and embeds the MFA UI components.
+## Documentation
 
----
+Composable UI building blocks for MFA enrollment and verification on iOS, built with SwiftUI Compose. This library provides ready-to-use components that integrate seamlessly with Auth0's authentication flows.
+- [Sample App](https://github.com/atko-cic/ui-components-ios/tree/main/AppUIComponents)
+- [API Documentation](#) <!-- Add link when available -->
+
+## Features
+
+This library provides ready-to-use UI components for multi-factor authentication:
+
+- 🔐 **TOTP (Time-based One-Time Password)** - Authenticator app support with QR code enrollment
+- 📱 **Push Notifications** - Secure push-based authentication
+- 💬 **SMS OTP** - Phone number verification via one-time codes
+- 📧 **Email OTP** - Email-based verification
+- 🔑 **Recovery Codes** - Backup authentication codes for account recovery
+
+All components are built on top of the [Auth0 Swift SDK](https://github.com/auth0/Auth0.swift) and integrate with Auth0's My Account APIs.
+
+> ⚠️ **BETA RELEASE** - This SDK is currently in beta. APIs may change before the stable release.
+
+## Getting Started
 
 ### Requirements
 
-- iOS 16.0+ / macOS 11.0+ / tvOS 14.0+ / watchOS 7.0+
-- Xcode 16.x
+- iOS 16.0+
+- macOS 14.0+
+- visionOS 1.0+
 - Swift 6.0+
-
----
+- Xcode 26.0+
 
 ### Installation
 
-#### Using the Swift Package Manager
+#### CocoaPods
 
-Open the following menu item in Xcode:
-
-**File > Add Package Dependencies...**
-
-In the **Search or Enter Package URL** search box enter this URL: 
-
-```text
-https://github.com/auth0/ui-components-ios
-
-```
-
-Then, select the dependency rule and press **Add Package**.
-
-#### Using Cocoapods
-
-Add the following line to your `Podfile`:
+Add the following to your `Podfile`:
 
 ```ruby
 pod 'Auth0UIComponents'
 ```
 
-Then, run `pod install`.
+Then run `pod install`.
 
-#### Using Carthage
+#### Swift Package Manager
 
-Add the following line to your `Cartfile`:
+Add the following to your `Package.swift`:
 
-```text
+```swift
+.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0")
+```
+
+Or use Xcode: File → Add Packages → Enter the repository URL.
+
+#### Carthage
+
+Add the following to your `Cartfile`:
+
+```
 github "auth0/ui-components-ios"
 ```
 
-Then, run `carthage bootstrap --use-xcframeworks`.
+### Configure the SDK
 
-### Project structure
+#### Step 1: Configure Auth0 Credentials
 
-```
-Auth0UIComponents/
-├─ AppUIComponents/                # Sample app 
-└─ Auth0UIComponents/      # Reusable MFA UI library
-```
+You can configure the SDK in two ways:
 
----
+#### Option A: Using Auth0.plist (Recommended)
 
-#### Configure Auth0 for the sample app
-
-1) Create a Native application in your Auth0 tenant and note the Client ID and Domain.
-
-2) Configure Allowed Callback URLs for iOS. The sample uses an callback of the form:
-
-	 ##### iOS
-
-```text
-https://YOUR_AUTH0_DOMAIN/ios/YOUR_BUNDLE_IDENTIFIER/callback,
-YOUR_BUNDLE_IDENTIFIER://YOUR_AUTH0_DOMAIN/ios/YOUR_BUNDLE_IDENTIFIER/callback
-```
-
-##### macOS
-
-```text
-https://YOUR_AUTH0_DOMAIN/macos/YOUR_BUNDLE_IDENTIFIER/callback,
-YOUR_BUNDLE_IDENTIFIER://YOUR_AUTH0_DOMAIN/macos/YOUR_BUNDLE_IDENTIFIER/callback
-```
-
-	 If you change the bundle identifier or scheme/domain values, update the callback accordingly.
-
-3) Create Auth0.plist in the App target and Set your Auth0 values in the Auth0.plist file:
-Create a `plist` file named `Auth0.plist` in your app bundle with the following content:
+1. Create `Auth0.plist` in your Xcode project:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>Domain</key>
+    <string>YOUR_AUTH0_DOMAIN.auth0.com</string>
     <key>ClientId</key>
     <string>YOUR_AUTH0_CLIENT_ID</string>
-    <key>Domain</key>
-    <string>YOUR_AUTH0_DOMAIN</string>
+    <key>Audience</key>
+    <string>https://YOUR_AUTH0_DOMAIN.auth0.com/api/v2/</string>
 </dict>
 </plist>
 ```
 
-4)  Audience configuration
+2. Ensure `Auth0.plist` is added to your target's Build Phases.
 
-	 The sample sets the audience to your tenant’s Management API v2 endpoint:
-	 `https://{domain}/api/v2/`
+#### Option B: Programmatic Configuration
 
-	 Ensure your application is configured to allow this audience if you plan to request tokens for APIs that back My Account operations.
+Pass your credentials directly during initialization.
 
----
+### Step 2: Initialize Auth0Dependencies in Your App
 
-#### Run the sample app
-
-From Xcode:
-- Open the terminal with project folder as current directory
-- Run `Carthage bootstrap --use-xcframeworks` command
-- Open the app in xcode by clicking twice on `Auth0UIComponents.xcodeproj`
-- Select `AppUIComponents` Target and click Run on a device/simulator (iOS 16+).
-
----
-
-#### What you’ll see in the sample
-
-1) Launch the app → you’ll land on a simple Login screen.
-2) Tap Login → Universal Login opens in the browser; complete authentication.
-3) After success, you’re navigated to Settings, which embeds the MFA UI Components. From here you can:
-	 - View available MFA methods
-	 - Enroll TOTP or Push via QR
-	 - Enroll SMS or Email and verify via OTP
-	 - Generate and copy Recovery Codes
-
----
-
-#### Using the SDK in your app
-
-Every time you want to display the initial view for displaying auth methods. Provide:
-- a `TokenProvider` (the sample uses `CredentialsManager()`), and
-- a `Bundle` instance for accessing assets like images and colors
-
-Minimal setup (Swift):
+Initialize `Auth0Dependencies` in your app's entry point. This **must be done before** using any UI components.
 
 ```swift
-Auth0UIComponents.myAcountAuthView(bundle: yourApporFrameworkBundle,
-                                   tokenProvider: yourTokenProvider)
+import SwiftUI
+import Auth0UIComponents
+
+// Custom token provider
+struct YourTokenProvider: TokenProvider {
+    func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials {
+        // Your custom logic to retrieve access token
+    }
+}
+
+@main
+struct MyApp: App {
+    init() {
+        // Initialize with Auth0.plist
+        Auth0Dependencies.initialize(tokenProvider: YourTokenProvider())
+        
+        // OR initialize programmatically
+        // Auth0Dependencies.initialize(
+        //     domain: "YOUR_AUTH0_DOMAIN",
+        //     clientId: "YOUR_AUTH0_CLIENT_ID",
+        //     audience: "https://YOUR_AUTH0_DOMAIN/me/"
+        // )
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
 ```
 
-Navigation inside MFA is handled internally by the SDK.
+### Step 3: Use UI Components
+
+Once initialized, you can use any of the provided UI components in your views:
+
+```swift
+import SwiftUI
+import Auth0UIComponents
+
+struct ContentView: View {
+    var body: some View {
+        NavigationView {
+            List {
+                NavigationLink(destination: MyAccountAuthMethodsView()) {
+                    Text("Authentication Methods")
+                }
+            }
+            .navigationTitle("Account Settings")
+        }
+    }
+}
+```
+
+### Universal Login Step-Up Flow
+
+This SDK uses **Universal Login** for step-up authentication flows. When an MFA-required error is encountered, the SDK automatically initiates a step-up flow to allow users to complete the required MFA challenge.
+
+#### Prerequisites for Universal Login
+
+To enable the step-up flow, configure the following in your Auth0 Tenant:
+
+1. **Associated Domains** - Add your app's associated domain to your Auth0 application settings
+2. **Callback URLs** - Configure the following in your Auth0 application:
+   - Add your app's callback URL (e.g., `com.yourcompany.yourapp://YOUR_AUTH0_DOMAIN/ios/com.yourcompany.yourapp/callback`)
+   - Ensure it matches your app's URL scheme and associated domain configuration
+
+#### Configuration Steps
+
+1. In your Xcode project, enable Associated Domains capability
+2. Add your domain entitlement (e.g., `applinks:YOUR_AUTH0_DOMAIN.auth0.com`)
+3. Configure your Auth0 application settings with the callback URL
+4. The SDK will automatically handle the Universal Login flow when MFA is required
+
+For more detailed information on Universal Login configuration, associated domains, and callback URL setup, refer to the [Auth0.swift SDK documentation](https://github.com/auth0/Auth0.swift/blob/master/README.md).
+
+### Components
+
+#### Authentication Methods
+Display and manage user's authentication methods.
+
+```swift
+MyAccountAuthMethodsView()
+```
+
+Allows users to:
+- View connected authenticators
+- Enroll in new authentication methods (TOTP, Push, Email, SMS)
+- Manage recovery codes
+- Remove authentication methods
+
+#### Screenshots
+
+| Authentication Methods | Manage Auth Methods |
+|:---:|:---:|
+| ![Auth Methods](./Screenshots/screenshot1.png) | ![MFA Setup](./Screenshots/screenshot2.png) |
+| View connected authenticators | Delete/Add MFA |
+
+## Sample App
+
+This repository includes a sample app (`AppUIComponents` target) that demonstrates how to use the Auth0 UI Components SDK. You can use the sample app to explore the SDK's features and test the MFA components.
+
+### Running the Sample App
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/auth0/ui-components-ios.git
+   cd ui-components-ios
+   ```
+
+2. **Install dependencies using Carthage:**
+   ```bash
+   carthage bootstrap --use-xcframeworks
+   ```
+
+3. **Configure Auth0 credentials:**
+   - Open `AppUIComponents/Auth0.plist`
+   - Update with your Auth0 tenant information:
+     ```xml
+     <dict>
+         <key>Domain</key>
+         <string>YOUR_AUTH0_DOMAIN.auth0.com</string>
+         <key>ClientId</key>
+         <string>YOUR_AUTH0_CLIENT_ID</string>
+         <key>Audience</key>
+         <string>https://YOUR_AUTH0_DOMAIN.auth0.com/api/v2/</string>
+     </dict>
+     ```
+
+4. **Open the project in Xcode:**
+   ```bash
+   open Auth0UIComponents.xcworkspace
+   ```
+
+5. **Select the `AppUIComponents` target** from the scheme dropdown
+
+6. **Build and run** the app on a simulator or physical device (Xcode 26.0+)
+
+## Support Policy
+
+This Policy defines the extent of the support for Xcode, Swift, and platform (iOS, macOS, tvOS, and watchOS) versions in Auth0.swift.
+
+### Xcode
+
+The only supported versions of Xcode are those that can be currently used to submit apps to the App Store. Once a Xcode version becomes unsupported, dropping it from Auth0.swift **will not be considered a breaking change**, and will be done in a **minor** release.
+
+### Swift
+
+The minimum supported Swift minor version is the one released with the oldest-supported Xcode version. Once a Swift minor becomes unsupported, dropping it from Auth0.swift **will not be considered a breaking change**, and will be done in a **minor** release.
+
+### Platforms
+
+We support only the last four major versions of any platform, including the current major version.
+
+Once a platform version becomes unsupported, dropping it from Auth0.swift **will not be considered a breaking change**, and will be done in a **minor** release. For example, iOS 14 will cease to be supported when iOS 18 gets released, and Auth0.swift will be able to drop it in a minor release.
+
+In the case of macOS, the yearly named releases are considered a major platform version for the purposes of this Policy, regardless of the actual version numbers.
+
+## Feedback
+
+### Contributing
+
+We appreciate feedback and contribution to this repo! Before you get started, please see the following:
+
+- [Auth0's general contribution guidelines](https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md)
+- [Auth0's code of conduct guidelines](https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md)
+- [Auth0UIComponents.swift's contribution guide](CONTRIBUTING.md)
+
+### Raise an issue
+
+To provide feedback or report a bug, please [raise an issue on our issue tracker](https://github.com/auth0/Auth0.swift/issues).
+
+### Vulnerability reporting
+
+Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/responsible-disclosure-policy) details the procedure for disclosing security issues.
 
 ---
 
-### Troubleshooting
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
+    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.auth0.com/website/sdks/logos/auth0_dark_mode.png" width="150">
+    <img alt="Auth0 Logo" src="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
+  </picture>
+</p>
 
-- Login completes but API calls fail (401/403):
-	- Confirm the audience/scopes and that your application is authorized to call the APIs backing My Account flows.
+<p align="center">Auth0 is an easy-to-implement, adaptable authentication and authorization platform. To learn more check out <a href="https://auth0.com/why-auth0">Why Auth0?</a></p>
 
-- SMS/Email OTP not received:
-	- Ensure those factors are enabled and configured in your Auth0 tenant and the test device/number/email is reachable.
-
----
+<p align="center">This project is licensed under the Apache License 2.0. See the <a href="./LICENSE">LICENSE</a> file for more info.</p>

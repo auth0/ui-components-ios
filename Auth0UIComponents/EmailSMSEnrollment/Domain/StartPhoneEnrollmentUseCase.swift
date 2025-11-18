@@ -21,7 +21,7 @@ struct StartPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable {
     }
 
     func execute(request: StartPhoneEnrollmentRequest) async throws -> PhoneEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .enrollPhone(phoneNumber: request.phoneNumber, preferredAuthenticationMethod: request.preferredAuthenticationMethod)
             .start()

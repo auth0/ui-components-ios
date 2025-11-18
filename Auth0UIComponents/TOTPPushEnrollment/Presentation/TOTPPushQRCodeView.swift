@@ -12,7 +12,9 @@ struct TOTPPushQRCodeView: View {
             if viewModel.showLoader {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
-                    .frame(width: 100, height: 100)
+                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
+                    .scaleEffect(1.5 )
+                    .frame(width: 50, height: 50)
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -45,6 +47,7 @@ struct TOTPPushQRCodeView: View {
                         #else
                         UIPasteboard.general.string = manualInputCode
                         #endif
+                        viewModel.toast = Toast(style: .notify, message: "Copied")
                     } label: {
                         HStack(alignment: .center, spacing: 8) {
                             Image("copy", bundle: ResourceBundle.default)
@@ -63,7 +66,9 @@ struct TOTPPushQRCodeView: View {
                 }
 
                 Button {
-                    viewModel.handleContinueButtonTap()
+                    Task {
+                        await viewModel.handleContinueButtonTap()
+                    }
                 } label: {
                     HStack {
                         Spacer()
@@ -108,12 +113,15 @@ struct TOTPPushQRCodeView: View {
                     }
             }
         }.padding(.all, 16)
+            .toastView(toast: $viewModel.toast)
             .navigationTitle(viewModel.navigationTitle())
         #if !os(macOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
-            .onAppear  {
-                 viewModel.fetchEnrollmentChallenge()
+            .onAppear {
+                Task {
+                    await viewModel.fetchEnrollmentChallenge()
+                }
             }
     }
     

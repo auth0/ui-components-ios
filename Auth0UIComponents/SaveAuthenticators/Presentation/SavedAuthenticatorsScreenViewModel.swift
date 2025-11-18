@@ -3,7 +3,7 @@ import Combine
 
 @MainActor
 final class SavedAuthenticatorsScreenViewModel: ObservableObject {
-    private let dependencies: Dependencies
+    private let dependencies: Auth0UIComponentsSDKInitializer
     private let authenticationMethods: [AuthenticationMethod]
     let type: AuthMethodType
     private let getAuthMethodsUseCase: GetAuthMethodsUseCaseable
@@ -12,10 +12,10 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel? = nil
     @Published var viewAuthenticationMethods: [AuthenticationMethod] = []
-    init(dependencies: Dependencies = .shared,
-         type: AuthMethodType,
+    init(dependencies: Auth0UIComponentsSDKInitializer = .shared,
          getAuthMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
          deleteAuthMethodsUseCase: DeleteAuthMethodUseCaseable = DeleteAuthMethodUseCase(),
+         type: AuthMethodType,
          authenticationMethods: [AuthenticationMethod]) {
         self.dependencies = dependencies
         self.type = type
@@ -24,43 +24,43 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         self.authenticationMethods = authenticationMethods
     }
 
-    func deleteAuthMethod(authMethod: AuthenticationMethod) {
-        Task {
-            do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid delete:me:authentication_methods")
-                try await deleteAuthMethodUseCase.execute(request: DeleteAuthMethodRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: authMethod.id))
-                loadData(true)
-            } catch {
-                await handle(error: error, scope: "openid delete:me:authentication_methods") { [weak self] in
-                    self?.deleteAuthMethod(authMethod: authMethod)
+    func deleteAuthMethod(authMethod: AuthenticationMethod) async {
+        do {
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid delete:me:authentication_methods")
+            try await deleteAuthMethodUseCase.execute(request: DeleteAuthMethodRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: authMethod.id))
+            await loadData(true)
+        } catch {
+            await handle(error: error, scope: "openid delete:me:authentication_methods") { [weak self] in
+                Task {
+                    await self?.deleteAuthMethod(authMethod: authMethod)
                 }
             }
         }
     }
 
-    func loadData(_ postDeletion: Bool = false) {
-        Task {
-            viewAuthenticationMethods = []
-            showLoader = true
-            errorViewModel = nil
-            guard authenticationMethods.isEmpty || postDeletion == true else {
-                showLoader = false
-                viewAuthenticationMethods = authenticationMethods
-                return
+    func loadData(_ postDeletion: Bool = false) async {
+        viewAuthenticationMethods = []
+        showLoader = true
+        errorViewModel = nil
+        guard postDeletion || authenticationMethods.isEmpty else {
+            showLoader = false
+            viewAuthenticationMethods = authenticationMethods
+            return
+        }
+        do {
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:authentication_methods")
+            let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+            showLoader = false
+            let filteredAuthMethods = apiAuthMethods.filter { $0.type == type.rawValue }
+            if filteredAuthMethods.isEmpty {
+                viewAuthenticationMethods = []
+            } else {
+                viewAuthenticationMethods = apiAuthMethods.filter { $0.type == type.rawValue }
             }
-            do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:authentication_methods")
-                let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-                showLoader = false
-                let filteredAuthMethods = apiAuthMethods.filter { $0.type == type.rawValue }
-                if filteredAuthMethods.isEmpty {
-                    viewAuthenticationMethods = []
-                } else {
-                    viewAuthenticationMethods = apiAuthMethods.filter { $0.type == type.rawValue }
-                }
-            } catch {
-                await handle(error: error, scope: "openid read:me:authentication_methods") { [weak self] in
-                    self?.loadData(postDeletion)
+        } catch {
+            await handle(error: error, scope: "openid read:me:authentication_methods") { [weak self] in
+                Task {
+                    await self?.loadData(postDeletion)
                 }
             }
         }
@@ -82,7 +82,7 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     showLoader = false
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,
@@ -107,7 +107,6 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         }
     }
 }
-
 
 extension AuthenticationMethod {
     var displayTime: String {
