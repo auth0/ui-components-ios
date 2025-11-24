@@ -20,7 +20,7 @@ import Auth0UIComponents
 @main
 struct MyApp: App {
     init() {
-        Auth0Dependencies.initialize(tokenProvider: YourTokenProvider())
+        Auth0UIComponentsSDKInitializer.initialize(tokenProvider: YourTokenProvider())
     }
     
     var body: some Scene {
@@ -42,14 +42,12 @@ import Auth0UIComponents
 @main
 struct MyApp: App {
     init() {
-        Auth0Dependencies.initialize(
-            domain: "your-auth0-domain",
-            clientId: "your_client_id",
-            audience: "https://your-auth0-domain.auth0.com/me/",
-            bundle: .main,
-            session: URLSession.shared,
-            tokenProvider: YourTokenProvider()
-        )
+        Auth0UIComponentsSDKInitializer.initialize(session: URLSession = .shared,
+                                                   bundle: Bundle = .main,
+                                                   domain: "your-auth0-domain",
+                                                   clientId: "your_client_id",
+                                                   audience: "https://your-auth0-domain.auth0.com/me/",
+                                                   tokenProvider: YourTokenProvider())
     }
     
     var body: some Scene {

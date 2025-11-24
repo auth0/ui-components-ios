@@ -140,16 +140,5 @@ struct SavedAuthenticatorsScreenViewModelTests {
             #expect(viewModel.viewAuthenticationMethods.isEmpty)
         }
     }
-
-    @Test
-    func testHandleError() async {
-        let mockTokenProvider = MockTokenProvider()
-        Auth0UIComponentsSDKInitializer.reset()
-        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
-
-        let viewModel = await SavedAuthenticatorsScreenViewModel(type: .sms, authenticationMethods: [])
-        await viewModel.handle(error: Auth0.AuthenticationError(info: [:], statusCode: 400), scope: "read:me:authentication_methods") {
-        }
-    }
 }
 

@@ -8,11 +8,7 @@ struct AppUIComponentsApp: App {
         WindowGroup {
             ContentView(viewModel: ContentViewModel())
                 .onAppear {
-                    do {
-                        try Auth0UIComponentsSDKInitializer.initialize(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
-                    } catch {
-                        // handle error while initialization
-                    }
+                    Auth0UIComponentsSDKInitializer.initialize(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
                 }
         }
     }

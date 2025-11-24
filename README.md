@@ -1,4 +1,4 @@
-![Auth0UIComponents.swift](https://cdn.auth0.com/website/sdks/banners/swift-banner.png)
+![Auth0UIComponents.swift](https://cdn.auth0.com/website/sdks/banners/ui-components-ios.png)
 
 ![Version](https://img.shields.io/cocoapods/v/Auth0.svg?style=flat)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/auth0/Auth0.swift/main.yml?style=flat)
@@ -118,14 +118,14 @@ struct YourTokenProvider: TokenProvider {
 struct MyApp: App {
     init() {
         // Initialize with Auth0.plist
-        Auth0Dependencies.initialize(tokenProvider: YourTokenProvider())
-        
+        Auth0UIComponentsSDKInitializer.initialize(tokenProvider: YourTokenProvider())
         // OR initialize programmatically
-        // Auth0Dependencies.initialize(
-        //     domain: "YOUR_AUTH0_DOMAIN",
-        //     clientId: "YOUR_AUTH0_CLIENT_ID",
-        //     audience: "https://YOUR_AUTH0_DOMAIN/me/"
-        // )
+        //Auth0UIComponentsSDKInitializer.initialize(session: URLSession = .shared,
+        //                                           bundle: Bundle = .main,
+        //                                           domain: "your-auth0-domain",
+        //                                           clientId: "your_client_id",
+        //                                           audience: "https://your-auth0-domain.auth0.com/me/",
+        //                                           tokenProvider: YourTokenProvider())
     }
 
     var body: some Scene {
