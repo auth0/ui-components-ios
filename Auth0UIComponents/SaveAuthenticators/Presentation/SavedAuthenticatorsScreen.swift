@@ -97,11 +97,7 @@ struct AuthenticatorView: View {
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
 
-                Text("Created")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color("828282", bundle: ResourceBundle.default))
-
-                Text("Last used")
+                Text("Created on \(authenticationMethod.formatIsoDate)")
                     .font(.system(size: 14))
                     .foregroundStyle(Color("828282", bundle: ResourceBundle.default))
             }

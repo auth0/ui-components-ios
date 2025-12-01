@@ -191,8 +191,7 @@ MyAccountAuthMethodsView()
 
 Allows users to:
 - View connected authenticators
-- Enroll in new authentication methods (TOTP, Push, Email, SMS)
-- Manage recovery codes
+- Enroll in new authentication methods (TOTP, Push, Email, SMS, Recovery Code)
 - Remove authentication methods
 
 #### Screenshots
@@ -235,7 +234,7 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
 
 4. **Open the project in Xcode:**
    ```bash
-   open Auth0UIComponents.xcworkspace
+   open Auth0UIComponents.xcodeproj
    ```
 
 5. **Select the `AppUIComponents` target** from the scheme dropdown

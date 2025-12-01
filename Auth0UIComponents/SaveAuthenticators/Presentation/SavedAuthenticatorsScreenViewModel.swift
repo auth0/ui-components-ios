@@ -1,5 +1,6 @@
 import Auth0
 import Combine
+import Foundation
 
 @MainActor
 final class SavedAuthenticatorsScreenViewModel: ObservableObject {
@@ -109,7 +110,24 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
 }
 
 extension AuthenticationMethod {
-    var displayTime: String {
-        return ""
+    var formatIsoDate: String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "M/dd/yy"
+
+        if let date = formatter.date(from: createdAt) {
+            return outputFormatter.string(from: date)
+        }
+
+        let fallbackFormatter = ISO8601DateFormatter()
+        fallbackFormatter.formatOptions = [.withInternetDateTime]
+
+        if let date = fallbackFormatter.date(from: createdAt) {
+            return outputFormatter.string(from: date)
+        }
+
+        return String(createdAt.prefix(10))
     }
 }
