@@ -288,7 +288,17 @@ Please do not report security vulnerabilities on the public GitHub issue tracker
     <img alt="Auth0 Logo" src="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
   </picture>
 </p>
-
 <p align="center">Auth0 is an easy-to-implement, adaptable authentication and authorization platform. To learn more check out <a href="https://auth0.com/why-auth0">Why Auth0?</a></p>
-
-<p align="center">This project is licensed under the Apache License 2.0. See the <a href="./LICENSE">LICENSE</a> file for more info.</p>
+<p align="center">
+This project is licensed under the Apache License 2.0. See the <a href="./LICENSE">LICENSE</a> file for more info.<br>
+Copyright 2025 Okta, Inc.<br>
+Licensed under the Apache License, Version 2.0 (the "<a href="./LICENSE">License</a>");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a><br>
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the <a href="./LICENSE">License</a> for the specific language governing permissions and
+limitations under the License.
+</p>
