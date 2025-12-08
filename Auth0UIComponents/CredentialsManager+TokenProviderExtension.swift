@@ -14,7 +14,7 @@ extension CredentialsManager: TokenProvider {
         _ = store(apiCredentials: apiCredentials, forAudience: audience)
     }
 
-    public func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials {
-        try await apiCredentials(forAudience: audience, scope: scope)
+    public func fetchAPICredentials(audience: String, scope: String, headers: [String: String]) async throws -> APICredentials {
+        try await apiCredentials(forAudience: audience, scope: scope, headers: headers)
     }
 }
