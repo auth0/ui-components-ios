@@ -5,6 +5,6 @@
 	<key>ClientId</key>
 	<string>GGUVoHL5nseaacSzqB810HWYGHZI34m8</string>
 	<key>Domain</key>
-	<string>int-dx-enterprise-test.us.auth0.com</string>
+	<string>passkeystestdomain.acmetest.org</string>
 </dict>
 </plist>

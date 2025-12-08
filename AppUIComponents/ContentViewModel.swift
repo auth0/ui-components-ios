@@ -14,6 +14,7 @@ final class ContentViewModel: ObservableObject {
 
     func storeCredentials(_ credentials: Credentials) {
         let _ = credentialsManager.store(credentials: credentials)
+        let _ = credentialsManager.store(apiCredentials: APICredentials(from: credentials), forAudience: "https://int-dx-enterprise-test.us.auth0.com/me/")
     }
 
     func clearCredentials() {
@@ -24,6 +25,12 @@ final class ContentViewModel: ObservableObject {
         credentialsManager.credentials()
             .receive(on: DispatchQueue.main)
             .sink { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    print(error)
+                }
             } receiveValue: { [weak self] credentials in
                 guard let self else { return }
                 route = .landingScreen

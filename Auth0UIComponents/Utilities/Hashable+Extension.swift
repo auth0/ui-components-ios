@@ -4,6 +4,8 @@ import Foundation
 import Auth0
 
 enum Route: Hashable {
+    case enrollPasskeyScreen
+
     case emailPhoneEnrollmentScreen(type: AuthMethodType)
     case totpPushQRScreen(type: AuthMethodType)
     case recoveryCodeScreen
