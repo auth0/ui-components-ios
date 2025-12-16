@@ -4,6 +4,8 @@ struct TOTPPushQRCodeView: View {
     @ObservedObject var viewModel: TOTPPushQRCodeViewModel
     @State private var showCopiedAlert = false
     
+    @Environment(\.customTheme) var customTheme
+    @Environment(\.globalTheme) var globalTheme
     private let context = CIContext()
     private let filter = CIFilter.qrCodeGenerator()
 
@@ -33,8 +35,8 @@ struct TOTPPushQRCodeView: View {
                 
                 if let manualInputCode = viewModel.manualInputCode {
                     Text(manualInputCode)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
+                        .font(customTheme?.qrTheme.copyTextTheme.titleFont ?? globalTheme?.title2Theme.font ?? .system(size: 14))
+                        .foregroundStyle(customTheme?.qrTheme.copyTextTheme.titleColor ?? globalTheme?.title2Theme.color ?? Color("1F1F1F", bundle: ResourceBundle.default))
                         .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
                         .overlay {
                             RoundedRectangle(cornerRadius: 14)

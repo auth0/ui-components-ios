@@ -88,6 +88,10 @@ public struct MyAccountAuthMethodsView: View {
     /// - Note: Uses `@ObservedObject` because the view model is created during initialization
     ///   rather than being injected, ensuring proper observation of published properties.
     @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
+    
+    
+    @Environment(\.customTheme) var customTheme
+    @Environment(\.globalTheme) var globalTheme
 
     // MARK: - Initialization
     
@@ -203,7 +207,7 @@ public struct MyAccountAuthMethodsView: View {
                         }.padding(.all, 16) // Consistent 16pt padding on all sides for spacing
                     }
                 }
-            }
+            }.background(customTheme?.myAccountAuthTheme.backgroundColor ?? globalTheme?.backgroundColor ?? Color.white)
             .navigationTitle(Text("Login & Security")) // Sets the navigation bar title
             #if !os(macOS)
                 // iOS, tvOS, watchOS: Use inline display mode for consistent, compact navigation bar
