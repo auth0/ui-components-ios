@@ -1,9 +1,9 @@
-![Auth0UIComponents.swift](https://cdn.auth0.com/website/sdks/banners/ui-components-ios.png)
+![ui-components-ios](https://cdn.auth0.com/website/sdks/banners/ui-components-ios.png)
 
 ![Version](https://img.shields.io/cocoapods/v/Auth0.svg?style=flat)
-![Build Status](https://img.shields.io/github/actions/workflow/status/auth0/Auth0.swift/main.yml?style=flat)
-[![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Auth0.swift/master.svg?style=flat)](https://codecov.io/github/auth0/Auth0.swift)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/auth0/Auth0.swift)
+![Build Status](https://img.shields.io/github/actions/workflow/status/auth0/ui-components-ios/main.yml?style=flat)
+[![Coverage Status](https://img.shields.io/codecov/c/github/auth0/ui-components-ios/master.svg?style=flat)](https://codecov.io/github/auth0/ui-components-ios)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/auth0/ui-components-ios)
 ![License](https://img.shields.io/github/license/auth0/Auth0.swift.svg?style=flat)
 
 📚 [Documentation](#documentation) • 🚀 [Getting Started](#getting-started) • 💻 [Sample App](#running-the-sample-app) • 📃 [**Support Policy**](#support-policy) • 💬 [**Feedback**](#feedback)
@@ -241,6 +241,8 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
 
 6. **Build and run** the app on a simulator or physical device (Xcode 26.0+)
 
+### Portions of this SDK may have AI-assisted or generated code.
+
 ## Support Policy
 
 This Policy defines the extent of the support for Xcode, Swift, and platform (iOS, macOS, tvOS, and watchOS) versions in Auth0.swift.
@@ -257,7 +259,7 @@ The minimum supported Swift minor version is the one released with the oldest-su
 
 We support only the last four major versions of any platform, including the current major version.
 
-Once a platform version becomes unsupported, dropping it from Auth0.swift **will not be considered a breaking change**, and will be done in a **minor** release. For example, iOS 14 will cease to be supported when iOS 18 gets released, and Auth0.swift will be able to drop it in a minor release.
+Once a platform version becomes unsupported, dropping it from ui-components-ios **will not be considered a breaking change**, and will be done in a **minor** release. For example, iOS 14 will cease to be supported when iOS 18 gets released, and ui-components-ios will be able to drop it in a minor release.
 
 In the case of macOS, the yearly named releases are considered a major platform version for the purposes of this Policy, regardless of the actual version numbers.
 
@@ -269,7 +271,7 @@ We appreciate feedback and contribution to this repo! Before you get started, pl
 
 - [Auth0's general contribution guidelines](https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md)
 - [Auth0's code of conduct guidelines](https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md)
-- [Auth0UIComponents.swift's contribution guide](CONTRIBUTING.md)
+- [ui-components-ios's contribution guide](CONTRIBUTING.md)
 
 ### Raise an issue
 
