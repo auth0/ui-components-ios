@@ -14,7 +14,6 @@
 		D47358CD2EB1C60D00E7D2D2 /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = D47358CC2EB1C60D00E7D2D2 /* Documentation.docc */; };
 		D47358D02EB1C60D00E7D2D2 /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = D47358CC2EB1C60D00E7D2D2 /* Documentation.docc */; };
 		D47358D12EB1C60D00E7D2D2 /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = D47358CC2EB1C60D00E7D2D2 /* Documentation.docc */; };
-		D47360022EB7858400E7D2D2 /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = D47360012EB7858400E7D2D2 /* RealityKitContent */; };
 		D473600E2EB7860000E7D2D2 /* Auth0UIComponents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */; };
 		D473600F2EB7860000E7D2D2 /* Auth0UIComponents.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4C3EFB72E94F33E00D5A06D /* Auth0UIComponents.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D47360122EB7860C00E7D2D2 /* Auth0UIComponents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4011CAC2E8FEA60002F57A0 /* Auth0UIComponents.framework */; };
@@ -322,7 +321,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D47360022EB7858400E7D2D2 /* RealityKitContent in Frameworks */,
 				D47360172EB7861600E7D2D2 /* Auth0UIComponents.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -541,7 +539,6 @@
 			);
 			name = AppUIComponentsVision;
 			packageProductDependencies = (
-				D47360012EB7858400E7D2D2 /* RealityKitContent */,
 			);
 			productName = AppUIComponentsVision;
 			productReference = D4735FFD2EB7858400E7D2D2 /* AppUIComponentsVision.app */;
@@ -966,10 +963,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AppUIComponents/AppUIComponents.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -991,9 +988,10 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppUIComponents;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=xros*]" = com.auth0.AppUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1017,10 +1015,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AppUIComponents/AppUIComponents.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 86WQXF56BC;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -1042,9 +1040,10 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppUIComponents;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=xros*]" = com.auth0.AppUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1158,7 +1157,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AppUIComponentsMac.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AppUIComponents/AppUIComponents.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1206,7 +1205,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AppUIComponentsMac.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AppUIComponents/AppUIComponents.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1811,13 +1810,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		D47360012EB7858400E7D2D2 /* RealityKitContent */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = RealityKitContent;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D499DA552E6AF789000E7E2F /* Project object */;
 }

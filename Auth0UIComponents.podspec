@@ -17,6 +17,6 @@ Pod::Spec.new do |s|
   s.dependency 'Auth0', '2.16.1'
 
   s.ios.deployment_target   = '16.0'
-  s.osx.deployment_target   = '13.0'
+  s.osx.deployment_target   = '14.0'
   s.visionos.deployment_target = '1.0'
 end
