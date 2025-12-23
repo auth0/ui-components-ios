@@ -4,7 +4,7 @@ platform :ios do
   desc "Tags the release and pushes the Podspec to CocoaPods"
   lane :release do
     perform_release target: 'Auth0UIComponents.iOS'
-    publish_release repository: 'Auth0UIComponents.swift'
+    publish_release repository: 'ui-components-ios'
   end
 
   desc 'Generate API documentation'
