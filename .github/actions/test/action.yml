@@ -18,6 +18,10 @@ runs:
   using: composite
 
   steps:
+    - name: Install xcpretty
+      run: gem install xcpretty
+      shell: bash
+
     - name: Save Xcode version
       run: xcodebuild -version | tee .xcode-version
       shell: bash
@@ -45,9 +49,17 @@ runs:
       if: steps.restore-carthage-cache.outputs.cache-hit != 'true'
       run: carthage bootstrap --platform ${{ inputs.platform }} --use-xcframeworks --no-use-binaries --cache-builds
       shell: bash
+      
+    - name: Save Carthage cache
+      id: save-carthage-cache
+      uses: actions/cache/save@v3
+      if: steps.restore-carthage-cache.outputs.cache-hit != 'true'
+      with:
+        path: Carthage
+        key: carthage-${{ inputs.platform }}-${{ hashFiles('Cartfile.resolved') }}-${{ hashFiles('.xcode-version') }}-v1
 
     - name: Run tests
-      uses: mxcl/xcodebuild@e366f14791346edb74397fe9a762ccee86eddc06 # pin@v3.4.0
+      uses: mxcl/xcodebuild@v2
       with:
         xcode: ${{ inputs.xcode }}
         scheme: ${{ inputs.scheme }}

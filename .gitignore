@@ -2,8 +2,8 @@
 .DS_Store
 
 # Auth0UIComponents
-Auth0.plist
-!Auth0UIComponentsTests/Auth0
+**/Auth0.plist
+!/Auth0UIComponentsTests/Auth0.plist
 
 # Xcode
 build/

@@ -13,8 +13,6 @@ body:
     attributes:
       label: Checklist
       options:
-        - label: The issue can be reproduced in the [Auth0.swift sample app](https://github.com/auth0-samples/auth0-ios-swift-sample/tree/master/Sample-01) (or N/A).
-          required: true
         - label: I have looked into the [Readme](https://github.com/auth0/ui-components-ios#readme), [Examples](https://github.com/auth0/ui-components-ios/blob/master/EXAMPLES.md), and [FAQ](https://github.com/auth0/ui-components-ios/blob/master/FAQ.md) and have not found a suitable solution or answer.
           required: true
         - label: I have looked into the [API documentation](https://auth0.github.io/ui-components-ios/documentation/auth0) and have not found a suitable solution or answer.
