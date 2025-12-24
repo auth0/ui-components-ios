@@ -70,6 +70,48 @@
 			remoteGlobalIDString = D4011D5F2E9019D7002F57A0;
 			remoteInfo = Auth0UIComponents.visionOS;
 		};
+		D4ABDBA72EFC0304000C828C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4011D282E9013AF002F57A0;
+			remoteInfo = AppUIComponents;
+		};
+		D4ABDBA92EFC0304000C828C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4C3EFB62E94F33E00D5A06D;
+			remoteInfo = Auth0UIComponents.iOS;
+		};
+		D4ABDBAB2EFC030C000C828C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4735FED2EB7851300E7D2D2;
+			remoteInfo = AppUIComponentsMac;
+		};
+		D4ABDBAD2EFC030C000C828C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4011CAB2E8FEA60002F57A0;
+			remoteInfo = Auth0UIComponents.macOS;
+		};
+		D4ABDBAF2EFC0313000C828C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4735FFC2EB7858400E7D2D2;
+			remoteInfo = AppUIComponentsVision;
+		};
+		D4ABDBB12EFC0313000C828C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D499DA552E6AF789000E7E2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4011D5F2E9019D7002F57A0;
+			remoteInfo = Auth0UIComponents.visionOS;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -579,6 +621,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				D4ABDBA82EFC0304000C828C /* PBXTargetDependency */,
+				D4ABDBAA2EFC0304000C828C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
@@ -601,6 +645,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				D4ABDBAC2EFC030C000C828C /* PBXTargetDependency */,
+				D4ABDBAE2EFC030C000C828C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
@@ -623,6 +669,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				D4ABDBB02EFC0313000C828C /* PBXTargetDependency */,
+				D4ABDBB22EFC0313000C828C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D4C3F0872E96858B00D5A06D /* Auth0UIComponentsTests */,
@@ -855,6 +903,36 @@
 			isa = PBXTargetDependency;
 			target = D4011D5F2E9019D7002F57A0 /* Auth0UIComponents.visionOS */;
 			targetProxy = D47360192EB7861600E7D2D2 /* PBXContainerItemProxy */;
+		};
+		D4ABDBA82EFC0304000C828C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4011D282E9013AF002F57A0 /* AppUIComponents */;
+			targetProxy = D4ABDBA72EFC0304000C828C /* PBXContainerItemProxy */;
+		};
+		D4ABDBAA2EFC0304000C828C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */;
+			targetProxy = D4ABDBA92EFC0304000C828C /* PBXContainerItemProxy */;
+		};
+		D4ABDBAC2EFC030C000C828C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4735FED2EB7851300E7D2D2 /* AppUIComponentsMac */;
+			targetProxy = D4ABDBAB2EFC030C000C828C /* PBXContainerItemProxy */;
+		};
+		D4ABDBAE2EFC030C000C828C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4011CAB2E8FEA60002F57A0 /* Auth0UIComponents.macOS */;
+			targetProxy = D4ABDBAD2EFC030C000C828C /* PBXContainerItemProxy */;
+		};
+		D4ABDBB02EFC0313000C828C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4735FFC2EB7858400E7D2D2 /* AppUIComponentsVision */;
+			targetProxy = D4ABDBAF2EFC0313000C828C /* PBXContainerItemProxy */;
+		};
+		D4ABDBB22EFC0313000C828C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4011D5F2E9019D7002F57A0 /* Auth0UIComponents.visionOS */;
+			targetProxy = D4ABDBB12EFC0313000C828C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
