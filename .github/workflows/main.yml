@@ -48,6 +48,10 @@ jobs:
                 xcode: ${{ matrix.xcode }}
                 scheme: ${{ matrix.platform.scheme }}
                 platform: ${{ matrix.platform.os }}
+              env:
+                CODE_SIGNING_ALLOWED: ${{ matrix.platform.os == 'macOS' && 'NO' || '' }}
+                CODE_SIGNING_REQUIRED: ${{ matrix.platform.os == 'macOS' && 'NO' || '' }}
+                DEVELOPMENT_TEAM: ${{ matrix.platform.os == 'macOS' && '' || '' }}
 
             - name: Convert coverage report
               if: ${{ matrix.platform.os == 'iOS' }}
