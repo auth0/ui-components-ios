@@ -79,7 +79,7 @@ jobs:
                 xcode: ${{ matrix.xcode }}
 
             - name: Run tests
-              run: swift test
+              run: swift test --no-parallel
 
     pod-lint:
         name: Lint podspec using Xcode ${{ matrix.xcode }}
