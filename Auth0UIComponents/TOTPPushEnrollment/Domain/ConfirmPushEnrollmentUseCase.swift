@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 struct ConfirmPushEnrollmentRequest {
     let token: String
@@ -22,9 +23,15 @@ struct ConfirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmPushEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-            .authenticationMethods
-            .confirmPushNotificationEnrollment(id: request.id, authSession: request.authSession)
-            .start()
+        do {
+            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+                .authenticationMethods
+                .confirmPushNotificationEnrollment(id: request.id, authSession: request.authSession)
+                .start()
+                refreshAuthComponents.send(())
+            return authenticationMethod
+        } catch {
+            throw error
+        }
     }
 }

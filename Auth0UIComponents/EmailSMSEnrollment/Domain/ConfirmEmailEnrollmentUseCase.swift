@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 protocol ConfirmEmailEnrollmentUseCaseable {
     var session: URLSession { get }
@@ -24,9 +25,15 @@ struct ConfirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmEmailEnrollmentRequest) async throws  -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-            .authenticationMethods
-            .confirmEmailEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
-            .start()
+        do {
+            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+                .authenticationMethods
+                .confirmEmailEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
+                .start()
+                refreshAuthComponents.send(())
+            return authenticationMethod
+        } catch {
+            throw error
+        }
     }
 }

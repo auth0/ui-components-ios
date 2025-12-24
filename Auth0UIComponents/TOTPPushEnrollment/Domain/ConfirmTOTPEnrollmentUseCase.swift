@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 struct ConfirmTOTPEnrollmentRequest {
     let token: String
@@ -22,9 +23,15 @@ struct ConfirmTOTPEnrollmentUseCase: ConfirmTOTPEnrollmentUseCaseable {
     }
 
     func execute(request: ConfirmTOTPEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-            .authenticationMethods
-            .confirmTOTPEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
-            .start()
+        do {
+            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+                .authenticationMethods
+                .confirmTOTPEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
+                .start()
+                refreshAuthComponents.send(())
+            return authenticationMethod
+        } catch {
+            throw error
+        }
     }
 }

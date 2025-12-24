@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 protocol DeleteAuthMethodUseCaseable {
     var session: URLSession  { get }
@@ -16,10 +17,14 @@ struct DeleteAuthMethodUseCase: DeleteAuthMethodUseCaseable {
     var session: URLSession = .shared
     
     func execute(request: DeleteAuthMethodRequest) async throws {
-         try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        do {
+            try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
                 .authenticationMethods
                 .deleteAuthenticationMethod(by: request.id)
                 .start()
-        
+                refreshAuthComponents.send(())
+        } catch {
+            throw error
+        }
     }
 }

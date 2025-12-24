@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 protocol ConfirmRecoveryCodeEnrollmentUseCaseable {
     var session: URLSession { get }
@@ -21,10 +22,16 @@ struct ConfirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCas
     }
     
     func execute(request: ConfirmRecoveryCodeEnrollmentRequest) async throws  -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-            .authenticationMethods
-            .confirmRecoveryCodeEnrollment(id: request.id, authSession: request.authSession)
-            .start()
+        do {
+            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+                .authenticationMethods
+                .confirmRecoveryCodeEnrollment(id: request.id, authSession: request.authSession)
+                .start()
+            refreshAuthComponents.send(())
+            return authenticationMethod
+        } catch {
+            throw error
+        }
     }
 }
 

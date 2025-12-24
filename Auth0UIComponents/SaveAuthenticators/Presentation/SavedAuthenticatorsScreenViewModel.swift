@@ -45,18 +45,23 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         errorViewModel = nil
         guard postDeletion || authenticationMethods.isEmpty else {
             showLoader = false
-            viewAuthenticationMethods = authenticationMethods
+            viewAuthenticationMethods = authenticationMethods.filter {
+                $0.type == type.rawValue && $0.confirmed == true
+            }
             return
         }
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:authentication_methods")
             let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
-            showLoader = false
-            let filteredAuthMethods = apiAuthMethods.filter { $0.type == type.rawValue }
+            self.showLoader = false
+            let filteredAuthMethods = apiAuthMethods
+                .filter {
+                    return $0.type == type.rawValue && $0.confirmed == true
+                }
             if filteredAuthMethods.isEmpty {
                 viewAuthenticationMethods = []
             } else {
-                viewAuthenticationMethods = apiAuthMethods.filter { $0.type == type.rawValue }
+                viewAuthenticationMethods = filteredAuthMethods
             }
         } catch {
             await handle(error: error, scope: "openid read:me:authentication_methods") { [weak self] in

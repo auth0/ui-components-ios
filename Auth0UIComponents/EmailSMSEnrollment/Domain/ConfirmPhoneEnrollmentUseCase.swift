@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 protocol ConfirmPhoneEnrollmentUseCaseable {
     var session: URLSession { get }
@@ -23,9 +24,15 @@ struct ConfirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmPhoneEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-            .authenticationMethods
-            .confirmPhoneEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
-            .start()
+        do {
+            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+                .authenticationMethods
+                .confirmPhoneEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
+                .start()
+                refreshAuthComponents.send(())
+            return authenticationMethod
+        } catch {
+            throw error
+        }
     }
 }
