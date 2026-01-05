@@ -54,13 +54,28 @@ final class OTPViewModel: ObservableObject {
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
             if type == .totp, let totpEnrollmentChallenge {
-                _ = try await confirmTOTPEnrollmentUseCase.execute(request: ConfirmTOTPEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: totpEnrollmentChallenge.authenticationId, authSession: totpEnrollmentChallenge.authenticationSession, otpCode: otpText))
+                let confirmTOTPEnrollmentRequest = ConfirmTOTPEnrollmentRequest(token: apiCredentials.accessToken,
+                                                                                domain: dependencies.domain,
+                                                                                id: totpEnrollmentChallenge.authenticationId,
+                                                                                authSession: totpEnrollmentChallenge.authenticationSession,
+                                                                                otpCode: otpText)
+                _ = try await confirmTOTPEnrollmentUseCase.execute(request: confirmTOTPEnrollmentRequest)
             }
             if type == .email, let emailEnrollmentChallenge {
-                _ = try await confirmEmailEnrollmentUseCase.execute(request: ConfirmEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: emailEnrollmentChallenge.authenticationId, authSession: emailEnrollmentChallenge.authenticationSession, otpCode: otpText))
+                let confirmEmailEnrollmentRequest = ConfirmEmailEnrollmentRequest(token: apiCredentials.accessToken,
+                                                                                  domain: dependencies.domain,
+                                                                                  id: emailEnrollmentChallenge.authenticationId,
+                                                                                  authSession: emailEnrollmentChallenge.authenticationSession,
+                                                                                  otpCode: otpText)
+                _ = try await confirmEmailEnrollmentUseCase.execute(request: confirmEmailEnrollmentRequest)
             }
             if type == .sms, let phoneEnrollmentChallenge {
-                _ = try await confirmPhoneEnrollmentUseCase.execute(request: ConfirmPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: phoneEnrollmentChallenge.authenticationId, authSession: phoneEnrollmentChallenge.authenticationSession, otpCode: otpText))
+                let confirmPhoneEnrollmentRequest = ConfirmPhoneEnrollmentRequest(token: apiCredentials.accessToken,
+                                                                                  domain: dependencies.domain,
+                                                                                  id: phoneEnrollmentChallenge.authenticationId,
+                                                                                  authSession: phoneEnrollmentChallenge.authenticationSession,
+                                                                                  otpCode: otpText)
+                _ = try await confirmPhoneEnrollmentUseCase.execute(request: confirmPhoneEnrollmentRequest)
             }
             apiCallInProgress = false
             await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))

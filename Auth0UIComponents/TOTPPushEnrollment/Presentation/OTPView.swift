@@ -132,12 +132,12 @@ struct OTPView: View {
         
         let old = viewModel.otpText
         
-        let strBefore = old._prefix(index)
+        let strBefore = old.prefix(length: index)
         let suffixLength = old.count - index - (string.isEmpty ? 1 : string.count)
         
-        let strAfter = suffixLength <= 0 ? "" : old._suffix(suffixLength)
+        let strAfter = suffixLength <= 0 ? "" : old.suffix(length: suffixLength)
         
-        let new = (strBefore + string + strAfter)._prefix(6)
+        let new = (strBefore + string + strAfter).prefix(length: 6)
         
         viewModel.otpText = new
         

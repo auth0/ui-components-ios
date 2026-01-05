@@ -43,7 +43,11 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         if let recoveryCodeChallenge {
             do  {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: ConfirmRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: recoveryCodeChallenge.authenticationId, authSession: recoveryCodeChallenge.authenticationSession))
+                let confirmRecoveryCodeEnrollmentRequest = ConfirmRecoveryCodeEnrollmentRequest(token: apiCredentials.accessToken,
+                                                                                                domain: dependencies.domain,
+                                                                                                id: recoveryCodeChallenge.authenticationId,
+                                                                                                authSession: recoveryCodeChallenge.authenticationSession)
+                let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: confirmRecoveryCodeEnrollmentRequest)
                 apiCallInProgress = false
                 await NavigationStore.shared.push(.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
             } catch {

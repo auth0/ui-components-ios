@@ -108,7 +108,10 @@ struct RecoveryCodeEnrollmentViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCase(session: makeMockSession()), confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCase(session: makeMockSession()))
+        let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())
+        let confirmRecoveryCodeEnrollmentUseCase = ConfirmRecoveryCodeEnrollmentUseCase(session: makeMockSession())
+        let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: startRecoveryCodeEnrollmentUseCase,
+                                                              confirmRecoveryCodeEnrollmentUseCase: confirmRecoveryCodeEnrollmentUseCase)
         await confirmation(expectedCount: 2) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(

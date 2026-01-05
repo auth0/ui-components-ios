@@ -82,13 +82,13 @@ enum MockWebAuthError: Error, Equatable {
     var message: String {
         switch self {
         case .userCancelled: return "User cancelled"
-        case .other(let m, _): return m
+        case .other(let message, _): return message
         }
     }
     var cause: Error? {
         switch self {
         case .userCancelled: return nil
-        case .other(_, let c): return c
+        case .other(_, let cause): return cause
         }
     }
 }
