@@ -98,7 +98,8 @@ final class OTPViewModel: ObservableObject {
                     phoneEnrollmentChallenge = try await
                     startPhoneEnrollmentUseCase.execute(request: StartPhoneEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, phoneNumber: emailOrPhoneNumber))
                 } else {
-                    emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(request: StartEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, email: emailOrPhoneNumber))
+                    let startEmailEnrollmentRequest = StartEmailEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, email: emailOrPhoneNumber)
+                    emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(request: startEmailEnrollmentRequest)
                 }
                 showLoader = false
             } catch {
