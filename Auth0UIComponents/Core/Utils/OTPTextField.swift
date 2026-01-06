@@ -232,10 +232,10 @@ class BackspaceAwareTextField: NSTextField {
 #endif
 extension String {
 
-    func _prefix(_ length: Int) -> String {
+    func prefix(length: Int) -> String {
         return String(self.prefix(length))
     }
-    func _suffix(_ length: Int) -> String {
+    func suffix(length: Int) -> String {
         return String(self.suffix(length))
     }
     

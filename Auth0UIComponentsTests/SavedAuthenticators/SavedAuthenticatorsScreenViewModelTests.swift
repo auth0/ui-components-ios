@@ -118,8 +118,12 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()), deleteAuthMethodsUseCase: DeleteAuthMethodUseCase(session: makeMockSession()) ,
-                                                                 type: .sms, authenticationMethods: [])
+        let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
+        let deleteAuthMethodsUseCase = DeleteAuthMethodUseCase(session: makeMockSession())
+        let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: getAuthMethodsUseCase,
+                                                                 deleteAuthMethodsUseCase: deleteAuthMethodsUseCase,
+                                                                 type: .sms,
+                                                                 authenticationMethods: [])
         await confirmation(expectedCount: 2) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(

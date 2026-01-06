@@ -89,7 +89,11 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         if let pushEnrollmentChallenge {
             do {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                let _ = try await confirmPushEnrollmentUseCase.execute(request: ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: pushEnrollmentChallenge.authenticationId, authSession: pushEnrollmentChallenge.authenticationSession))
+                let confirmPushEnrollmentRequest = ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken,
+                                                                                domain: dependencies.domain,
+                                                                                id: pushEnrollmentChallenge.authenticationId,
+                                                                                authSession: pushEnrollmentChallenge.authenticationSession)
+                let _ = try await confirmPushEnrollmentUseCase.execute(request: confirmPushEnrollmentRequest)
                 apiCallInProgress = false
                 await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
             } catch {

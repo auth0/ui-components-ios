@@ -6,9 +6,6 @@ on:
         - opened
         - synchronize
 
-permissions:
-  contents: read
-
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
@@ -19,7 +16,7 @@ env:
 jobs:
     test:
         name: Test on ${{ matrix.platform.os }} using Xcode ${{ matrix.xcode }}
-        runs-on: macos-26
+        runs-on: macos-15
 
         env:
             xcodeproj: Auth0UIComponents.xcodeproj
@@ -35,7 +32,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: Set up environment
               uses: ./.github/actions/setup
@@ -62,7 +59,7 @@ jobs:
 
     test-package:
         name: Test Swift package using Xcode ${{ matrix.xcode }}
-        runs-on: macos-26
+        runs-on: macos-15
 
         strategy:
           matrix:
@@ -71,7 +68,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: Set up environment
               uses: ./.github/actions/setup
@@ -84,7 +81,7 @@ jobs:
 
     pod-lint:
         name: Lint podspec using Xcode ${{ matrix.xcode }}
-        runs-on: macos-26-xlarge
+        runs-on: macos-15-xlarge
 
         strategy:
           matrix:
@@ -93,7 +90,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: Set up environment
               uses: ./.github/actions/setup
@@ -106,11 +103,11 @@ jobs:
 
     swiftlint:
         name: Lint code with SwiftLint
-        runs-on: macos-26
+        runs-on: macos-15
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
               
             - name: Install SwiftLint
               run: brew install swiftlint
