@@ -4,14 +4,12 @@ import AuthenticationServices
 
 @MainActor
 final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthorizationControllerDelegate {
-//    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-//       
-//    }
-    
+
     private let startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable
     private let confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable
     private let dependencies: Auth0UIComponentsSDKInitializer
     private var passkeyChallenge: PasskeyEnrollmentChallenge? = nil
+    @Published var showLoader: Bool = false
 
     init(startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable = StartPasskeyEnrollmentUseCase(),
          confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable = ConfirmPasskeyEnrollmentUseCase(),
@@ -54,9 +52,10 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
             case let newPasskey as ASAuthorizationPlatformPublicKeyCredentialRegistration:
                 if let passkeyChallenge {
                     do {
+                        showLoader = true
                         let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
                         let passkeyAuthenticationMethod = try await confirmPasskeyEnrollmentUseCase.execute(request: ConfirmPasskeyEnrollmentRequest(passkey: newPasskey, token: apiCredentials.accessToken, domain: dependencies.audience, challenge: passkeyChallenge))
-                        print(passkeyAuthenticationMethod)
+                        await NavigationStore.shared.push(.filteredAuthListScreen(type: .passkey, authMethods: []))
                     } catch {
                         print(error)
                     }

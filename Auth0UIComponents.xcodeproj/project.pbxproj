@@ -218,6 +218,7 @@
 		D473604D2EB7CDC400E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsMac" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Auth0.plist,
 				Info.plist,
 			);
 			target = D4735FED2EB7851300E7D2D2 /* AppUIComponentsMac */;
@@ -225,6 +226,7 @@
 		D473604E2EB85EEC00E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsVision" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Auth0.plist,
 				Info.plist,
 			);
 			target = D4735FFC2EB7858400E7D2D2 /* AppUIComponentsVision */;
@@ -232,6 +234,7 @@
 		D4C3F2892E9D2F4400D5A06D /* Exceptions for "AppUIComponents" folder in "AppUIComponents" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Auth0.plist,
 				Info.plist,
 			);
 			target = D4011D282E9013AF002F57A0 /* AppUIComponents */;
@@ -286,13 +289,40 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		D4ABDF612F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponents" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D4011D252E9013AF002F57A0 /* Sources */;
+			membershipExceptions = (
+				Auth0.plist,
+			);
+		};
+		D4ABDF622F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsMac" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D4735FEA2EB7851300E7D2D2 /* Sources */;
+			membershipExceptions = (
+				Auth0.plist,
+			);
+		};
+		D4ABDF632F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsVision" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D4735FF92EB7858400E7D2D2 /* Sources */;
+			membershipExceptions = (
+				Auth0.plist,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D4011D9F2E901AD6002F57A0 /* AppUIComponents */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				D4C3F2892E9D2F4400D5A06D /* Exceptions for "AppUIComponents" folder in "AppUIComponents" target */,
+				D4ABDF612F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponents" target */,
 				D473604D2EB7CDC400E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsMac" target */,
+				D4ABDF622F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsMac" target */,
 				D473604E2EB85EEC00E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsVision" target */,
+				D4ABDF632F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsVision" target */,
 			);
 			path = AppUIComponents;
 			sourceTree = "<group>";
