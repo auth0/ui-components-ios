@@ -39,9 +39,8 @@ struct ContentView: View {
                                 }
                             }
                     }.frame(height: 50)
-                    
-                    
-                    Button("View") {
+    
+                    Button("Manage Authenticators") {
                         viewAuthMethods.toggle()
                     }
                     
