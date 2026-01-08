@@ -34,11 +34,9 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
         showLoader = true
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:factors read:me:authentication_methods")
-            print(apiCredentials.accessToken)
             async let factorsResponse = factorsUseCase.execute(request: GetFactorsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
             async let authMethodsResponse = authMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
             let (authMethods, factors) = try await (authMethodsResponse, factorsResponse)
-            print(authMethods)
             let supportedFactors = factors.compactMap { AuthMethodType(rawValue: $0.type) }
             showLoader = false
             if supportedFactors.isEmpty == false {
