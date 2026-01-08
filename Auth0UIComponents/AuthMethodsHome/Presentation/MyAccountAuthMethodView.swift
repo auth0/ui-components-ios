@@ -1,11 +1,13 @@
 import SwiftUI
 
+struct Constants {
+    static let colorPrimary0: Color = Color(red: 0.15, green: 0.14, blue: 0.13).opacity(0)
+    static let colorPrimary5: Color = Color(red: 0.15, green: 0.14, blue: 0.13).opacity(0.05)
+}
+
 struct MyAccountAuthMethodView: View {
     @ObservedObject var viewModel: MyAccountAuthMethodViewModel
-    struct Constants {
-        static let colorPrimary0: Color = Color(red: 0.15, green: 0.14, blue: 0.13).opacity(0)
-        static let colorPrimary5: Color = Color(red: 0.15, green: 0.14, blue: 0.13).opacity(0.05)
-    }
+
     
     var body: some View {
         HStack() {
