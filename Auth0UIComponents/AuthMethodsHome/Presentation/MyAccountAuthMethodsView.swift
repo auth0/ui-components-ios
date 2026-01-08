@@ -280,43 +280,12 @@ public struct MyAccountAuthMethodsView: View {
         switch component {
         // MARK: Title Component
         // Renders a prominent section heading with bold typography
-        case .createPasskey:
-            VStack(alignment: .leading) {
-                Text("With Passkey, you don’t have to remember complext passwords.")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-
-                Text("What are passkeys?")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-
-                Text(" Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.  Where are passkeys saved? Passkeys are saved in your credential manager, so you can sign in on other devices.")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                
-                Button {
-                    
-                } label: {
-                    Label {
-                        Text("Add a Passkey")
-                    } icon: {
-                        Image("passkey", bundle: ResourceBundle.default)
-                    }
-                }.frame(height: 48)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color("262420").opacity(0.35), lineWidth: 1)
-                    }
-                
-                
-                Text("Remind me later")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
-
-            }
+        case .createPasskey(let viewModel):
+          EnrollPasskeyView(viewModel: viewModel)
+                .padding(.bottom, 24)
         case .signinMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
+                .padding(.bottom, 48)
         case .title(let text):
             Text(text)
                 .foregroundStyle(Color("000000", bundle: ResourceBundle.default)) // Pure black for maximum contrast
@@ -339,23 +308,7 @@ public struct MyAccountAuthMethodsView: View {
         // Renders an alert-style banner when user has no MFA methods configured
         // Encourages user to enroll in at least one authentication method for security
         case .emptyFactors:
-            HStack {
-                // Warning icon to draw attention
-                Image("info.circle.red", bundle: ResourceBundle.default)
-                    .frame(width: 16, height: 16) // Fixed size for consistency
-
-                // Clear, actionable message
-                Text("No factors configured")
-                    .foregroundStyle(Color("CA3B2B", bundle: ResourceBundle.default)) // Red for alert/warning
-                    .font(.system(size: 14).weight(.medium)) // Medium weight for emphasis
-                Spacer() // Pushes content to the left
-            }
-            .padding(.all, 12) // Internal spacing for comfortable readability
-            .overlay {
-                // Subtle border to define the warning area
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color("D9D9D9", bundle: ResourceBundle.default), lineWidth: 1)
-            }
+            EmptyFactorsView()
         }
     }
 
