@@ -14,7 +14,6 @@ final class ContentViewModel: ObservableObject {
 
     func storeCredentials(_ credentials: Credentials) {
         let _ = credentialsManager.store(credentials: credentials)
-        let _ = credentialsManager.store(apiCredentials: APICredentials(from: credentials), forAudience: "https://int-dx-enterprise-test.us.auth0.com/me/")
     }
 
     func clearCredentials() {

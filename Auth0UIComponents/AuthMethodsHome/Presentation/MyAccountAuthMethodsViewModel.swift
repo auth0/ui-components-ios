@@ -46,7 +46,7 @@ enum MyAccountAuthViewComponentData: Hashable {
     /// - Parameter text: The subtitle text to display (e.g., "Manage your 2FA methods")
     case subtitle(text: String)
     
-    case createPasskey
+    case createPasskey(model: PasskeysEnrollmentViewModel)
 
     case signinMethods(model: MyAccountAuthMethodViewModel)
 
