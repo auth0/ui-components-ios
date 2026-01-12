@@ -54,5 +54,12 @@ public protocol TokenProvider {
     /// - Returns: The stored and validated `APICredentials` object for the specified **audience**.
     /// - Throws: An error if the credentials cannot be found, have expired and cannot be refreshed,
     ///   or do not contain the necessary **scope**.
-    func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials
+    ///   
+    func fetchAPICredentials(audience: String, scope: String, headers: [String: String]) async throws -> APICredentials
+}
+
+extension TokenProvider {
+    func fetchAPICredentials(audience: String, scope: String, headers: [String: String] = [:]) async throws -> APICredentials {
+        try await self.fetchAPICredentials(audience: audience, scope: scope, headers: headers)
+    }
 }

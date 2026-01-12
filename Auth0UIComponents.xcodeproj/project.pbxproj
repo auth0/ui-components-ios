@@ -218,6 +218,7 @@
 		D473604D2EB7CDC400E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsMac" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Auth0.plist,
 				Info.plist,
 			);
 			target = D4735FED2EB7851300E7D2D2 /* AppUIComponentsMac */;
@@ -225,6 +226,7 @@
 		D473604E2EB85EEC00E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsVision" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Auth0.plist,
 				Info.plist,
 			);
 			target = D4735FFC2EB7858400E7D2D2 /* AppUIComponentsVision */;
@@ -232,6 +234,7 @@
 		D4C3F2892E9D2F4400D5A06D /* Exceptions for "AppUIComponents" folder in "AppUIComponents" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Auth0.plist,
 				Info.plist,
 			);
 			target = D4011D282E9013AF002F57A0 /* AppUIComponents */;
@@ -286,13 +289,40 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		D4ABDF612F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponents" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D4011D252E9013AF002F57A0 /* Sources */;
+			membershipExceptions = (
+				Auth0.plist,
+			);
+		};
+		D4ABDF622F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsMac" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D4735FEA2EB7851300E7D2D2 /* Sources */;
+			membershipExceptions = (
+				Auth0.plist,
+			);
+		};
+		D4ABDF632F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsVision" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D4735FF92EB7858400E7D2D2 /* Sources */;
+			membershipExceptions = (
+				Auth0.plist,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D4011D9F2E901AD6002F57A0 /* AppUIComponents */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				D4C3F2892E9D2F4400D5A06D /* Exceptions for "AppUIComponents" folder in "AppUIComponents" target */,
+				D4ABDF612F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponents" target */,
 				D473604D2EB7CDC400E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsMac" target */,
+				D4ABDF622F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsMac" target */,
 				D473604E2EB85EEC00E7D2D2 /* Exceptions for "AppUIComponents" folder in "AppUIComponentsVision" target */,
+				D4ABDF632F0CD380000C828C /* Exceptions for "AppUIComponents" folder in "Compile Sources" phase from "AppUIComponentsVision" target */,
 			);
 			path = AppUIComponents;
 			sourceTree = "<group>";
@@ -963,7 +993,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -1010,7 +1040,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -1062,12 +1092,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppAuth0UIComponents;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=xros*]" = com.auth0.AppUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1115,12 +1145,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.Auth0UIComponents;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppAuth0UIComponents;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=xros*]" = com.auth0.AppUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1354,7 +1384,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.UIComponentsVision;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = xros;
@@ -1386,7 +1416,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.UIComponentsVision;
+				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = xros;
@@ -1548,7 +1578,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1602,7 +1632,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/Auth0UIComponents/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

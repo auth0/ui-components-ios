@@ -87,8 +87,6 @@ You can configure the SDK in two ways:
     <string>YOUR_AUTH0_DOMAIN.auth0.com</string>
     <key>ClientId</key>
     <string>YOUR_AUTH0_CLIENT_ID</string>
-    <key>Audience</key>
-    <string>https://YOUR_AUTH0_DOMAIN.auth0.com/api/v2/</string>
 </dict>
 </plist>
 ```

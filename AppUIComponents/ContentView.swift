@@ -22,7 +22,7 @@ struct ContentView: View {
                                     viewModel.storeCredentials(credentials)
                                     viewModel.getCredentials()
                                 case .failure(let error):
-                                    break
+                                    print(error)
                                 }
                             }
                     }.frame(height: 50)
@@ -38,11 +38,9 @@ struct ContentView: View {
                                     break
                                 }
                             }
-                        
                     }.frame(height: 50)
-                    
-                    
-                    Button("View") {
+    
+                    Button("Manage Authenticators") {
                         viewAuthMethods.toggle()
                     }
                     
