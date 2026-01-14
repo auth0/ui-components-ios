@@ -22,7 +22,7 @@ struct DeleteAuthMethodUseCase: DeleteAuthMethodUseCaseable {
                 .authenticationMethods
                 .deleteAuthenticationMethod(by: request.id)
                 .start()
-                refreshAuthComponents.send(())
+            refreshAuthComponents.send(())
         } catch {
             throw error
         }
