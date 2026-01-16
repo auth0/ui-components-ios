@@ -21,7 +21,6 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
     @Published var showLoader: Bool = true
     private let dependencies: Auth0UIComponentsSDKInitializer
     
-    private var factorsFetched: Bool = false
     private var authMethodsFetched: Bool = false
     private var factors: [Factor] = []
     private var authMethods: [AuthenticationMethod] = []
@@ -40,7 +39,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
         showLoader = true
 
         do {
-            if self.factorsFetched == false || self.authMethodsFetched == false {
+            if self.authMethodsFetched == false {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                     audience: dependencies.audience,
                     scope: "openid read:me:factors read:me:authentication_methods"
@@ -56,7 +55,6 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                 let (authMethods, factors) = try await (authMethodsResponse, factorsResponse)
                 self.factors = factors
                 self.authMethods = authMethods
-                self.factorsFetched = true
                 self.authMethodsFetched = true
             }
 
@@ -156,7 +154,6 @@ extension MyAccountAuthMethodsViewModel: RefreshAuthDataProtocol  {
     
     func refreshAuthData() {
         authMethodsFetched = false
-        factorsFetched = false
     }
     
 }
