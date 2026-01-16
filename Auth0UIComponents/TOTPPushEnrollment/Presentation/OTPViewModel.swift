@@ -35,7 +35,7 @@ final class OTPViewModel: ObservableObject {
          phoneEnrollmentChallenge: PhoneEnrollmentChallenge? = nil,
          type: AuthMethodType,
          emailOrPhoneNumber: String? = nil,
-         delegate: RefreshAuthDataProtocol? = nil
+         delegate: RefreshAuthDataProtocol?
     ) {
         self.dependencies = dependencies
         self.type = type

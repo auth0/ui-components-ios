@@ -19,7 +19,7 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
          deleteAuthMethodsUseCase: DeleteAuthMethodUseCaseable = DeleteAuthMethodUseCase(),
          type: AuthMethodType,
          authenticationMethods: [AuthenticationMethod],
-         delegate: RefreshAuthDataProtocol? = nil) {
+         delegate: RefreshAuthDataProtocol?) {
         self.dependencies = dependencies
         self.type = type
         self.getAuthMethodsUseCase = getAuthMethodsUseCase

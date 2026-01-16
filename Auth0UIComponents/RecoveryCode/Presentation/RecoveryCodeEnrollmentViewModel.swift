@@ -17,7 +17,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     init(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable = StartRecoveryCodeEnrollmentUseCase(),
          confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable = ConfirmRecoveryCodeEnrollmentUseCase(),
          dependencies: Auth0UIComponentsSDKInitializer = .shared,
-         delegate: RefreshAuthDataProtocol? = nil) {
+         delegate: RefreshAuthDataProtocol?) {
         self.startRecoveryCodeEnrollmentUseCase = startRecoveryCodeEnrollmentUseCase
         self.confirmRecoveryCodeEnrollmentUseCase = confirmRecoveryCodeEnrollmentUseCase
         self.dependencies = dependencies

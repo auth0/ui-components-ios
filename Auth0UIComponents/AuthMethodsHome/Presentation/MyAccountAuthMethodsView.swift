@@ -75,7 +75,7 @@ public struct MyAccountAuthMethodsView: View {
     }
 
     @ViewBuilder
-    private func handleRoute(route: Route, delegate: RefreshAuthDataProtocol? = nil) -> some View {
+    private func handleRoute(route: Route, delegate: RefreshAuthDataProtocol?) -> some View {
         switch route {
         case let .totpPushQRScreen(type):
             TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type, delegate: delegate))
