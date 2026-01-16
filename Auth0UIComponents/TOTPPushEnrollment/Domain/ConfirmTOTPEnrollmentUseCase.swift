@@ -23,14 +23,9 @@ struct ConfirmTOTPEnrollmentUseCase: ConfirmTOTPEnrollmentUseCaseable {
     }
 
     func execute(request: ConfirmTOTPEnrollmentRequest) async throws -> AuthenticationMethod {
-        do {
-            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-                .authenticationMethods
-                .confirmTOTPEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
-                .start()
-            return authenticationMethod
-        } catch {
-            throw error
-        }
+        let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+            .authenticationMethods
+            .confirmTOTPEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
+            .start()
     }
 }

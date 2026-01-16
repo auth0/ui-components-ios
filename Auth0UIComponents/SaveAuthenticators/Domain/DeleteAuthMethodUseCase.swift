@@ -17,13 +17,9 @@ struct DeleteAuthMethodUseCase: DeleteAuthMethodUseCaseable {
     var session: URLSession = .shared
     
     func execute(request: DeleteAuthMethodRequest) async throws {
-        do {
-            try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-                .authenticationMethods
-                .deleteAuthenticationMethod(by: request.id)
-                .start()
-        } catch {
-            throw error
-        }
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+            .authenticationMethods
+            .deleteAuthenticationMethod(by: request.id)
+            .start()
     }
 }

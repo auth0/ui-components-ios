@@ -16,7 +16,6 @@ struct ConfirmEmailEnrollmentRequest {
     let otpCode: String
 }
 
-
 struct ConfirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable {
     var session: URLSession
     
@@ -25,14 +24,9 @@ struct ConfirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmEmailEnrollmentRequest) async throws  -> AuthenticationMethod {
-        do {
-            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-                .authenticationMethods
-                .confirmEmailEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
-                .start()
-            return authenticationMethod
-        } catch {
-            throw error
-        }
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+            .authenticationMethods
+            .confirmEmailEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
+            .start()
     }
 }

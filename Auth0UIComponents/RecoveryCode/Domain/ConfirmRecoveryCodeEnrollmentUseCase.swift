@@ -22,15 +22,10 @@ struct ConfirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCas
     }
     
     func execute(request: ConfirmRecoveryCodeEnrollmentRequest) async throws  -> AuthenticationMethod {
-        do {
-            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-                .authenticationMethods
-                .confirmRecoveryCodeEnrollment(id: request.id, authSession: request.authSession)
-                .start()
-            return authenticationMethod
-        } catch {
-            throw error
-        }
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+            .authenticationMethods
+            .confirmRecoveryCodeEnrollment(id: request.id, authSession: request.authSession)
+            .start()
     }
 }
 

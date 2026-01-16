@@ -23,14 +23,9 @@ struct ConfirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable {
     }
     
     func execute(request: ConfirmPushEnrollmentRequest) async throws -> AuthenticationMethod {
-        do {
-            let authenticationMethod = try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
-                .authenticationMethods
-                .confirmPushNotificationEnrollment(id: request.id, authSession: request.authSession)
-                .start()
-            return authenticationMethod
-        } catch {
-            throw error
-        }
+        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+            .authenticationMethods
+            .confirmPushNotificationEnrollment(id: request.id, authSession: request.authSession)
+            .start()
     }
 }
