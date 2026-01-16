@@ -19,7 +19,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
     private let type: AuthMethodType
     private var pushEnrollmentChallenge: PushEnrollmentChallenge?
     private var totpEnrollmentChallenge: TOTPEnrollmentChallenge?
-
+    private weak var delegate: RefreshAuthDataProtocol?
     @Published var qrCodeImage: Image?
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String? = nil
@@ -31,12 +31,14 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
          startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
          confirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCase = ConfirmPushEnrollmentUseCase(),
          type: AuthMethodType,
-         dependencies: Auth0UIComponentsSDKInitializer = .shared) {
+         dependencies: Auth0UIComponentsSDKInitializer = .shared,
+         delegate: RefreshAuthDataProtocol? = nil) {
         self.startTOTPEnrollmentUseCase = startTOTPEnrollmentUseCase
         self.startPushEnrollmentUseCase = startPushEnrollmentUseCase
         self.confirmPushEnrollmentUseCase = confirmPushEnrollmentUseCase
         self.dependencies = dependencies
         self.type = type
+        self.delegate = delegate
     }
 
     func fetchEnrollmentChallenge() async {
@@ -94,6 +96,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
                                                                                 id: pushEnrollmentChallenge.authenticationId,
                                                                                 authSession: pushEnrollmentChallenge.authenticationSession)
                 let _ = try await confirmPushEnrollmentUseCase.execute(request: confirmPushEnrollmentRequest)
+                delegate?.refreshAuthData()
                 apiCallInProgress = false
                 await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
             } catch {

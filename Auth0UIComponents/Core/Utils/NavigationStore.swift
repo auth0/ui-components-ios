@@ -8,8 +8,6 @@ final class NavigationStore: ObservableObject {
     static let shared = NavigationStore()
     private init() {}
 
-    private let queue = DispatchQueue(label: "NavigationStoreQueue")
-
     func push(_ route: Route) {
         path.append(route)
     }
@@ -21,7 +19,7 @@ final class NavigationStore: ObservableObject {
     }
 
     func popToRoot() {
-        path.removeLast(path.count)
+        path.removeAll()
     }
 
     func reset() {

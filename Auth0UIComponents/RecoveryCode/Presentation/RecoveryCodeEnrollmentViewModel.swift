@@ -7,7 +7,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     private let startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable
     private let confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable
     private let dependencies: Auth0UIComponentsSDKInitializer
-    
+    private weak var delegate: RefreshAuthDataProtocol?
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
@@ -16,10 +16,12 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
 
     init(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable = StartRecoveryCodeEnrollmentUseCase(),
          confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable = ConfirmRecoveryCodeEnrollmentUseCase(),
-         dependencies: Auth0UIComponentsSDKInitializer = .shared) {
+         dependencies: Auth0UIComponentsSDKInitializer = .shared,
+         delegate: RefreshAuthDataProtocol?) {
         self.startRecoveryCodeEnrollmentUseCase = startRecoveryCodeEnrollmentUseCase
         self.confirmRecoveryCodeEnrollmentUseCase = confirmRecoveryCodeEnrollmentUseCase
         self.dependencies = dependencies
+        self.delegate = delegate
     }
 
     func loadData() async {
@@ -50,6 +52,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
                 let _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(request: confirmRecoveryCodeEnrollmentRequest)
                 apiCallInProgress = false
                 await NavigationStore.shared.push(.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
+                delegate?.refreshAuthData()
             } catch {
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
@@ -77,7 +80,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     showLoader = false
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

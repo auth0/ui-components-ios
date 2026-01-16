@@ -8,25 +8,30 @@ struct MyAccountAuthMethodView: View {
             Image(viewModel.image(), bundle: ResourceBundle.default)
                 .frame(width: 24, height: 24)
                 .padding(.trailing, 16)
+
             Text(viewModel.title())
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
                 .padding(.trailing, 16)
+
             Spacer()
+
             if viewModel.isAtleastOnceAuthFactorEnrolled() {
                 Image("checkmark.green", bundle: ResourceBundle.default)
                     .frame(width: 24, height: 24)
                     .padding(.trailing, 22)
             }
+
             Image("chevron", bundle: ResourceBundle.default)
                 .frame(width: 16, height: 16)
-        }.padding(.all, 20)
-            .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color("D9D9D9", bundle: ResourceBundle.default), lineWidth: 1)
-            }
-            .onTapGesture {
-                viewModel.handleNavigation()
-            }
+        }
+        .padding(.all, 20)
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color("D9D9D9", bundle: ResourceBundle.default), lineWidth: 1)
+        }
+        .onTapGesture {
+            viewModel.handleNavigation()
+        }
     }
 }

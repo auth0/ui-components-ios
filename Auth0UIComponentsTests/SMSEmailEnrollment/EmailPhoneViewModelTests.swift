@@ -64,7 +64,7 @@ struct EmailPhoneViewModelTests {
             #expect(vm.email.isEmpty)
         }
     }
-    
+
     @Test func testStartEnrollment_Phone_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()

@@ -70,7 +70,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await RecoveryCodeEnrollmentViewModel()
+        let vm = await RecoveryCodeEnrollmentViewModel(delegate: nil)
         await MainActor.run {
             #expect(vm.showLoader == true)
             #expect(vm.errorViewModel == nil)
@@ -84,7 +84,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCase(session: makeMockSession()))
+        let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCase(session: makeMockSession()), delegate: nil)
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -111,7 +111,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())
         let confirmRecoveryCodeEnrollmentUseCase = ConfirmRecoveryCodeEnrollmentUseCase(session: makeMockSession())
         let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: startRecoveryCodeEnrollmentUseCase,
-                                                              confirmRecoveryCodeEnrollmentUseCase: confirmRecoveryCodeEnrollmentUseCase)
+                                                              confirmRecoveryCodeEnrollmentUseCase: confirmRecoveryCodeEnrollmentUseCase, delegate: nil)
         await confirmation(expectedCount: 2) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(

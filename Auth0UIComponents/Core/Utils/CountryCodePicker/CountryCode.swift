@@ -1,8 +1,6 @@
 import Foundation
 import Combine
 
-// MARK: - Model
-
 struct Country: Codable, Identifiable {
     let id = UUID()
     let name: String
@@ -14,8 +12,6 @@ struct Country: Codable, Identifiable {
     }
 }
 
-// MARK: - Loader
-
 final class CountryStore: ObservableObject {
     @Published var countries: [Country] = []
     
@@ -23,7 +19,6 @@ final class CountryStore: ObservableObject {
         self.countries = Self.loadCountries()
     }
 
-    /// Loads countries.json from bundle
     static func loadCountries() -> [Country] {
         guard let url = ResourceBundle.default.url(forResource: "CountryCodes", withExtension: "json") else {
             return []

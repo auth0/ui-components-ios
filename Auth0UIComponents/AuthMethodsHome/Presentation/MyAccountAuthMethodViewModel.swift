@@ -5,6 +5,7 @@ import SwiftUI
 final class MyAccountAuthMethodViewModel: ObservableObject {
     private let authMethods: [AuthenticationMethod]
     private let type: AuthMethodType
+
     private let dependencies: Auth0UIComponentsSDKInitializer
 
     init(authMethods: [AuthenticationMethod],
@@ -16,13 +17,13 @@ final class MyAccountAuthMethodViewModel: ObservableObject {
     }
 
     func isAtleastOnceAuthFactorEnrolled() -> Bool {
-        authMethods.first(where: { $0.confirmed == true }) != nil
+        return authMethods.first(where: { $0.confirmed == true }) != nil
     }
 
     func title() -> String {
         type.title
     }
-    
+
     func image() -> String {
         type.image
     }
@@ -38,7 +39,7 @@ extension MyAccountAuthMethodViewModel: Hashable {
     static func == (lhs: MyAccountAuthMethodViewModel, rhs: MyAccountAuthMethodViewModel) -> Bool {
         lhs.type == rhs.type
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(authMethods)
     }
@@ -87,7 +88,7 @@ extension AuthMethodType {
             "sms"
         }
     }
-    
+
     var savedAuthenticatorsCellTitle: String {
         switch self {
         case .email:
@@ -160,7 +161,7 @@ extension AuthMethodType {
             "Remove"
         }
     }
-    
+
     var savedAuthenticatorsEmptyStateMessage: String {
         switch self {
         case .pushNotification:
@@ -175,10 +176,9 @@ extension AuthMethodType {
             return "No Authenticator was added."
         }
     }
-    
 
     private func isAtleastOnceAuthFactorEnrolled(_ authMethods: [AuthenticationMethod]) -> Bool {
-        authMethods.first(where: { $0.confirmed == true }) != nil
+        return authMethods.first(where: { $0.confirmed == true }) != nil
     }
 
     func navigationDestination(_ authMethods: [AuthenticationMethod]) -> Route {
@@ -188,7 +188,7 @@ extension AuthMethodType {
             switch self {
             case .pushNotification,
                     .totp:
-               return .totpPushQRScreen(type: self)
+                return .totpPushQRScreen(type: self)
             case .email:
                return .emailPhoneEnrollmentScreen(type: .email)
             case .sms:
