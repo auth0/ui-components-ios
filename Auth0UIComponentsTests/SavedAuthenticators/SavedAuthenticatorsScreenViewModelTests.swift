@@ -82,7 +82,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await SavedAuthenticatorsScreenViewModel(type: .email, authenticationMethods: [])
+        let vm = await SavedAuthenticatorsScreenViewModel(type: .email, authenticationMethods: [], delegate: nil)
         await MainActor.run {
             #expect(vm.showLoader == true)
             #expect(vm.errorViewModel == nil)
@@ -95,7 +95,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()), type: .sms, authenticationMethods: [])
+        let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()), type: .sms, authenticationMethods: [], delegate: nil)
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -123,7 +123,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: getAuthMethodsUseCase,
                                                                  deleteAuthMethodsUseCase: deleteAuthMethodsUseCase,
                                                                  type: .sms,
-                                                                 authenticationMethods: [])
+                                                                 authenticationMethods: [], delegate: nil)
         await confirmation(expectedCount: 2) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(

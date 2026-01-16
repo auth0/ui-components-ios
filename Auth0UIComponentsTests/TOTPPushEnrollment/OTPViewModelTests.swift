@@ -110,7 +110,7 @@ struct OTPViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallenge, emailEnrollmentChallenge: nil, phoneEnrollmentChallenge: nil, type: .totp)
+        let vm = await OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallenge, emailEnrollmentChallenge: nil, phoneEnrollmentChallenge: nil, type: .totp, delegate: nil)
         await MainActor.run {
             #expect(vm.showLoader == false)
             #expect(vm.errorMessage == nil)
@@ -133,7 +133,7 @@ struct OTPViewModelTests {
                                            totpEnrollmentChallenge: totpEnrollmentChallenge,
             emailEnrollmentChallenge: nil,
             phoneEnrollmentChallenge: nil,
-            type: .totp
+                                           type: .totp, delegate: nil
         )
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
@@ -165,7 +165,7 @@ struct OTPViewModelTests {
                                            totpEnrollmentChallenge:  nil,
                                            emailEnrollmentChallenge: emailEnrollmentChallenge,
                                            phoneEnrollmentChallenge: nil,
-                                           type: .email
+                                           type: .email, delegate: nil
         )
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
@@ -193,7 +193,8 @@ struct OTPViewModelTests {
                                            totpEnrollmentChallenge:  nil,
                                            emailEnrollmentChallenge: nil,
                                            phoneEnrollmentChallenge: phoneEnrollmentChallenge,
-                                           type: .sms
+                                           type: .sms,
+                                           delegate: nil
         )
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
@@ -217,7 +218,7 @@ struct OTPViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await OTPViewModel(type: .sms)
+        let viewModel = await OTPViewModel(type: .sms, delegate: nil)
         await MainActor.run {
             #expect(viewModel.isEmailOrSMS)
         }
@@ -228,7 +229,7 @@ struct OTPViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await OTPViewModel(type: .sms)
+        let viewModel = await OTPViewModel(type: .sms, delegate: nil)
         await MainActor.run {
             #expect(viewModel.navigationTitle == "Add Phone for SMS OTP")
         }
