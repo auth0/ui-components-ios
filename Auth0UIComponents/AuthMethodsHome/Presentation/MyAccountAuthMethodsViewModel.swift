@@ -90,11 +90,6 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
         }
     }
 
-    func resetDataBeforeRefresing() {
-        self.factorsFetched = false
-        self.authMethodsFetched = false 
-    }
-
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
@@ -116,7 +111,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     
-                    await dependencies.tokenProvider.store(
+                    dependencies.tokenProvider.store(
                         apiCredentials: APICredentials(from: credentials),
                         for: dependencies.audience
                     )
