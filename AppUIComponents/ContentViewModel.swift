@@ -12,7 +12,6 @@ final class ContentViewModel: ObservableObject {
     private var cancellables: Set<AnyCancellable> = []
     @Published var route: Route? = nil
     @Published var loginStatusMessage: String = ""
-    @Published var errorMessage: String = ""
     func storeCredentials(_ credentials: Credentials) {
         let _ = credentialsManager.store(credentials: credentials)
     }
@@ -30,7 +29,7 @@ final class ContentViewModel: ObservableObject {
                 case .finished:
                     break
                 case .failure(let error):
-                    loginStatusMessage = "Not logged in"
+                    loginStatusMessage = "Not logged in \(error.debugDescription)"
                     break
                 }
             } receiveValue: { [weak self] credentials in
