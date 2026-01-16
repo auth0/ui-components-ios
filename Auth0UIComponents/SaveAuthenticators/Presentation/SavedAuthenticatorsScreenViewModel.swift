@@ -9,6 +9,7 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
     let type: AuthMethodType
     private let getAuthMethodsUseCase: GetAuthMethodsUseCaseable
     private let deleteAuthMethodUseCase: DeleteAuthMethodUseCaseable
+    private weak var delegate: RefreshAuthDataProtocol?
     @Published var showManageAuthSheet: Bool = false
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel? = nil
@@ -17,18 +18,21 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
          getAuthMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
          deleteAuthMethodsUseCase: DeleteAuthMethodUseCaseable = DeleteAuthMethodUseCase(),
          type: AuthMethodType,
-         authenticationMethods: [AuthenticationMethod]) {
+         authenticationMethods: [AuthenticationMethod],
+         delegate: RefreshAuthDataProtocol? = nil) {
         self.dependencies = dependencies
         self.type = type
         self.getAuthMethodsUseCase = getAuthMethodsUseCase
         self.deleteAuthMethodUseCase = deleteAuthMethodsUseCase
         self.authenticationMethods = authenticationMethods
+        self.delegate = delegate
     }
 
     func deleteAuthMethod(authMethod: AuthenticationMethod) async {
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid delete:me:authentication_methods")
             try await deleteAuthMethodUseCase.execute(request: DeleteAuthMethodRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: authMethod.id))
+            delegate?.refreshAuthData()
             await loadData(true)
         } catch {
             await handle(error: error, scope: "openid delete:me:authentication_methods") { [weak self] in

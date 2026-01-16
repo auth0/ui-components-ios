@@ -91,7 +91,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject {
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

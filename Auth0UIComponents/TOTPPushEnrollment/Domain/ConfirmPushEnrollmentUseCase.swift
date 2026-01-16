@@ -28,7 +28,6 @@ struct ConfirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable {
                 .authenticationMethods
                 .confirmPushNotificationEnrollment(id: request.id, authSession: request.authSession)
                 .start()
-            refreshAuthComponents.send(())
             return authenticationMethod
         } catch {
             throw error

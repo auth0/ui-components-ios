@@ -15,6 +15,7 @@ final class OTPViewModel: ObservableObject {
     private let dependencies: Auth0UIComponentsSDKInitializer
     private let type: AuthMethodType
     private let emailOrPhoneNumber: String?
+    private weak var delegate: RefreshAuthDataProtocol?
     @Published var showLoader: Bool = false
     @Published var errorMessage: String?
     @Published var otpText: String = ""
@@ -33,7 +34,8 @@ final class OTPViewModel: ObservableObject {
          emailEnrollmentChallenge: EmailEnrollmentChallenge? = nil,
          phoneEnrollmentChallenge: PhoneEnrollmentChallenge? = nil,
          type: AuthMethodType,
-         emailOrPhoneNumber: String? = nil
+         emailOrPhoneNumber: String? = nil,
+         delegate: RefreshAuthDataProtocol? = nil
     ) {
         self.dependencies = dependencies
         self.type = type
@@ -46,6 +48,7 @@ final class OTPViewModel: ObservableObject {
         self.emailEnrollmentChallenge = emailEnrollmentChallenge
         self.phoneEnrollmentChallenge = phoneEnrollmentChallenge
         self.totpEnrollmentChallenge = totpEnrollmentChallenge
+        self.delegate = delegate
     }
 
     func confirmEnrollment() async {
@@ -78,6 +81,7 @@ final class OTPViewModel: ObservableObject {
                 _ = try await confirmPhoneEnrollmentUseCase.execute(request: confirmPhoneEnrollmentRequest)
             }
             apiCallInProgress = false
+            delegate?.refreshAuthData()
             await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
         } catch {
             apiCallInProgress = false

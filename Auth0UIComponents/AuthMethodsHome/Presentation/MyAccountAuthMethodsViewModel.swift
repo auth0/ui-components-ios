@@ -3,8 +3,6 @@ import Combine
 import SwiftUI
 import Auth0
 
-let refreshAuthComponents = PassthroughSubject<Void, Never>()
-
 enum MyAccountAuthViewComponentData: Hashable {
     case title(text: String)
     case subtitle(text: String)
@@ -14,13 +12,13 @@ enum MyAccountAuthViewComponentData: Hashable {
 
 @MainActor
 final class MyAccountAuthMethodsViewModel: ObservableObject {
+    
     private let factorsUseCase: GetFactorsUseCaseable
     private let authMethodsUseCase: GetAuthMethodsUseCaseable
 
     @Published var viewComponents: [MyAccountAuthViewComponentData] = []
     @Published var errorViewModel: ErrorScreenViewModel? = nil
     @Published var showLoader: Bool = true
-
     private let dependencies: Auth0UIComponentsSDKInitializer
     
     private var factorsFetched: Bool = false
@@ -42,8 +40,6 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
         showLoader = true
 
         do {
-            
-            
             if self.factorsFetched == false || self.authMethodsFetched == false {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                     audience: dependencies.audience,
@@ -105,28 +101,28 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
         showLoader = false
-
+        
         if let error = error as? CredentialsManagerError {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-
+            
             if case .mfaRequired = uiComponentError {
                 showLoader = true
-
+                
                 do {
                     let credentials = try await Auth0.webAuth(
                         clientId: dependencies.clientId,
                         domain: dependencies.domain,
                         session: dependencies.session
                     )
-                    .audience(dependencies.audience)
-                    .scope(scope)
-                    .start()
-
+                        .audience(dependencies.audience)
+                        .scope(scope)
+                        .start()
+                    
                     await dependencies.tokenProvider.store(
                         apiCredentials: APICredentials(from: credentials),
                         for: dependencies.audience
                     )
-
+                    
                     showLoader = false
                     retryCallback()
                 } catch  {
@@ -153,4 +149,14 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
             }
         }
     }
+    
+}
+
+extension MyAccountAuthMethodsViewModel: RefreshAuthDataProtocol  {
+    
+    func refreshAuthData() {
+        authMethodsFetched = false
+        factorsFetched = false
+    }
+    
 }

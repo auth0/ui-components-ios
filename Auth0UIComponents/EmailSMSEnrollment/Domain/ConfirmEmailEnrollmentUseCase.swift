@@ -30,7 +30,6 @@ struct ConfirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable {
                 .authenticationMethods
                 .confirmEmailEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
                 .start()
-            refreshAuthComponents.send(())
             return authenticationMethod
         } catch {
             throw error

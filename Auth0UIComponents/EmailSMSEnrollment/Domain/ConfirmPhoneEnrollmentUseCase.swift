@@ -29,7 +29,6 @@ struct ConfirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable {
                 .authenticationMethods
                 .confirmPhoneEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
                 .start()
-            refreshAuthComponents.send(())
             return authenticationMethod
         } catch {
             throw error

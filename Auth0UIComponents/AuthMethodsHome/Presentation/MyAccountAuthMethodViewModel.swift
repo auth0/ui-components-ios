@@ -188,7 +188,7 @@ extension AuthMethodType {
             switch self {
             case .pushNotification,
                     .totp:
-               return .totpPushQRScreen(type: self)
+                return .totpPushQRScreen(type: self)
             case .email:
                return .emailPhoneEnrollmentScreen(type: .email)
             case .sms:

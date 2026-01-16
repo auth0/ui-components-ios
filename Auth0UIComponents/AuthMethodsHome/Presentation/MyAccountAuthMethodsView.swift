@@ -4,6 +4,7 @@ import Combine
 public struct MyAccountAuthMethodsView: View {
     @StateObject private var navigationStore = NavigationStore.shared
     @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
+    @State private var previousPathCount = 0
 
     public init() {
         self.viewModel = MyAccountAuthMethodsViewModel()
@@ -38,19 +39,20 @@ public struct MyAccountAuthMethodsView: View {
                 .navigationBarTitleDisplayMode(.inline)
             #endif
                 .navigationDestination(for: Route.self) { route in
-                    handleRoute(route: route)
+                    handleRoute(route: route, delegate: viewModel)
                 }
+        }.onReceive(navigationStore.$path) { path in
+            if path.count < previousPathCount && path.isEmpty {
+                Task {
+                    await viewModel.loadMyAccountAuthViewComponentData()
+                }
+            }
+            previousPathCount = path.count
         }
         .onAppear {
             Task {
                 await viewModel.loadMyAccountAuthViewComponentData()
             }
-        }.onReceive(navigationStore.popDataRefreshPublisher) { _ in
-            Task {
-                await viewModel.loadMyAccountAuthViewComponentData()
-            }
-        }.onReceive(refreshAuthComponents.receive(on: DispatchQueue.main).eraseToAnyPublisher()) { _ in
-            viewModel.resetDataBeforeRefresing()
         }
     }
 
@@ -73,27 +75,33 @@ public struct MyAccountAuthMethodsView: View {
     }
 
     @ViewBuilder
-    private func handleRoute(route: Route) -> some View {
+    private func handleRoute(route: Route, delegate: RefreshAuthDataProtocol? = nil) -> some View {
         switch route {
         case let .totpPushQRScreen(type):
-            TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type))
-        case let .otpScreen(type, emailOrPhoneNumber, totpEnrollmentChallege, phoneEnrollmentChallenge, emailEnrollmentChallenge):
+            TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type, delegate: delegate))
+        case let .otpScreen(type,
+                            emailOrPhoneNumber,
+                            totpEnrollmentChallege,
+                            phoneEnrollmentChallenge,
+                            emailEnrollmentChallenge):
             OTPView(viewModel: OTPViewModel(
                 totpEnrollmentChallenge: totpEnrollmentChallege,
                 emailEnrollmentChallenge: emailEnrollmentChallenge,
                 phoneEnrollmentChallenge: phoneEnrollmentChallenge,
                 type: type,
-                emailOrPhoneNumber: emailOrPhoneNumber
+                emailOrPhoneNumber: emailOrPhoneNumber,
+                delegate: delegate
             ))
         case let .filteredAuthListScreen(type, authMethods):
             SavedAuthenticatorsScreen(viewModel: SavedAuthenticatorsScreenViewModel(
                 type: type,
-                authenticationMethods: authMethods
+                authenticationMethods: authMethods,
+                delegate: delegate
             ))
         case let .emailPhoneEnrollmentScreen(type):
             EmailPhoneEnrollmentView(viewModel: EmailPhoneEnrollmentViewModel(type: type))
         case .recoveryCodeScreen:
-            RecoveryCodeEnrollmentView(viewModel: RecoveryCodeEnrollmentViewModel())
+            RecoveryCodeEnrollmentView(viewModel: RecoveryCodeEnrollmentViewModel(delegate: delegate))
         }
     }
 }
