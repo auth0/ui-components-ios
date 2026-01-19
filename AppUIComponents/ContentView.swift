@@ -11,6 +11,9 @@ struct ContentView: View {
                let route = viewModel.route,
                case Route.landingScreen = route {
                 MyAccountAuthMethodsView()
+                    .onLongPressGesture {
+                        viewAuthMethods.toggle()
+                    }
             } else {
                 VStack {
                     Button("Login") {
@@ -43,6 +46,12 @@ struct ContentView: View {
                     Button("Manage Authenticators") {
                         viewAuthMethods.toggle()
                     }
+                    
+                    
+                    Text(viewModel.loginStatusMessage)
+                        .foregroundStyle(Color.black)
+                        .font(.system(size: 16, weight: .semibold))
+                        .padding()
                     
                     Spacer()
                 }

@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 struct ConfirmTOTPEnrollmentRequest {
     let token: String

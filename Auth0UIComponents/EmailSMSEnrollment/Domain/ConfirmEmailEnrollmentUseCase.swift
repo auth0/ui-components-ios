@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 protocol ConfirmEmailEnrollmentUseCaseable {
     var session: URLSession { get }
@@ -14,7 +15,6 @@ struct ConfirmEmailEnrollmentRequest {
     let authSession: String
     let otpCode: String
 }
-
 
 struct ConfirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCaseable {
     var session: URLSession

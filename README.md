@@ -217,9 +217,14 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
    ```
 
 3. **Configure Auth0 credentials:**
-   - Open `AppUIComponents/Auth0.plist`
-   - Update with your Auth0 tenant information:
+
+   **Important:** The `Auth0.plist` file is required for the sample app to build and run. You need to create this file.
+
+   - Create `AppUIComponents/Auth0.plist` in your Xcode project with your Auth0 tenant information:
      ```xml
+     <?xml version="1.0" encoding="UTF-8"?>
+     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+     <plist version="1.0">
      <dict>
          <key>Domain</key>
          <string>YOUR_AUTH0_DOMAIN.auth0.com</string>
@@ -228,7 +233,9 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
          <key>Audience</key>
          <string>https://YOUR_AUTH0_DOMAIN.auth0.com/api/v2/</string>
      </dict>
+     </plist>
      ```
+   - Ensure the file is added to the `AppUIComponents` target in Build Phases
 
 4. **Open the project in Xcode:**
    ```bash
@@ -237,7 +244,28 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
 
 5. **Select the `AppUIComponents` target** from the scheme dropdown
 
-6. **Build and run** the app on a simulator or physical device (Xcode 26.0+)
+6. **Build and run the app:**
+
+   #### Running on iOS Simulator
+
+   - Select any iOS simulator from the device dropdown (e.g., iPhone 15 Pro)
+   - Press `Cmd + R` or click the Run button
+   - The app will build and launch in the simulator
+
+   #### Running on a Physical Device
+
+   To run the sample app on a physical device, you need to:
+
+   - **Apple Developer Account**: Your device must be registered in your Apple Developer account
+   - **Update Bundle Identifier**:
+     1. Select the `AppUIComponents` target in Xcode
+     2. Go to the "Signing & Capabilities" tab
+     3. Update the bundle identifier to match your provisioning profile (e.g., `com.yourcompany.AppUIComponents`)
+   - **Code Signing**: Ensure your team is selected and provisioning profile is valid
+   - **Connect your device** via USB and select it from the device dropdown
+   - Press `Cmd + R` or click the Run button
+
+   Note: Without a valid provisioning profile and registered device, you will encounter code signing errors when attempting to run on a physical device.
 
 ### Portions of this SDK may have AI-assisted or generated code.
 

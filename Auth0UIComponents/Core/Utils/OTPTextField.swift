@@ -195,13 +195,11 @@ struct OTPTextField: NSViewRepresentable {
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
 
-            // ENTER key
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
                 parent.enterKeyPressed()
                 return true
             }
 
-            // BACKSPACE on empty
             if commandSelector == #selector(NSResponder.deleteBackward(_:)) {
                 if textView.string.isEmpty {
                     parent.emptyBackspaceKeyPressed()
@@ -215,7 +213,6 @@ struct OTPTextField: NSViewRepresentable {
 }
 
 
-// MARK: - Custom NSTextField for detecting empty backspace
 class BackspaceAwareTextField: NSTextField {
     var emptyBackspaceKeyPressed: (() -> Void)?
 

@@ -9,15 +9,18 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
     private let confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable
     private let dependencies: Auth0UIComponentsSDKInitializer
     private var passkeyChallenge: PasskeyEnrollmentChallenge? = nil
+    private var delegate: RefreshAuthDataProtocol?
     @Published var showLoader: Bool = false
     @Published var errorViewModel: ErrorScreenViewModel? = nil
 
     init(startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable = StartPasskeyEnrollmentUseCase(),
          confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable = ConfirmPasskeyEnrollmentUseCase(),
-         dependencies: Auth0UIComponentsSDKInitializer = .shared) {
+         dependencies: Auth0UIComponentsSDKInitializer = .shared,
+         delegate: RefreshAuthDataProtocol?) {
         self.startPasskeyEnrollmentUseCase = startPasskeyEnrollmentUseCase
         self.confirmPasskeyEnrollmentUseCase = confirmPasskeyEnrollmentUseCase
         self.dependencies = dependencies
+        self.delegate = delegate
     }
 
     func enrollPasskey() {

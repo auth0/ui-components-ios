@@ -22,7 +22,6 @@ struct ConfirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable {
                 .authenticationMethods
                 .enroll(passkey: request.passkey, challenge: request.challenge)
                 .start()
-                refreshAuthComponents.send(())
             return authenticationMethod
         } catch {
             throw error

@@ -1,5 +1,6 @@
 import Auth0
 import Foundation
+import Combine
 
 protocol ConfirmRecoveryCodeEnrollmentUseCaseable {
     var session: URLSession { get }
