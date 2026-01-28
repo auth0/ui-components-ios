@@ -1,7 +1,6 @@
 import Auth0
 import Foundation
 
-
 struct GetAuthMethodsRequest {
   
     let token: String

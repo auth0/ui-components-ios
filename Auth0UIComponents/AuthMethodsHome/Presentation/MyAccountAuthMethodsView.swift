@@ -9,20 +9,20 @@ public struct MyAccountAuthMethodsView: View {
     public init() {
         self.viewModel = MyAccountAuthMethodsViewModel()
     }
-
+    
     public var body: some View {
         NavigationStack(path: $navigationStore.path) {
             ZStack {
                 if viewModel.showLoader {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
-                        .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                        .scaleEffect(1.5)
-                        .frame(width: 50, height: 50)
+                        .tint(Color("3C3C43", bundle: ResourceBundle.default)) // Brand-compliant dark gray
+                        .scaleEffect(1.5) // Enlarged for better visibility
+                        .frame(width: 50, height: 50) // Fixed size container
                 }
                 else if let errorViewModel = viewModel.errorViewModel {
                     ErrorScreen(viewModel: errorViewModel)
-                        .padding()
+                        .padding() // Adds spacing from screen edges
                 }
                 else {
                     ScrollView(showsIndicators: false) {
@@ -34,8 +34,9 @@ public struct MyAccountAuthMethodsView: View {
                     }
                 }
             }
-            .navigationTitle(Text("Login & Security"))
+            .navigationTitle(Text("Login & Security")) // Sets the navigation bar title
             #if !os(macOS)
+                // iOS, tvOS, watchOS: Use inline display mode for consistent, compact navigation bar
                 .navigationBarTitleDisplayMode(.inline)
             #endif
                 .navigationDestination(for: Route.self) { route in
@@ -51,6 +52,7 @@ public struct MyAccountAuthMethodsView: View {
         }
         .onAppear {
             Task {
+                // Fetches authentication methods from Auth0 and builds the component hierarchy
                 await viewModel.loadMyAccountAuthViewComponentData()
             }
         }
@@ -59,14 +61,29 @@ public struct MyAccountAuthMethodsView: View {
     @ViewBuilder
     private func authMethodView(_ component: MyAccountAuthViewComponentData) -> some View {
         switch component {
+        // MARK: Title Component
+        // Renders a prominent section heading with bold typography
+        case .createPasskey(let viewModel):
+          EnrollPasskeyView(viewModel: viewModel)
+                .padding(.bottom, 24)
+        case .signinMethods(let viewModel):
+            MyAccountAuthMethodView(viewModel: viewModel)
+                .padding(.bottom, 48)
         case .title(let text):
             Text(text)
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color("000000", bundle: ResourceBundle.default)) // Pure black for maximum contrast
+                .font(.system(size: 20, weight: .semibold)) // Large, bold font for hierarchy
+
+        // MARK: Subtitle Component
+        // Renders secondary descriptive text with reduced visual weight
         case .subtitle(let text):
             Text(text)
-                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(Color("606060", bundle: ResourceBundle.default)) // Medium gray for subtlety
+                .font(.system(size: 14, weight: .regular)) // Standard body text size
+
+        // MARK: Authentication Method Card
+        // Renders an interactive card for a specific authentication method
+        // Delegates to MyAccountAuthMethodView for the complete card UI and interaction handling
         case .additionalVerificationMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
         case .emptyFactors:
@@ -102,6 +119,8 @@ public struct MyAccountAuthMethodsView: View {
             EmailPhoneEnrollmentView(viewModel: EmailPhoneEnrollmentViewModel(type: type))
         case .recoveryCodeScreen:
             RecoveryCodeEnrollmentView(viewModel: RecoveryCodeEnrollmentViewModel(delegate: delegate))
+        case .enrollPasskeyScreen:
+            PasskeysEnrollmentView(viewModel: PasskeysEnrollmentViewModel(delegate: delegate))
         }
     }
 }

@@ -25,7 +25,7 @@ struct ContentView: View {
                                     viewModel.storeCredentials(credentials)
                                     viewModel.getCredentials()
                                 case .failure(let error):
-                                    break
+                                    print(error)
                                 }
                             }
                     }.frame(height: 50)

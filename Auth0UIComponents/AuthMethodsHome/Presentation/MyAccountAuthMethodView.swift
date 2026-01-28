@@ -2,7 +2,6 @@ import SwiftUI
 
 struct MyAccountAuthMethodView: View {
     @ObservedObject var viewModel: MyAccountAuthMethodViewModel
-
     var body: some View {
         HStack() {
             Image(viewModel.image(), bundle: ResourceBundle.default)
@@ -18,10 +17,9 @@ struct MyAccountAuthMethodView: View {
 
             if viewModel.isAtleastOnceAuthFactorEnrolled() {
                 Image("checkmark.green", bundle: ResourceBundle.default)
-                    .frame(width: 24, height: 24)
-                    .padding(.trailing, 22)
+                    .frame(width: 24, height: 24) // Matches icon size for visual balance
+                    .padding(.trailing, 22) // Spacing before chevron
             }
-
             Image("chevron", bundle: ResourceBundle.default)
                 .frame(width: 16, height: 16)
         }

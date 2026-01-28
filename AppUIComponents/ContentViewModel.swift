@@ -18,6 +18,7 @@ final class ContentViewModel: ObservableObject {
 
     func clearCredentials() {
        _ = credentialsManager.clear()
+        loginStatusMessage = "Not logged in"
     }
 
     func getCredentials() {
