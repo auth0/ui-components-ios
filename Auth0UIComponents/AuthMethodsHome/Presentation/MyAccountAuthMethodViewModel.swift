@@ -105,17 +105,17 @@ extension AuthMethodType {
     var savedAuthenticatorsCellTitle: String {
         switch self {
         case .email:
-            "Email OTP"
+            "Email"
         case .totp:
-            "Authenticator App"
+            "Authenticator"
         case .pushNotification:
-            "Push Notifications via Guardian"
+            "Push"
         case .recoveryCode:
-            "Recovery code generated"
+            "Recovery code"
         case .sms:
-            "SMS OTP"
+            "Phone"
         case .passkey:
-            ""
+            "Passkey"
         }
     }
 

@@ -93,7 +93,7 @@ struct AuthenticatorView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(type.savedAuthenticatorsCellTitle)
+                Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
 

@@ -50,20 +50,14 @@ struct EnrollPasskeyView: View {
                 .background(
                     LinearGradient(
                         stops: [
-                            Gradient.Stop(color: Color("262420", bundle: ResourceBundle.default), location: 0.00),
-                            Gradient.Stop(color: Color("262420", bundle: ResourceBundle.default).opacity(0.05), location: 1.00),
+                            Gradient.Stop(color: Color("262421", bundle: ResourceBundle.default).opacity(0), location: 0.00),
+                            Gradient.Stop(color: Color("262421", bundle: ResourceBundle.default).opacity(0.05), location: 1.00),
                         ],
                         startPoint: UnitPoint(x: 0.5, y: 0),
                         endPoint: UnitPoint(x: 0.5, y: 1)
                     )
                 )
-                .background(Color("FFFFFF", bundle: ResourceBundle.default))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: Color("000000", bundle: ResourceBundle.default).opacity(0.10), radius: 4, x: 0, y: 4)
-                .shadow(color: Color("000000", bundle: ResourceBundle.default).opacity(0.10), radius: 2, x: 0, y: 2)
-                .shadow(color: Color("000000", bundle: ResourceBundle.default).opacity(0.10), radius: 0.5, x: 0, y: 1)
-                .shadow(color: Color("000000", bundle: ResourceBundle.default).opacity(0.10), radius: 1, x: 0, y: 2)
-                .shadow(color: Color("000000", bundle: ResourceBundle.default).opacity(0.05), radius: 0, x: 0, y: 0)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .inset(by: 0.5)
@@ -75,7 +69,9 @@ struct EnrollPasskeyView: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
                 .onTapGesture {
-                    collapsePasskeyBanner.toggle()
+                    withAnimation {
+                        collapsePasskeyBanner.toggle()
+                    }
                 }
                 .padding(EdgeInsets(top: 20, leading: 0, bottom: 32, trailing: 0))
 
