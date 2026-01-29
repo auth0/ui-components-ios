@@ -2,6 +2,7 @@ import SwiftUI
 
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct EnrollPasskeyView: View {
+    @Binding var collapsePasskeyBanner: Bool
     var viewModel: PasskeysEnrollmentViewModel
     var body: some View {
         VStack {
@@ -73,6 +74,9 @@ struct EnrollPasskeyView: View {
             Text("Remind me later")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
+                .onTapGesture {
+                    collapsePasskeyBanner.toggle()
+                }
                 .padding(EdgeInsets(top: 20, leading: 0, bottom: 32, trailing: 0))
 
         }.padding(.all, 20).background(Color("F0F0F0", bundle: ResourceBundle.default).opacity(0.90)).clipShape(RoundedRectangle(cornerRadius: 12))

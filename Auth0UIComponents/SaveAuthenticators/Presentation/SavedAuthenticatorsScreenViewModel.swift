@@ -50,7 +50,11 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         guard postDeletion || authenticationMethods.isEmpty else {
             showLoader = false
             viewAuthenticationMethods = authenticationMethods.filter {
-                $0.type == type.rawValue && $0.confirmed == true
+                if type == .passkey {
+                    $0.type == type.rawValue
+                } else {
+                    $0.type == type.rawValue && $0.confirmed == true
+                }
             }
             return
         }
@@ -60,7 +64,11 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
             self.showLoader = false
             let filteredAuthMethods = apiAuthMethods
                 .filter {
-                    return $0.type == type.rawValue && $0.confirmed == true
+                    if type == .passkey {
+                        $0.type == type.rawValue
+                    } else {
+                        $0.type == type.rawValue && $0.confirmed == true
+                    }
                 }
             if filteredAuthMethods.isEmpty {
                 viewAuthenticationMethods = []

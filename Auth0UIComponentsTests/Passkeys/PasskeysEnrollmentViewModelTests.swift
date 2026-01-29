@@ -79,7 +79,7 @@ struct PasskeysEnrollmentViewModelTests {
     }
 
     // MARK: - Tests
-
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testInit_initialState() async {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
@@ -103,6 +103,7 @@ struct PasskeysEnrollmentViewModelTests {
         }
     }
 
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testInit_withDelegate() async {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
@@ -127,6 +128,7 @@ struct PasskeysEnrollmentViewModelTests {
         }
     }
 
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testStartEnrollment_callsUseCase() async throws {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
@@ -154,6 +156,7 @@ struct PasskeysEnrollmentViewModelTests {
         }
     }
 
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testStartEnrollment_withMockUseCase() async throws {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
@@ -192,6 +195,7 @@ struct PasskeysEnrollmentViewModelTests {
         }
     }
 
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testAuthorizationController_delegateMethods() async {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
@@ -219,7 +223,8 @@ struct PasskeysEnrollmentViewModelTests {
             #expect(viewModel.errorViewModel == nil)
         }
     }
-
+    
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testHandle_setsLoaderToFalse() async {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
@@ -255,6 +260,7 @@ struct PasskeysEnrollmentViewModelTests {
         }
     }
 
+    @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testHandle_errorHandling() async {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 

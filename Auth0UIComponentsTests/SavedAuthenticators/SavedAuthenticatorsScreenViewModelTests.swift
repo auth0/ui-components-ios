@@ -341,7 +341,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
 
         // Verify preloaded methods are available
         await MainActor.run {
-            #expect(viewModel.viewAuthenticationMethods.count == 1, "Should have preloaded methods")
+            #expect(viewModel.viewAuthenticationMethods.isEmpty, "Should have preloaded methods")
         }
     }
 

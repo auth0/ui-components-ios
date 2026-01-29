@@ -5,7 +5,7 @@ public struct MyAccountAuthMethodsView: View {
     @StateObject private var navigationStore = NavigationStore.shared
     @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
     @State private var previousPathCount = 0
-
+    @State var collapsePasskeyBanner: Bool = false
     public init() {
         self.viewModel = MyAccountAuthMethodsViewModel()
     }
@@ -65,8 +65,10 @@ public struct MyAccountAuthMethodsView: View {
         // Renders a prominent section heading with bold typography
         case .createPasskey(let model):
             if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
-                if let viewModel = model as? PasskeysEnrollmentViewModel {
-                    EnrollPasskeyView(viewModel: viewModel)
+                if let viewModel = model as? PasskeysEnrollmentViewModel,
+                    collapsePasskeyBanner == false {
+                    EnrollPasskeyView(collapsePasskeyBanner: $collapsePasskeyBanner,
+                                      viewModel: viewModel)
                         .padding(.bottom, 24)
                 }
             }
