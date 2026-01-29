@@ -2,6 +2,7 @@ import Auth0
 import Combine
 import AuthenticationServices
 
+@available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 @MainActor
 final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthorizationControllerDelegate {
 

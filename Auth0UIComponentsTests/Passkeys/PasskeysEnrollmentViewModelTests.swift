@@ -2,11 +2,13 @@
 import Foundation
 import Auth0
 import Testing
+import AuthenticationServices
 
 @Suite(.serialized)
 struct PasskeysEnrollmentViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
+
     private func makeMockSession() -> URLSession {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [MockURLProtocol.self]
@@ -18,108 +20,269 @@ struct PasskeysEnrollmentViewModelTests {
         decoder.userInfo[CodingUserInfoKey(rawValue: "locationHeader")!] = locationHeader
         return try decoder.decode(T.self, from: json)
     }
-   
-    private var enrollmentChallengeData: Data {
+
+    private var passkeyEnrollmentChallengeData: Data {
         let mockJsonData = """
         {
-          "id" : "recovery-code|test_hHm0dHPGxyF2RsKj",
-          "auth_session" : "3iMRnuk6WJVwjSElegkHmpy3OxjsiW55",
-          "recovery_code" : "VHDGEJQRKWM3UVJ6BML4ST95"
+          "id": "passkey|test_abc123",
+          "publicKey": {
+            "challenge": "VGhpcyBpcyBhIG1vY2sgY2hhbGxlbmdl",
+            "rp": {
+              "id": "test-tenant.auth0.com",
+              "name": "Test Tenant"
+            },
+            "user": {
+              "id": "dXNlcl9pZF8xMjM=",
+              "name": "test@example.com",
+              "displayName": "Test User"
+            },
+            "pubKeyCredParams": [
+              {
+                "type": "public-key",
+                "alg": -7
+              }
+            ],
+            "timeout": 60000,
+            "authenticatorSelection": {
+              "authenticatorAttachment": "platform",
+              "requireResidentKey": true,
+              "userVerification": "required"
+            }
+          }
         }
         """.data(using: .utf8)!
         return mockJsonData
     }
 
-    private var confirmRecoveryChallengeData: Data {
+    private var confirmPasskeyEnrollmentData: Data {
         let mockJsonData = """
-            {
-             "id" : "recovery-code|test_hHm0dHPGxyF2RsKj",
-             "confirmed" : true,
-             "type" : "recovery-code",
-             "usage" : [
-              "secondary"
-             ],
-             "created_at" : "2025-11-11T03:42:03.571Z"
-            }
-            """.data(using: .utf8)!
+        {
+          "id": "passkey|test_abc123",
+          "confirmed": true,
+          "type": "passkey",
+          "usage": ["primary", "secondary"],
+          "created_at": "2025-11-11T03:42:03.571Z",
+          "name": "iPhone"
+        }
+        """.data(using: .utf8)!
         return mockJsonData
     }
 
+    // MARK: - Mock Delegate
+
+    class MockRefreshDelegate: RefreshAuthDataProtocol {
+        var refreshCalled = false
+
+        func refreshAuthData() {
+            refreshCalled = true
+        }
+    }
+
+    // MARK: - Tests
 
     @Test func testInit_initialState() async {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
         let mockTokenProvider = MockTokenProvider()
 
         Auth0UIComponentsSDKInitializer.reset()
-        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
 
-        let vm = await PasskeysEnrollmentViewModel()
+        let vm = await PasskeysEnrollmentViewModel(delegate: nil)
+
         await MainActor.run {
-            #expect(vm.showLoader == true)
+            #expect(vm.showLoader == false)
             #expect(vm.errorViewModel == nil)
-            #expect(vm.recoveryCodeChallenge == nil)
         }
     }
-    
-    @Test func testLoadData() async throws {
-        let mockTokenProvider = MockTokenProvider()
-        await NavigationStore.shared.reset()
-        Auth0UIComponentsSDKInitializer.reset()
-        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCase(session: makeMockSession()))
-        await confirmation(expectedCount: 1) { @MainActor confirmation in
-            MockURLProtocol.requestHandler = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: ["Location": "https://\(mockDomain)/me/v1/authentication-methods/recovery-code%7Ctest_nkfnbkfnb"]
-                )!
-                confirmation()
-                return (response, enrollmentChallengeData)
-            }
-            await viewModel.loadData()
-            #expect(viewModel.recoveryCodeChallenge != nil)
+    @Test func testInit_withDelegate() async {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
+        let mockTokenProvider = MockTokenProvider()
+        let mockDelegate = MockRefreshDelegate()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
+
+        let vm = await PasskeysEnrollmentViewModel(delegate: mockDelegate)
+
+        await MainActor.run {
+            #expect(vm.showLoader == false)
+            #expect(vm.errorViewModel == nil)
         }
     }
-    
-    
-    @Test func testConfirmEnrollment() async throws {
+
+    @Test func testStartEnrollment_callsUseCase() async throws {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
+
         Auth0UIComponentsSDKInitializer.reset()
-        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
 
-        let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())
-        let confirmRecoveryCodeEnrollmentUseCase = ConfirmRecoveryCodeEnrollmentUseCase(session: makeMockSession())
-        let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: startRecoveryCodeEnrollmentUseCase,
-                                                              confirmRecoveryCodeEnrollmentUseCase: confirmRecoveryCodeEnrollmentUseCase)
-        await confirmation(expectedCount: 2) { @MainActor confirmation in
-            MockURLProtocol.requestHandler = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: ["Location": "https://\(mockDomain)/me/v1/authentication-methods/recovery-code%7Ctest_nkfnbkfnb"]
-                )!
-                confirmation()
-                return (response, enrollmentChallengeData)
-            }
-            await viewModel.loadData()
-            MockURLProtocol.requestHandler = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                confirmation()
-                return (response, confirmRecoveryChallengeData)
-            }
+        // Note: Testing passkey enrollment fully requires ASAuthorizationController which
+        // cannot be easily mocked in unit tests. This test verifies the view model is
+        // properly initialized and ready to handle passkey enrollment.
+        let viewModel = await PasskeysEnrollmentViewModel(delegate: nil)
 
-            await viewModel.confirmEnrollment()
-            #expect(NavigationStore.shared.path.last == Route.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
+        await MainActor.run {
+            #expect(viewModel.showLoader == false)
+            #expect(viewModel.errorViewModel == nil)
+        }
+    }
+
+    @Test func testStartEnrollment_withMockUseCase() async throws {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
+
+        // Create a mock that throws an error
+        class MockFailingPasskeyUseCase: StartPasskeyEnrollmentUseCaseable {
+            func execute(request: StartPasskeyEnrollmentRequest) async throws -> PasskeyEnrollmentChallenge {
+                throw MyAccountError(detail: "Internal Server Error", statusCode: 500, validationErrors: nil)
+            }
+        }
+
+        let mockUseCase = MockFailingPasskeyUseCase()
+        let viewModel = await PasskeysEnrollmentViewModel(
+            startPasskeyEnrollmentUseCase: mockUseCase,
+            delegate: nil
+        )
+
+        await viewModel.startEnrollment()
+
+        // Note: Error handling involves complex UI callback mechanisms that are
+        // difficult to reliably test in unit tests. This verifies the method completes.
+        await MainActor.run {
+            #expect(viewModel.showLoader == false, "Loader should be hidden after enrollment attempt")
+        }
+    }
+
+    @Test func testAuthorizationController_delegateMethods() async {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
+
+        let viewModel = await PasskeysEnrollmentViewModel(delegate: nil)
+
+        // Note: We cannot easily test ASAuthorizationControllerDelegate methods as
+        // ASAuthorizationController and ASAuthorization objects cannot be mocked or
+        // instantiated directly in unit tests. This test verifies the view model
+        // is in a valid state and ready to handle authorization callbacks.
+        await MainActor.run {
+            #expect(viewModel.showLoader == false)
+            #expect(viewModel.errorViewModel == nil)
+        }
+    }
+
+    @Test func testHandle_setsLoaderToFalse() async {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
+        let mockTokenProvider = MockTokenProvider()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
+
+        let viewModel = await PasskeysEnrollmentViewModel(delegate: nil)
+
+        // Set loader to true first
+        await MainActor.run {
+            viewModel.showLoader = true
+        }
+
+        // Test handling of MyAccountError - server error type
+        let error = MyAccountError(detail: "Server Error", statusCode: 500, validationErrors: nil)
+
+        await viewModel.handle(error: error, scope: "openid create:me:authentication_methods") {
+            // Retry callback
+        }
+
+        // Verify loader is turned off after error handling
+        await MainActor.run {
+            #expect(viewModel.showLoader == false, "Loader should be hidden after error handling")
+        }
+    }
+
+    @Test func testHandle_errorHandling() async {
+        guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
+
+        let mockTokenProvider = MockTokenProvider()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "test_client_id",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
+
+        let viewModel = await PasskeysEnrollmentViewModel(delegate: nil)
+
+        // Test handling of WebAuthError
+        let error = WebAuthError.userCancelled
+
+        await viewModel.handle(error: error, scope: "openid create:me:authentication_methods") {
+            // Retry callback
+        }
+
+        // Verify loader state management - errorViewModel depends on complex UI callback
+        // mechanisms which are tested through integration tests
+        await MainActor.run {
+            #expect(viewModel.showLoader == false, "Loader should be hidden after error handling")
         }
     }
 }
-

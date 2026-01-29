@@ -135,6 +135,12 @@ struct OTPViewModelTests {
             phoneEnrollmentChallenge: nil,
                                            type: .totp, delegate: nil
         )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -167,6 +173,12 @@ struct OTPViewModelTests {
                                            phoneEnrollmentChallenge: nil,
                                            type: .email, delegate: nil
         )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -196,6 +208,12 @@ struct OTPViewModelTests {
                                            type: .sms,
                                            delegate: nil
         )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -234,6 +252,301 @@ struct OTPViewModelTests {
             #expect(viewModel.navigationTitle == "Add Phone for SMS OTP")
         }
     }
-    
+
+    // MARK: - Tests with Delegate
+
+    class MockRefreshDelegate: RefreshAuthDataProtocol {
+        var refreshCalled = false
+
+        func refreshAuthData() {
+            refreshCalled = true
+        }
+    }
+
+    @Test func testInit_withDelegate() async {
+        let mockTokenProvider = MockTokenProvider()
+        let mockDelegate = MockRefreshDelegate()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let vm = await OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallenge, emailEnrollmentChallenge: nil, phoneEnrollmentChallenge: nil, type: .totp, delegate: mockDelegate)
+        await MainActor.run {
+            #expect(vm.showLoader == false)
+            #expect(vm.errorMessage == nil)
+        }
+    }
+
+    @Test func testConfirmEnrollment_TOTP_callsDelegate() async throws {
+        let mockTokenProvider = MockTokenProvider()
+        let mockDelegate = MockRefreshDelegate()
+        await NavigationStore.shared.reset()
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            confirmTOTPEnrollmentUSeCase: ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
+            totpEnrollmentChallenge: totpEnrollmentChallenge,
+            emailEnrollmentChallenge: nil,
+            phoneEnrollmentChallenge: nil,
+            type: .totp,
+            delegate: mockDelegate
+        )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
+        await confirmation(expectedCount: 1) { @MainActor confirmation in
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Location": "https://\(mockDomain)/me/v1/authentication-methods/totp%7Ctest_nkfnbkfnb"]
+                )!
+                confirmation()
+                return (response, confirmEnrollmentTOTPData)
+            }
+            await viewModel.confirmEnrollment()
+
+            // Verify delegate was called
+            #expect(mockDelegate.refreshCalled == true, "Delegate should be called after successful enrollment")
+            #expect(NavigationStore.shared.path.last == Route.filteredAuthListScreen(type: .totp, authMethods: []))
+        }
+    }
+
+    // MARK: - Error Cases
+
+    @Test func testConfirmEnrollment_TOTP_handlesAPIError() async throws {
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            confirmTOTPEnrollmentUSeCase: ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
+            totpEnrollmentChallenge: totpEnrollmentChallenge,
+            emailEnrollmentChallenge: nil,
+            phoneEnrollmentChallenge: nil,
+            type: .totp,
+            delegate: nil
+        )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
+        await confirmation(expectedCount: 1) { @MainActor confirmation in
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 400,
+                    httpVersion: nil,
+                    headerFields: nil
+                )!
+                confirmation()
+                let errorData = """
+                {
+                    "statusCode": 400,
+                    "error": "Bad Request",
+                    "message": "Invalid OTP code"
+                }
+                """.data(using: .utf8)!
+                return (response, errorData)
+            }
+
+            await viewModel.confirmEnrollment()
+
+            // Verify error was handled
+            #expect(viewModel.apiCallInProgress == false, "API call should not be in progress after error")
+            #expect(viewModel.errorMessage != nil, "Error message should be set on confirmation failure")
+        }
+    }
+
+    @Test func testConfirmEnrollment_Email_handlesAPIError() async throws {
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            confirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCase(session: makeMockSession()),
+            totpEnrollmentChallenge: nil,
+            emailEnrollmentChallenge: emailEnrollmentChallenge,
+            phoneEnrollmentChallenge: nil,
+            type: .email,
+            delegate: nil
+        )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
+        await confirmation(expectedCount: 1) { @MainActor confirmation in
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 400,
+                    httpVersion: nil,
+                    headerFields: nil
+                )!
+                confirmation()
+                let errorData = """
+                {
+                    "statusCode": 400,
+                    "error": "Bad Request",
+                    "message": "Invalid email OTP code"
+                }
+                """.data(using: .utf8)!
+                return (response, errorData)
+            }
+
+            await viewModel.confirmEnrollment()
+
+            // Verify error was handled
+            #expect(viewModel.apiCallInProgress == false, "API call should not be in progress after error")
+            #expect(viewModel.errorMessage != nil, "Error message should be set on confirmation failure")
+        }
+    }
+
+    @Test func testConfirmEnrollment_Phone_handlesAPIError() async throws {
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
+            totpEnrollmentChallenge: nil,
+            emailEnrollmentChallenge: nil,
+            phoneEnrollmentChallenge: phoneEnrollmentChallenge,
+            type: .sms,
+            delegate: nil
+        )
+
+        // Set OTP text before confirming
+        await MainActor.run {
+            viewModel.otpText = "123456"
+        }
+
+        await confirmation(expectedCount: 1) { @MainActor confirmation in
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 400,
+                    httpVersion: nil,
+                    headerFields: nil
+                )!
+                confirmation()
+                let errorData = """
+                {
+                    "statusCode": 400,
+                    "error": "Bad Request",
+                    "message": "Invalid phone OTP code"
+                }
+                """.data(using: .utf8)!
+                return (response, errorData)
+            }
+
+            await viewModel.confirmEnrollment()
+
+            // Verify error was handled
+            #expect(viewModel.apiCallInProgress == false, "API call should not be in progress after error")
+            #expect(viewModel.errorMessage != nil, "Error message should be set on confirmation failure")
+        }
+    }
+
+    @Test func testConfirmEnrollment_withoutChallenge() async {
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            totpEnrollmentChallenge: nil,
+            emailEnrollmentChallenge: nil,
+            phoneEnrollmentChallenge: nil,
+            type: .totp,
+            delegate: nil
+        )
+
+        // Call confirmEnrollment without a challenge
+        await viewModel.confirmEnrollment()
+
+        // Should not crash and should remain in initial state
+        await MainActor.run {
+            #expect(viewModel.apiCallInProgress == false, "API call should not be in progress")
+        }
+    }
+
+    // MARK: - State Management Tests
+
+    @Test func testApiCallInProgress_stateManagement() async throws {
+        let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
+
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            confirmTOTPEnrollmentUSeCase: ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
+            totpEnrollmentChallenge: totpEnrollmentChallenge,
+            emailEnrollmentChallenge: nil,
+            phoneEnrollmentChallenge: nil,
+            type: .totp,
+            delegate: nil
+        )
+
+        // Verify initial state
+        await MainActor.run {
+            #expect(viewModel.apiCallInProgress == false, "API call should not be in progress initially")
+        }
+
+        await confirmation(expectedCount: 1) { @MainActor confirmation in
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: ["Location": "https://\(mockDomain)/me/v1/authentication-methods/totp%7Ctest_nkfnbkfnb"]
+                )!
+                confirmation()
+                return (response, confirmEnrollmentTOTPData)
+            }
+
+            await viewModel.confirmEnrollment()
+
+            // Verify state after successful confirm
+            #expect(viewModel.apiCallInProgress == false, "API call should complete")
+        }
+    }
+
+    @Test func testOTPText_validation() async {
+        let mockTokenProvider = MockTokenProvider()
+        Auth0UIComponentsSDKInitializer.reset()
+        Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        let viewModel = await OTPViewModel(
+            totpEnrollmentChallenge: totpEnrollmentChallenge,
+            emailEnrollmentChallenge: nil,
+            phoneEnrollmentChallenge: nil,
+            type: .totp,
+            delegate: nil
+        )
+
+        // Verify OTP text starts empty
+        await MainActor.run {
+            #expect(viewModel.otpText.isEmpty, "OTP text should start empty")
+
+            // Set OTP text
+            viewModel.otpText = "123456"
+            #expect(viewModel.otpText == "123456", "OTP text should update correctly")
+        }
+    }
 }
 

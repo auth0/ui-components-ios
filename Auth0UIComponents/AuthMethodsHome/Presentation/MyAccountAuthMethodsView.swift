@@ -63,9 +63,13 @@ public struct MyAccountAuthMethodsView: View {
         switch component {
         // MARK: Title Component
         // Renders a prominent section heading with bold typography
-        case .createPasskey(let viewModel):
-          EnrollPasskeyView(viewModel: viewModel)
-                .padding(.bottom, 24)
+        case .createPasskey(let model):
+            if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
+                if let viewModel = model as? PasskeysEnrollmentViewModel {
+                    EnrollPasskeyView(viewModel: viewModel)
+                        .padding(.bottom, 24)
+                }
+            }
         case .signinMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
                 .padding(.bottom, 48)
@@ -120,7 +124,9 @@ public struct MyAccountAuthMethodsView: View {
         case .recoveryCodeScreen:
             RecoveryCodeEnrollmentView(viewModel: RecoveryCodeEnrollmentViewModel(delegate: delegate))
         case .enrollPasskeyScreen:
-            PasskeysEnrollmentView(viewModel: PasskeysEnrollmentViewModel(delegate: delegate))
+            if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
+                PasskeysEnrollmentView(viewModel: PasskeysEnrollmentViewModel(delegate: delegate))
+            }
         }
     }
 }

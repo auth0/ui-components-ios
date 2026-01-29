@@ -7,14 +7,54 @@ enum MyAccountAuthViewComponentData: Hashable {
     case title(text: String)
 
     case subtitle(text: String)
-    
-    case createPasskey(model: PasskeysEnrollmentViewModel)
+
+    case createPasskey(model: Any)
 
     case signinMethods(model: MyAccountAuthMethodViewModel)
 
     case additionalVerificationMethods(model: MyAccountAuthMethodViewModel)
 
     case emptyFactors
+
+    static func == (lhs: MyAccountAuthViewComponentData, rhs: MyAccountAuthViewComponentData) -> Bool {
+        switch (lhs, rhs) {
+        case (.title(let lhsText), .title(let rhsText)):
+            return lhsText == rhsText
+        case (.subtitle(let lhsText), .subtitle(let rhsText)):
+            return lhsText == rhsText
+        case (.createPasskey, .createPasskey):
+            return true
+        case (.signinMethods(let lhsModel), .signinMethods(let rhsModel)):
+            return lhsModel == rhsModel
+        case (.additionalVerificationMethods(let lhsModel), .additionalVerificationMethods(let rhsModel)):
+            return lhsModel == rhsModel
+        case (.emptyFactors, .emptyFactors):
+            return true
+        default:
+            return false
+        }
+    }
+
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .title(let text):
+            hasher.combine(0)
+            hasher.combine(text)
+        case .subtitle(let text):
+            hasher.combine(1)
+            hasher.combine(text)
+        case .createPasskey:
+            hasher.combine(2)
+        case .signinMethods(let model):
+            hasher.combine(3)
+            hasher.combine(model)
+        case .additionalVerificationMethods(let model):
+            hasher.combine(4)
+            hasher.combine(model)
+        case .emptyFactors:
+            hasher.combine(5)
+        }
+    }
 }
 
 @MainActor
@@ -75,7 +115,9 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
 
             var viewComponents: [MyAccountAuthViewComponentData] = []
             if authMethods.filter({ $0.type == "passkey" }).isEmpty == true {
-                viewComponents.append(.createPasskey(model: PasskeysEnrollmentViewModel(delegate: self)))
+                if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
+                    viewComponents.append(.createPasskey(model: PasskeysEnrollmentViewModel(delegate: self)))
+                }
             }
             viewComponents.append(.title(text: "Sign-in methods"))
             viewComponents.append(.signinMethods(model: MyAccountAuthMethodViewModel(authMethods: authMethods.filter { $0.type == AuthMethodType.passkey.rawValue }, type: .passkey, dependencies: dependencies)))

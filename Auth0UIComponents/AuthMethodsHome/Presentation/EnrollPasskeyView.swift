@@ -1,5 +1,6 @@
 import SwiftUI
 
+@available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct EnrollPasskeyView: View {
     var viewModel: PasskeysEnrollmentViewModel
     var body: some View {
