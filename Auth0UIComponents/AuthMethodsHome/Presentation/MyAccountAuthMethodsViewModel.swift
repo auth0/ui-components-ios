@@ -120,7 +120,10 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                 }
             }
             viewComponents.append(.title(text: "Sign-in methods"))
-            viewComponents.append(.signinMethods(model: MyAccountAuthMethodViewModel(authMethods: authMethods.filter { $0.type == AuthMethodType.passkey.rawValue }, type: .passkey, dependencies: dependencies)))
+            let viewModel = MyAccountAuthMethodViewModel(authMethods: authMethods.filter { $0.type == AuthMethodType.passkey.rawValue },
+                                                         type: .passkey,
+                                                         dependencies: dependencies)
+            viewComponents.append(.signinMethods(model: viewModel))
             viewComponents.append(.title(text: "Verification methods"))
             viewComponents.append(.subtitle(text: "Manage your 2FA methods"))
 

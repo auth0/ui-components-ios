@@ -1,3 +1,5 @@
+// swiftlint:disable type_body_length
+
 @testable import Auth0UIComponents
 import Foundation
 import Auth0

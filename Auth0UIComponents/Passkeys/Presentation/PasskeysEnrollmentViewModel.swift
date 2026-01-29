@@ -63,7 +63,11 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
                     do {
                         showLoader = true
                         let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                        _ = try await confirmPasskeyEnrollmentUseCase.execute(request: ConfirmPasskeyEnrollmentRequest(passkey: newPasskey, token: apiCredentials.accessToken, domain: dependencies.domain, challenge: passkeyChallenge))
+                        let confirmPasskeyEnrollmentRequest = ConfirmPasskeyEnrollmentRequest(passkey: newPasskey,
+                                                            token: apiCredentials.accessToken,
+                                                            domain: dependencies.domain,
+                                                            challenge: passkeyChallenge)
+                        _ = try await confirmPasskeyEnrollmentUseCase.execute(request: confirmPasskeyEnrollmentRequest)
                         delegate?.refreshAuthData()
                         await NavigationStore.shared.push(.filteredAuthListScreen(type: .passkey, authMethods: []))
                     } catch {
