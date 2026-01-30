@@ -119,6 +119,7 @@ The `MyAccountAuthMethodsView` component allows users to:
   - Email
   - SMS
   - Recovery codes
+  - Passkeys (FIDO2/WebAuthn)
 - **Enroll in new authentication methods** - Add additional authentication factors
 - **Delete authentication methods** - Remove enrolled authenticators
 - **Manage recovery codes** - Generate and manage backup codes for account recovery
