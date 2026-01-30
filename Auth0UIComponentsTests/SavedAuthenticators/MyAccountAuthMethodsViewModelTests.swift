@@ -170,7 +170,7 @@ struct MyAccountAuthMethodsViewModelTests {
                 }
             }
             await viewModel.loadMyAccountAuthViewComponentData()
-            #expect(viewModel.viewComponents.count == 7)
+            #expect(viewModel.viewComponents.count == 10)
         }
     }
 }

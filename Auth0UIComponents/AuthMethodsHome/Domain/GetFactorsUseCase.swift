@@ -1,5 +1,5 @@
-import Auth0
 import Foundation
+import Auth0
 
 struct GetFactorsRequest {
     let token: String
