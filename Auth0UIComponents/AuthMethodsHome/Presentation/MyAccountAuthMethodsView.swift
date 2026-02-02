@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import Auth0
 
 /// The main view for managing authentication methods in Auth0 My Account.
 ///
@@ -50,7 +51,7 @@ public struct MyAccountAuthMethodsView: View {
     /// Shared navigation store for managing route state
     @StateObject private var navigationStore = NavigationStore.shared
     /// The main view model managing data and business logic
-    @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
+    @StateObject private var viewModel: MyAccountAuthMethodsViewModel
     /// Tracks previous navigation stack depth to detect returns to root
     @State private var previousPathCount = 0
     /// Controls visibility of the passkey enrollment banner
@@ -58,7 +59,7 @@ public struct MyAccountAuthMethodsView: View {
 
     /// Initializes the My Account Auth Methods view.
     public init() {
-        self.viewModel = MyAccountAuthMethodsViewModel()
+        _viewModel = StateObject(wrappedValue: MyAccountAuthMethodsViewModel())
     }
 
     public var body: some View {
@@ -149,26 +150,23 @@ public struct MyAccountAuthMethodsView: View {
     private func handleRoute(route: Route, delegate: RefreshAuthDataProtocol?) -> some View {
         switch route {
         case let .totpPushQRScreen(type):
-            TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type, delegate: delegate))
+            TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type,
+                                                                  delegate: delegate))
         case let .otpScreen(type,
                             emailOrPhoneNumber,
                             totpEnrollmentChallege,
                             phoneEnrollmentChallenge,
                             emailEnrollmentChallenge):
-            OTPView(viewModel: OTPViewModel(
-                totpEnrollmentChallenge: totpEnrollmentChallege,
-                emailEnrollmentChallenge: emailEnrollmentChallenge,
-                phoneEnrollmentChallenge: phoneEnrollmentChallenge,
-                type: type,
-                emailOrPhoneNumber: emailOrPhoneNumber,
-                delegate: delegate
-            ))
+            OTPView(viewModel: OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallege,
+                                            emailEnrollmentChallenge: emailEnrollmentChallenge,
+                                            phoneEnrollmentChallenge: phoneEnrollmentChallenge,
+                                            type: type,
+                                            emailOrPhoneNumber: emailOrPhoneNumber,
+                                            delegate: delegate))
         case let .filteredAuthListScreen(type, authMethods):
-            SavedAuthenticatorsScreen(viewModel: SavedAuthenticatorsScreenViewModel(
-                type: type,
-                authenticationMethods: authMethods,
-                delegate: delegate
-            ))
+            SavedAuthenticatorsView(viewModel: SavedAuthenticatorsViewModel(type: type,
+                                                                            authenticationMethods: authMethods,
+                                                                            delegate: delegate))
         case let .emailPhoneEnrollmentScreen(type):
             EmailPhoneEnrollmentView(viewModel: EmailPhoneEnrollmentViewModel(type: type))
         case .recoveryCodeScreen:

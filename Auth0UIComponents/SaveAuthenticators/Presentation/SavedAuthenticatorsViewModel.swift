@@ -8,7 +8,7 @@ import Foundation
 /// for a specific type (email, SMS, TOTP, etc.). Allows users to remove authenticators
 /// they no longer need.
 @MainActor
-final class SavedAuthenticatorsScreenViewModel: ObservableObject, ErrorViewModelHandler {
+final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandler {
     private let dependencies: Auth0UIComponentsSDKInitializer
     private let authenticationMethods: [AuthenticationMethod]
     let type: AuthMethodType

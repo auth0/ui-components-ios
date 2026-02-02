@@ -6,7 +6,7 @@ import Foundation
 import Testing
 
 @Suite(.serialized)
-struct SavedAuthenticatorsScreenViewModelTests {
+struct SavedAuthenticatorsViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
     private func makeMockSession() -> URLSession {
@@ -84,7 +84,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await SavedAuthenticatorsScreenViewModel(type: .email, authenticationMethods: [], delegate: nil)
+        let vm = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: nil)
         await MainActor.run {
             #expect(vm.showLoader == true)
             #expect(vm.errorViewModel == nil)
@@ -97,7 +97,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()), type: .sms, authenticationMethods: [], delegate: nil)
+        let viewModel = await SavedAuthenticatorsViewModel(getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()), type: .sms, authenticationMethods: [], delegate: nil)
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -122,7 +122,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
 
         let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
         let deleteAuthMethodsUseCase = DeleteAuthMethodUseCase(session: makeMockSession())
-        let viewModel = await SavedAuthenticatorsScreenViewModel(getAuthMethodsUseCase: getAuthMethodsUseCase,
+        let viewModel = await SavedAuthenticatorsViewModel(getAuthMethodsUseCase: getAuthMethodsUseCase,
                                                                  deleteAuthMethodsUseCase: deleteAuthMethodsUseCase,
                                                                  type: .sms,
                                                                  authenticationMethods: [], delegate: nil)
@@ -164,7 +164,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await SavedAuthenticatorsScreenViewModel(type: .email, authenticationMethods: [], delegate: mockDelegate)
+        let vm = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: mockDelegate)
         await MainActor.run {
             #expect(vm.showLoader == true)
             #expect(vm.errorViewModel == nil)
@@ -179,7 +179,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
 
         let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
         let deleteAuthMethodsUseCase = DeleteAuthMethodUseCase(session: makeMockSession())
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: getAuthMethodsUseCase,
             deleteAuthMethodsUseCase: deleteAuthMethodsUseCase,
             type: .sms,
@@ -219,7 +219,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()),
             type: .sms,
             authenticationMethods: [],
@@ -258,7 +258,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()),
             type: .sms,
             authenticationMethods: [],
@@ -286,7 +286,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
 
         let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
         let deleteAuthMethodsUseCase = DeleteAuthMethodUseCase(session: makeMockSession())
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: getAuthMethodsUseCase,
             deleteAuthMethodsUseCase: deleteAuthMethodsUseCase,
             type: .sms,
@@ -335,7 +335,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             type: .sms,
             authenticationMethods: authMethods,
             delegate: nil
@@ -352,7 +352,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()),
             type: .sms,
             authenticationMethods: [],
@@ -391,7 +391,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             type: .sms,
             authenticationMethods: authMethods,
             delegate: nil
@@ -415,9 +415,9 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let smsViewModel = await SavedAuthenticatorsScreenViewModel(type: .sms, authenticationMethods: [], delegate: nil)
-        let emailViewModel = await SavedAuthenticatorsScreenViewModel(type: .email, authenticationMethods: [], delegate: nil)
-        let totpViewModel = await SavedAuthenticatorsScreenViewModel(type: .totp, authenticationMethods: [], delegate: nil)
+        let smsViewModel = await SavedAuthenticatorsViewModel(type: .sms, authenticationMethods: [], delegate: nil)
+        let emailViewModel = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: nil)
+        let totpViewModel = await SavedAuthenticatorsViewModel(type: .totp, authenticationMethods: [], delegate: nil)
 
         await MainActor.run {
             #expect(smsViewModel.viewAuthenticationMethods.isEmpty, "SMS view model should start with empty methods")
@@ -431,7 +431,7 @@ struct SavedAuthenticatorsScreenViewModelTests {
         Auth0UIComponentsSDKInitializer.reset()
         Auth0UIComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()),
             type: .sms,
             authenticationMethods: [],

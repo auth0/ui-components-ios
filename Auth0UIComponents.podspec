@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
                         Auth0UIComponents SDK for iOS, macOS and visionOS apps.
                         DESC
   s.homepage         = 'https://github.com/auth0/ui-components-ios'
-  s.license          = 'MIT'
+  s.license          = 'Apache License 2.0'
   s.authors          = { 'Auth0' => 'support@auth0.com', 'Nandan Prabhu' => 'nandan.prabhup@okta.com' }
   s.source           = { :git => 'https://github.com/auth0/ui-components-ios.git', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/auth0'

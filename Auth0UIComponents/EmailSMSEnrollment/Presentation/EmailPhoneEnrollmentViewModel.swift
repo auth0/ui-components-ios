@@ -37,6 +37,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
     
     func startEnrollment() async {
         apiCallInProgress = true
+        errorMessage = nil
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
             if type == .sms, let phoneNumber = selectedCountry?.code.appending(phoneNumber) {

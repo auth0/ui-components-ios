@@ -5,9 +5,16 @@ import Auth0
 ///
 /// Displays a list of previously enrolled authentication methods for a specific
 /// type (email, SMS, TOTP, push, etc.) that users can select to manage or delete.
-struct SavedAuthenticatorsScreen: View {
+struct SavedAuthenticatorsView: View {
     /// View model managing saved authenticators and deletion logic
-    @ObservedObject var viewModel: SavedAuthenticatorsScreenViewModel
+    @StateObject private var viewModel: SavedAuthenticatorsViewModel
+
+    /// Initializes the saved authenticators screen.
+    ///
+    /// - Parameter viewModel: The view model managing saved authenticators and deletion logic
+    init(viewModel: SavedAuthenticatorsViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         ZStack {

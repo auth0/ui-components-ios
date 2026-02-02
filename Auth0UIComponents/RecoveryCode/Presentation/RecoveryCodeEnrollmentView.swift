@@ -8,7 +8,14 @@ import Auth0
 /// authentication methods are unavailable.
 struct RecoveryCodeEnrollmentView: View {
     /// View model managing recovery code state and enrollment logic
-    @ObservedObject var viewModel: RecoveryCodeEnrollmentViewModel
+    @StateObject private var viewModel: RecoveryCodeEnrollmentViewModel
+
+    /// Initializes the recovery code enrollment view.
+    ///
+    /// - Parameter viewModel: The view model managing recovery code state and enrollment
+    init(viewModel: RecoveryCodeEnrollmentViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         ZStack {

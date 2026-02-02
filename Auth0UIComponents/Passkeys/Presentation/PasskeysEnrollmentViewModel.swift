@@ -104,7 +104,7 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
         showLoader = false
 
-        if let authError = error as? ASAuthorizationError {
+        if let authError = error as? ASAuthorizationError, authError.code != .canceled {
             errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
                 Task {
                     await self?.startEnrollment()

@@ -7,9 +7,16 @@ import SwiftUI
 /// cases where QR code scanning is not possible.
 struct TOTPPushQRCodeView: View {
     /// View model managing QR code generation and enrollment state
-    @ObservedObject var viewModel: TOTPPushQRCodeViewModel
+    @StateObject private var viewModel: TOTPPushQRCodeViewModel
     /// Controls visibility of the "code copied" alert
     @State private var showCopiedAlert = false
+
+    /// Initializes the TOTP/Push QR code view.
+    ///
+    /// - Parameter viewModel: The view model managing QR code state and enrollment
+    init(viewModel: TOTPPushQRCodeViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     /// Core Image context for QR code generation
     private let context = CIContext()

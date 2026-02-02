@@ -190,7 +190,7 @@ struct ErrorHandlerTests {
     }
 
     @MainActor
-    @Test("ErrorHandler integration with SavedAuthenticatorsScreenViewModel - API error")
+    @Test("ErrorHandler integration with SavedAuthenticatorsViewModel - API error")
     func testErrorHandlerIntegration_SavedAuthenticators_APIError() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
@@ -205,7 +205,7 @@ struct ErrorHandlerTests {
             tokenProvider: mockTokenProvider
         )
 
-        let viewModel = await SavedAuthenticatorsScreenViewModel(
+        let viewModel = await SavedAuthenticatorsViewModel(
             getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()),
             type: .totp,
             authenticationMethods: [],

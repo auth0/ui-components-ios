@@ -1,4 +1,5 @@
 import SwiftUI
+import Auth0
 
 /// View for entering one-time passwords (OTP/MFA codes).
 ///
@@ -10,9 +11,16 @@ import SwiftUI
 /// The view auto-advances between fields and validates codes on entry.
 struct OTPView: View {
     /// View model managing OTP verification state and logic
-    @ObservedObject var viewModel: OTPViewModel
+    @StateObject private var viewModel: OTPViewModel
     /// Tracks which OTP field currently has focus
     @FocusState private var focusedField: Int?
+
+    /// Initializes the OTP verification view.
+    ///
+    /// - Parameter viewModel: The view model managing OTP verification state and logic
+    init(viewModel: OTPViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         VStack {

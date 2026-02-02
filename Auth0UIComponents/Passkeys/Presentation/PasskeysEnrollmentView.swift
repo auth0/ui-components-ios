@@ -10,13 +10,13 @@ import SwiftUI
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct PasskeysEnrollmentView: View {
     /// View model handling passkey enrollment state and logic
-    @ObservedObject var viewModel: PasskeysEnrollmentViewModel
+    @StateObject private var viewModel: PasskeysEnrollmentViewModel
 
     /// Initializes the passkey enrollment view.
     ///
-    /// - Parameter viewModel: The view model managing enrollment state
+    /// - Parameter viewModel: The view model managing passkey enrollment state and logic
     init(viewModel: PasskeysEnrollmentViewModel) {
-        self.viewModel = viewModel
+        _viewModel = StateObject(wrappedValue: viewModel)
     }
 
     var body: some View {
@@ -81,10 +81,9 @@ struct PasskeysEnrollmentView: View {
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
                             .onTapGesture {
-                                NavigationStore.shared.popToRoot()
+                                NavigationStore.shared.pop()
                             }
                             .padding(.top, 20)
-                        Spacer()
                     }
                 }.padding()
             }

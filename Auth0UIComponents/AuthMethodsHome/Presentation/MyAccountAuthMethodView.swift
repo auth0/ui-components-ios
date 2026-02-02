@@ -1,4 +1,5 @@
 import SwiftUI
+import Auth0
 
 /// Displays a single authentication method as a selectable card.
 ///
@@ -7,7 +8,11 @@ import SwiftUI
 /// management or enrollment screen for that authentication method.
 struct MyAccountAuthMethodView: View {
     /// View model providing authentication method details and actions
-    @ObservedObject var viewModel: MyAccountAuthMethodViewModel
+    @StateObject var viewModel: MyAccountAuthMethodViewModel
+ 
+    init(viewModel: MyAccountAuthMethodViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         HStack() {
