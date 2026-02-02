@@ -119,7 +119,7 @@ The `MyAccountAuthMethodsView` component allows users to:
   - Email
   - SMS
   - Recovery codes
-  - Passkeys (FIDO2/WebAuthn)
+  - Passkeys (FIDO2/WebAuthn) - Requires iOS 16.6+, macOS 13.5+, visionOS 1.0+
 - **Enroll in new authentication methods** - Add additional authentication factors
 - **Delete authentication methods** - Remove enrolled authenticators
 - **Manage recovery codes** - Generate and manage backup codes for account recovery

@@ -4,8 +4,8 @@ import Auth0
 struct StartPasskeyEnrollmentRequest {
     let token: String
     let domain: String
-    let userIdentityId: String? = nil
-    let connection: String? = nil
+    let userIdentityId: String?
+    let connection: String?
 }
 
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)

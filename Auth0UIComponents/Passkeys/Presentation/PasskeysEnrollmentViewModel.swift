@@ -44,7 +44,11 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
     func startEnrollment() async {
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
-            passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(request: StartPasskeyEnrollmentRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+            let startPasskeysEnrollmentRequest = await StartPasskeyEnrollmentRequest(token: apiCredentials.accessToken,
+                                                                                     domain: dependencies.domain,
+                                                                                     userIdentityId: dependencies.passkeyConfiguration.userIdentityId,
+                                                                                     connection: dependencies.passkeyConfiguration.connection)
+            passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(request: startPasskeysEnrollmentRequest)
             enrollPasskey()
         } catch {
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in

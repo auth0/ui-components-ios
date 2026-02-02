@@ -5,6 +5,7 @@ public actor Auth0UIComponentsSDKInitializer {
     let audience: String
     let domain: String
     let clientId: String
+    let passkeyConfiguration: PasskeysConfiguration
     let tokenProvider: TokenProvider
     let bundle: Bundle
     let session: URLSession
@@ -20,6 +21,7 @@ public actor Auth0UIComponentsSDKInitializer {
     private init(audience: String,
                  domain: String,
                  clientId: String,
+                 passkeyConfiguration: PasskeysConfiguration,
                  bundle: Bundle = .main,
                  session: URLSession = .shared,
                  tokenProvider: any TokenProvider) {
@@ -29,9 +31,11 @@ public actor Auth0UIComponentsSDKInitializer {
         self.tokenProvider = tokenProvider
         self.bundle = bundle
         self.session = session
+        self.passkeyConfiguration = passkeyConfiguration
     }
 
     public static func initialize(session: URLSession = .shared,
+                                  passkeyConfiguration: PasskeysConfiguration = PasskeysConfiguration(),
                                   bundle: Bundle = .main,
                                   tokenProvider: any TokenProvider) {
         let config = plistValues(bundle: bundle)!
@@ -39,22 +43,25 @@ public actor Auth0UIComponentsSDKInitializer {
         let myAccountAudience = config.domain.appending("/me/")
         
         _shared = Auth0UIComponentsSDKInitializer(audience: ensureHTTPS(myAccountAudience),
-                                    domain: config.domain,
-                                    clientId: config.clientId,
-                                    bundle: bundle,
-                                    session: session,
-                                    tokenProvider: tokenProvider)
+                                                  domain: config.domain,
+                                                  clientId: config.clientId,
+                                                  passkeyConfiguration: passkeyConfiguration,
+                                                  bundle: bundle,
+                                                  session: session,
+                                                  tokenProvider: tokenProvider)
     }
 
     public static func initialize(session: URLSession = .shared,
                                   bundle: Bundle = .main,
                                   domain: String,
                                   clientId: String,
+                                  passkeyConfiguration: PasskeysConfiguration = PasskeysConfiguration(),
                                   audience: String,
                                   tokenProvider: any TokenProvider) {
         _shared = Auth0UIComponentsSDKInitializer(audience: ensureHTTPS(audience),
                                     domain: domain,
                                     clientId: clientId,
+                                    passkeyConfiguration: passkeyConfiguration,
                                     bundle: bundle,
                                     session: session,
                                     tokenProvider: tokenProvider)
