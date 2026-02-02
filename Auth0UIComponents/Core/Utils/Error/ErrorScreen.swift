@@ -1,17 +1,22 @@
 import SwiftUI
 
 struct ErrorScreen: View {
+    // MARK: - View Model
     let viewModel: ErrorScreenViewModel
+    
+    // MARK: - Theme
+    @Environment(\.theme) var theme
 
+    // MARK: - Main body
     var body: some View {
         VStack {
             Spacer()
-            VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text(viewModel.title)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(Color("191919", bundle: ResourceBundle.default))
+                    .textStyle(.title, theme: theme)
                 
                 Text(viewModel.subTitle)
+                    .textStyle(.helper, theme: theme)
                     .onTapGesture {
                         viewModel.handleTextTap()
                     }
@@ -24,17 +29,8 @@ struct ErrorScreen: View {
                         .font(.system(size: 16, weight: .medium))
                         .frame(maxWidth: .infinity)
                 }.frame(height: 48)
-                    .background(
-                        Color("262420", bundle: ResourceBundle.default)
-                    )
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                Color("262420", bundle: ResourceBundle.default),
-                                lineWidth: 2
-                            )
-                    )
+                    .themeButtonStyle(.primary)
+                    .foregroundStyle(theme.colors.error)
             }
             Spacer()
         }.padding()

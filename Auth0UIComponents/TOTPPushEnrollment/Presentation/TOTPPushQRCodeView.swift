@@ -1,14 +1,22 @@
 import SwiftUI
 
 struct TOTPPushQRCodeView: View {
-    @ObservedObject var viewModel: TOTPPushQRCodeViewModel
+    // MARK: - State Properties
     @State private var showCopiedAlert = false
     
+    // MARK: - View Model
+    @ObservedObject var viewModel: TOTPPushQRCodeViewModel
+    
+    // MARK: - Properties
     private let context = CIContext()
     private let filter = CIFilter.qrCodeGenerator()
+    
+    // MARK: - Theme
+    @Environment(\.appTheme) var theme
 
+    // MARK: - Main body
     var body: some View {
-        VStack {
+        VStack(spacing: 16) {
             if viewModel.showLoader {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
@@ -26,8 +34,7 @@ struct TOTPPushQRCodeView: View {
                         .padding(.horizontal)
                     
                     Text("Use your Authenticator App (like Google Authenticator or Auth0 Guardian) to scan this QR code.")
-                        .font(Font.system(size: 16))
-                        .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                        .textStyle(.bodySmall)
                         .multilineTextAlignment(.center)
                 }
                 
@@ -40,13 +47,10 @@ struct TOTPPushQRCodeView: View {
                             RoundedRectangle(cornerRadius: 14)
                                 .stroke(Color("262420", bundle: ResourceBundle.default), lineWidth: 1)
                         }.padding(.bottom, 16)
-
+                    
                     Button {
-                        #if os(macOS)
-                        NSPasteboard.general.setString(manualInputCode, forType: .string)
-                        #else
-                        UIPasteboard.general.string = manualInputCode
-                        #endif
+                        // Copy contents using common pasteboard instance
+                        PasteboardManager.copy(manualInputCode)
                         viewModel.toast = Toast(style: .notify, message: "Copied")
                     } label: {
                         HStack(alignment: .center, spacing: 8) {
@@ -64,53 +68,36 @@ struct TOTPPushQRCodeView: View {
                         )
                         .cornerRadius(24)
                 }
-
-                Button {
-                    Task {
-                        await viewModel.handleContinueButtonTap()
-                    }
-                } label: {
-                    HStack {
-                        Spacer()
-                        if viewModel.apiCallInProgress {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .tint(Color("FFFFFF", bundle: ResourceBundle.default))
-                        } else {
-                            Text("Continue")
-                                .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
-                                .font(.system(size: 16, weight: .medium))
-                        }
-                        Spacer()
-                    }.frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                }.frame(height: 48)
-                    .background(
-                        Color("262420", bundle: ResourceBundle.default)
-                    )
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                Color("262420", bundle: ResourceBundle.default),
-                                lineWidth: 2
-                            )
-                    )
-                    .padding(.bottom, 30)
                 
-            Text(attributedString())
-                    .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                    .font(Font.system(size: 16))
-                    .multilineTextAlignment(.center)
-                    .onTapGesture {
-                        if let url = URL(string: "https://apps.apple.com/us/app/auth0-guardian/id1093447833") {
-                            #if os(macOS)
-                                NSWorkspace.shared.open(url)
-                            #else
-                                UIApplication.shared.open(url)
-                            #endif
+                VStack(spacing: 32) {
+                    Button {
+                        Task {
+                            await viewModel.handleContinueButtonTap()
                         }
+                    } label: {
+                        HStack(alignment: .center) {
+                            if viewModel.apiCallInProgress {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                            } else {
+                                Text("Continue")
+                                    .foregroundStyle(AnyShapeStyle(Color.white))
+                                    .textStyle(.label)
+                            }
+                        }.frame(maxWidth: .infinity)
                     }
+                    .themeButtonStyle(.primary)
+                    
+                    Text(attributedString())
+                        .textStyle(.bodySmall)
+                        .multilineTextAlignment(.center)
+                        .onTapGesture {
+                            if let url = URL(string: "https://apps.apple.com/us/app/auth0-guardian/id1093447833") {
+                                openExternalLink(url)
+                            }
+                        }
+                }
             }
         }.padding(.all, 16)
             .toastView(toast: $viewModel.toast)
