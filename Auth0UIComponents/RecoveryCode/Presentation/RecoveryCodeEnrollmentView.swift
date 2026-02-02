@@ -50,12 +50,8 @@ struct RecoveryCodeEnrollmentView: View {
                     
                     Button {
                         if let recoveryCodeChallenge = viewModel.recoveryCodeChallenge {
-                            #if os(macOS)
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.writeObjects([recoveryCodeChallenge.recoveryCode as NSString])
-                            #elseif os(iOS) && os(visionOS)
-                                UIPasteboard.general.string = recoveryCodeChallenge.recoveryCode
-                            #endif
+                            // Copy contents using common pasteboard instance
+                            PasteboardManager.copy(recoveryCodeChallenge.recoveryCode)
                             viewModel.toast = Toast(style: .notify, message: "Copied")
                         }
                     } label: {

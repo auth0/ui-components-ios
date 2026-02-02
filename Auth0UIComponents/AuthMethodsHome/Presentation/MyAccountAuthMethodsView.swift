@@ -2,14 +2,22 @@ import SwiftUI
 import Combine
 
 public struct MyAccountAuthMethodsView: View {
+    
+    // MARK: - Navigation
     @StateObject private var navigationStore = NavigationStore.shared
-    @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
+    
+    // MARK: - State Properties
     @State private var previousPathCount = 0
-
+    
+    // MARK: - View Model
+    @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
+    
+    // MARK: - Init
     public init() {
         self.viewModel = MyAccountAuthMethodsViewModel()
     }
 
+    // MARK: - Main body
     public var body: some View {
         NavigationStack(path: $navigationStore.path) {
             ZStack {
@@ -61,12 +69,10 @@ public struct MyAccountAuthMethodsView: View {
         switch component {
         case .title(let text):
             Text(text)
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                .font(.system(size: 20, weight: .semibold))
+                .textStyle(.title)
         case .subtitle(let text):
             Text(text)
-                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                .font(.system(size: 14, weight: .regular))
+                .textStyle(.bodySmall)
         case .additionalVerificationMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
         case .emptyFactors:

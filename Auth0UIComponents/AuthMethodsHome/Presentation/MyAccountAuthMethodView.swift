@@ -10,8 +10,7 @@ struct MyAccountAuthMethodView: View {
                 .padding(.trailing, 16)
 
             Text(viewModel.title())
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
+                .textStyle(.body)
                 .padding(.trailing, 16)
 
             Spacer()
