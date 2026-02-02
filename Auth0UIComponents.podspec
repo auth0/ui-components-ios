@@ -5,10 +5,10 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
                         Auth0UIComponents SDK for iOS, macOS and visionOS apps.
                         DESC
-  s.homepage         = 'https://github.com/auth0/Auth0UIComponents.swift'
+  s.homepage         = 'https://github.com/auth0/ui-components-ios'
   s.license          = 'MIT'
   s.authors          = { 'Auth0' => 'support@auth0.com', 'Nandan Prabhu' => 'nandan.prabhup@okta.com' }
-  s.source           = { :git => 'https://github.com/auth0/Auth0.swift.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/auth0/ui-components-ios', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/auth0'
   s.source_files     = 'Auth0UIComponents/**/*.swift'
   s.resource_bundles = { s.name => 'Auth0UIComponents/PrivacyInfo.xcprivacy' }
