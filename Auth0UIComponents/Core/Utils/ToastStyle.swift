@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Enum defining toast notification styles with associated theme colors.
 enum ToastStyle {
   case error
   case warning

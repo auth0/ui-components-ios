@@ -10,7 +10,6 @@ import UIKit
 import AppKit
 #endif
 
-/// ViewModel for managing TOTP and Push authentication method enrollment with QR code generation.
 @MainActor
 final class TOTPPushQRCodeViewModel: ObservableObject {
     private let startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable
@@ -42,7 +41,6 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         self.delegate = delegate
     }
 
-    /// Fetches the enrollment challenge from the server for the selected authentication method.
     func fetchEnrollmentChallenge() async {
         showLoader = true
         errorViewModel = nil
@@ -80,7 +78,6 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         }
     }
 
-    /// Handles the continue button tap, proceeding with enrollment based on the authentication method type.
     func handleContinueButtonTap() async {
         if let totpEnrollmentChallenge {
             await NavigationStore.shared.push(.otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge))
@@ -135,7 +132,6 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         }
     }
     
-    /// Returns the appropriate navigation title based on the authentication method type.
     func navigationTitle() -> String {
         if type == .pushNotification  {
             return "Add push notification"
@@ -144,7 +140,6 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         }
     }
 
-    /// Handles various error types encountered during enrollment with appropriate user feedback and recovery options.
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
@@ -161,7 +156,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     showLoader = false
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

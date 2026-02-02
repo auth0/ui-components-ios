@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Reusable circular progress indicator with customizable tint color
 struct Auth0Loader: View {
     var tintColor: Color
 

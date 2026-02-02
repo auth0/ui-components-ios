@@ -1,7 +1,6 @@
 import SwiftUI
 import Auth0
 
-/// SwiftUI view for displaying and saving recovery codes during enrollment.
 struct RecoveryCodeEnrollmentView: View {
     @ObservedObject var viewModel: RecoveryCodeEnrollmentViewModel
     var body: some View {

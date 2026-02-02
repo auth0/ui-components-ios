@@ -7,7 +7,6 @@ import UIKit
 import AppKit
 #endif
 
-/// UIViewRepresentable for individual OTP digit input fields with specialized keyboard handling.
 #if !os(macOS)
 struct OTPTextField: UIViewRepresentable {
     
@@ -60,7 +59,7 @@ struct OTPTextField: UIViewRepresentable {
         uiView.setContentHuggingPriority(.defaultLow, for: .horizontal)
     }
     
-    
+
     func setSelection(_ textField: UITextField) {
         guard let text = textField.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         textField.selectedTextRange = textField.textRange(from: textField.beginningOfDocument, to: textField.endOfDocument)
@@ -75,26 +74,26 @@ struct OTPTextField: UIViewRepresentable {
 }
 
 extension OTPTextField {
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
     class Coordinator: NSObject, UITextFieldDelegate {
         var parent: OTPTextField
-        
+
         private var shouldChangeTriggered = false
 
         init(_ control: OTPTextField) {
             self.parent = control
             super.init()
         }
-        
+
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
             self.parent.enterKeyPressed()
             return false
         }
-        
+
         func textFieldDidBeginEditing(_ textField: UITextField) {
             self.parent.setSelection(textField)
         }
@@ -102,15 +101,13 @@ extension OTPTextField {
         func textFieldDidChangeSelection(_ textField: UITextField) {
             self.parent.setSelection(textField)
         }
-        
-        
+
         func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
             self.parent.setText(string)
             return false
         }
     }
 }
-
 
 class BackSpaceTextField: UITextField {
     var emptyBackspaceKeyPressed: (() -> Void)?
@@ -233,10 +230,11 @@ extension String {
     func prefix(length: Int) -> String {
         return String(self.prefix(length))
     }
+
     func suffix(length: Int) -> String {
         return String(self.suffix(length))
     }
-    
+
     func strAtIndex(_ int: Int) -> String {
         if int >= self.count { return "" }
         let stringIndex = self.toStringIndex(int)

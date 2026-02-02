@@ -1,7 +1,6 @@
 import SwiftUI
 import Combine
 
-/// Public SwiftUI view for managing user authentication methods in My Account.
 public struct MyAccountAuthMethodsView: View {
     @StateObject private var navigationStore = NavigationStore.shared
     @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
@@ -10,7 +9,7 @@ public struct MyAccountAuthMethodsView: View {
     public init() {
         self.viewModel = MyAccountAuthMethodsViewModel()
     }
-    
+
     public var body: some View {
         NavigationStack(path: $navigationStore.path) {
             ZStack {
@@ -31,9 +30,8 @@ public struct MyAccountAuthMethodsView: View {
                     }
                 }
             }
-            .navigationTitle(Text("Login & Security")) // Sets the navigation bar title
+            .navigationTitle(Text("Login & Security"))
             #if !os(macOS)
-                // iOS, tvOS, watchOS: Use inline display mode for consistent, compact navigation bar
                 .navigationBarTitleDisplayMode(.inline)
             #endif
                 .navigationDestination(for: Route.self) { route in
@@ -49,7 +47,6 @@ public struct MyAccountAuthMethodsView: View {
         }
         .onAppear {
             Task {
-                // Fetches authentication methods from Auth0 and builds the component hierarchy
                 await viewModel.loadMyAccountAuthViewComponentData()
             }
         }
@@ -58,8 +55,6 @@ public struct MyAccountAuthMethodsView: View {
     @ViewBuilder
     private func authMethodView(_ component: MyAccountAuthViewComponentData) -> some View {
         switch component {
-        // MARK: Title Component
-        // Renders a prominent section heading with bold typography
         case .createPasskey(let model):
             if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
                 if let viewModel = model as? PasskeysEnrollmentViewModel,
@@ -74,19 +69,14 @@ public struct MyAccountAuthMethodsView: View {
                 .padding(.bottom, 48)
         case .title(let text):
             Text(text)
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default)) // Pure black for maximum contrast
-                .font(.system(size: 20, weight: .semibold)) // Large, bold font for hierarchy
+                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
+                .font(.system(size: 20, weight: .semibold))
 
-        // MARK: Subtitle Component
-        // Renders secondary descriptive text with reduced visual weight
         case .subtitle(let text):
             Text(text)
-                .foregroundStyle(Color("606060", bundle: ResourceBundle.default)) // Medium gray for subtlety
-                .font(.system(size: 14, weight: .regular)) // Standard body text size
+                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                .font(.system(size: 14, weight: .regular))
 
-        // MARK: Authentication Method Card
-        // Renders an interactive card for a specific authentication method
-        // Delegates to MyAccountAuthMethodView for the complete card UI and interaction handling
         case .additionalVerificationMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
         case .emptyFactors:

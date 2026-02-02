@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// SwiftUI view for passkey enrollment with informational content.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct PasskeysEnrollmentView: View {
     @ObservedObject var viewModel: PasskeysEnrollmentViewModel

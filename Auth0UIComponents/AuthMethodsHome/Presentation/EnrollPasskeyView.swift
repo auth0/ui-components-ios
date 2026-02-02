@@ -1,13 +1,12 @@
 import SwiftUI
 
-/// SwiftUI view promoting passkey enrollment with informational content.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct EnrollPasskeyView: View {
     @Binding var collapsePasskeyBanner: Bool
     var viewModel: PasskeysEnrollmentViewModel
     var body: some View {
         VStack {
-            Text("With Passkey, you don’t have to remember complext passwords.")
+            Text("With Passkey, you don’t have to remember complex passwords.")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
 

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// View for displaying QR code for TOTP and Push notification enrollment
 struct TOTPPushQRCodeView: View {
     @ObservedObject var viewModel: TOTPPushQRCodeViewModel
     @State private var showCopiedAlert = false

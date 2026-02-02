@@ -1,7 +1,6 @@
 import SwiftUI
 import Auth0
 
-/// SwiftUI view displaying a list of saved authentication methods with delete capability.
 struct SavedAuthenticatorsScreen: View {
     @ObservedObject var viewModel: SavedAuthenticatorsScreenViewModel
     var body: some View {

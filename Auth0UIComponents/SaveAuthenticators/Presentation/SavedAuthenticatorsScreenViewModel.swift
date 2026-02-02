@@ -2,7 +2,6 @@ import Auth0
 import Combine
 import Foundation
 
-/// ViewModel managing the display and management of saved authentication methods.
 @MainActor
 final class SavedAuthenticatorsScreenViewModel: ObservableObject {
     private let dependencies: Auth0UIComponentsSDKInitializer
@@ -101,7 +100,7 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
                         .scope(scope)
                         .start()
                     showLoader = false
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

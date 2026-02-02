@@ -2,7 +2,6 @@ import Combine
 import Auth0
 import SwiftUI
 
-/// ViewModel for a single authentication method item in the My Account view.
 final class MyAccountAuthMethodViewModel: ObservableObject {
     private let authMethods: [AuthenticationMethod]
     private let type: AuthMethodType
@@ -39,7 +38,7 @@ final class MyAccountAuthMethodViewModel: ObservableObject {
 }
 
 extension MyAccountAuthMethodViewModel: Hashable {
-  
+
     static func == (lhs: MyAccountAuthMethodViewModel, rhs: MyAccountAuthMethodViewModel) -> Bool {
         lhs.type == rhs.type
     }
@@ -55,7 +54,6 @@ extension AuthenticationMethod: @retroactive Hashable {
     }
 }
 
-/// Enum representing the different types of authentication methods available.
 enum AuthMethodType: String, CaseIterable {
     case email = "email"
 

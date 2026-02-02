@@ -3,7 +3,6 @@ import Combine
 import Foundation
 import Auth0
 
-/// Enum defining all possible navigation routes in the authentication flow.
 enum Route: Hashable {
     case enrollPasskeyScreen
 
@@ -20,7 +19,6 @@ enum Route: Hashable {
 }
 
 extension AuthMethodType: Hashable {
-    
 }
 
 extension TOTPEnrollmentChallenge: @retroactive Hashable {
@@ -53,7 +51,6 @@ extension EmailEnrollmentChallenge: @retroactive Hashable {
     }
 }
 
-/// Type-erased wrapper for any TokenProvider conforming to Hashable.
 struct AnyTokenProvider: Hashable {
     private let base: any TokenProvider
     private let _hash: (inout Hasher) -> Void

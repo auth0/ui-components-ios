@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// SwiftUI view displaying a single authentication method with enrollment status.
 struct MyAccountAuthMethodView: View {
     @ObservedObject var viewModel: MyAccountAuthMethodViewModel
     var body: some View {
@@ -18,8 +17,8 @@ struct MyAccountAuthMethodView: View {
 
             if viewModel.isAtleastOnceAuthFactorEnrolled() {
                 Image("checkmark.green", bundle: ResourceBundle.default)
-                    .frame(width: 24, height: 24) // Matches icon size for visual balance
-                    .padding(.trailing, 22) // Spacing before chevron
+                    .frame(width: 24, height: 24)
+                    .padding(.trailing, 22)
             }
             Image("chevron", bundle: ResourceBundle.default)
                 .frame(width: 16, height: 16)

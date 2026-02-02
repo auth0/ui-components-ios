@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// SwiftUI view displaying a styled toast notification message.
 struct ToastView: View {
-  
+
   var style: ToastStyle
   var message: String
   var onCancelTapped: (() -> Void)

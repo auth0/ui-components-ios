@@ -3,7 +3,6 @@ import Combine
 import SwiftUI
 import Auth0
 
-/// Enum representing the different components that can be displayed in the My Account auth methods view.
 enum MyAccountAuthViewComponentData: Hashable {
     case title(text: String)
 
@@ -58,7 +57,6 @@ enum MyAccountAuthViewComponentData: Hashable {
     }
 }
 
-/// ViewModel managing the My Account authentication methods view with data fetching and composition.
 @MainActor
 final class MyAccountAuthMethodsViewModel: ObservableObject {
 
@@ -141,14 +139,11 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
 
                 self.viewComponents = viewComponents
             } else {
-                // No factors available - show empty state warning
                 self.viewComponents = [.emptyFactors]
             }
         } catch  {
-            // MARK: Error Handling - Delegate to comprehensive error handler with retry logic
             await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
                 Task {
-                    // Retry callback: re-execute this method if user taps retry button
                     await self?.loadMyAccountAuthViewComponentData()
                 }
             }
@@ -158,15 +153,14 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
-        // Hide loading indicator before showing error (unless we're going to reauth)
         showLoader = false
-        
+
         if let error = error as? CredentialsManagerError {
             let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-            
+
             if case .mfaRequired = uiComponentError {
                 showLoader = true
-                
+
                 do {
                     let credentials = try await Auth0.webAuth(
                         clientId: dependencies.clientId,
@@ -176,23 +170,20 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
                         .audience(dependencies.audience)
                         .scope(scope)
                         .start()
-                    
+
                     dependencies.tokenProvider.store(
                         apiCredentials: APICredentials(from: credentials),
                         for: dependencies.audience
                     )
-                    
+
                     showLoader = false
-                    // Retry the original operation with new credentials
                     retryCallback()
                 } catch  {
-                    // Reauthentication failed - recursively handle the new error
                     await handle(error: error,
                                  scope: scope,
                                  retryCallback: retryCallback)
                 }
             } else {
-                // Other credential errors - show error screen with retry option
                 errorViewModel = uiComponentError.errorViewModel(completion: {
                     retryCallback()
                 })
@@ -211,7 +202,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
             }
         }
     }
-    
+
 }
 
 extension MyAccountAuthMethodsViewModel: RefreshAuthDataProtocol  {

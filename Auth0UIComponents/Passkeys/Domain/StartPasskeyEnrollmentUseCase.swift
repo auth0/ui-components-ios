@@ -1,6 +1,5 @@
 import Auth0
 
-/// Request parameters for initiating passkey enrollment.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct StartPasskeyEnrollmentRequest {
     let token: String
@@ -9,13 +8,11 @@ struct StartPasskeyEnrollmentRequest {
     let connection: String? = nil
 }
 
-/// Protocol for initiating passkey enrollment.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 protocol StartPasskeyEnrollmentUseCaseable {
     func execute(request: StartPasskeyEnrollmentRequest) async throws -> PasskeyEnrollmentChallenge
 }
 
-/// Use case for initiating passkey enrollment and retrieving enrollment challenge.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct StartPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable {
     func execute(request: StartPasskeyEnrollmentRequest) async throws -> PasskeyEnrollmentChallenge {
@@ -23,6 +20,5 @@ struct StartPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable {
             .authenticationMethods
             .passkeyEnrollmentChallenge()
             .start()
-        
     }
 }

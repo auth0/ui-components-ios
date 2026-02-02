@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// SwiftUI view for entering email or phone number during enrollment.
 struct EmailPhoneEnrollmentView: View {
     @ObservedObject var viewModel: EmailPhoneEnrollmentViewModel
     @FocusState private var textFieldFocused: Bool

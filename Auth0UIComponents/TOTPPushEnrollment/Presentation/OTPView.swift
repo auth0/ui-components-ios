@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// SwiftUI view for entering a 6-digit OTP code during enrollment confirmation.
 struct OTPView: View {
     @ObservedObject var viewModel: OTPViewModel
     @FocusState private var focusedField: Int?
@@ -93,9 +92,8 @@ struct OTPView: View {
                 focusedField = 0
             }
     }
-    
+
     private func otpTextFieldView() -> some View {
-        
         HStack(spacing: 8) {
             ForEach(0..<6, id: \.self, content: { index in
                 OTPTextField(
@@ -124,40 +122,37 @@ struct OTPView: View {
     }
 
     private func setTextAtIndex(_ string: String, at index: Int) {
-        
         let old = viewModel.otpText
-        
+
         let strBefore = old.prefix(length: index)
         let suffixLength = old.count - index - (string.isEmpty ? 1 : string.count)
-        
+
         let strAfter = suffixLength <= 0 ? "" : old.suffix(length: suffixLength)
-        
+
         let new = (strBefore + string + strAfter).prefix(length: 6)
-        
+
         viewModel.otpText = new
-        
+
         guard let focusedField = self.focusedField else {
             return
         }
-        
+
         if focusedField <= old.count - 1 {
             let newFocus = focusedField + (string.isEmpty ? -1 : string.count)
-            
+
             self.focusedField = newFocus >= 6 ? nil : newFocus
             return
         }
-        
-        
+
         let newFocus = new.count
         if newFocus >= 6 {
             self.focusedField = nil
             return
         }
-        
+
         self.focusedField = newFocus
-        
     }
-    
+
     private func enterKeyPressed() {
         self.focusedField = nil
     }

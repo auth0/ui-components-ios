@@ -2,7 +2,6 @@ import Auth0
 import Combine
 import AuthenticationServices
 
-/// ViewModel managing passkey enrollment with ASAuthorizationControllerDelegate integration.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 @MainActor
 final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthorizationControllerDelegate {
@@ -42,7 +41,6 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
         }
     }
 
-    /// Initiates the passkey enrollment process.
     func startEnrollment() async {
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
@@ -91,10 +89,29 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
-        
+        showLoader = false
+
+        if let authError = error as? ASAuthorizationError {
+            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
+                Task {
+                    await self?.startEnrollment()
+                }
+            }
+        } else {
+            Task { [weak self] in
+                await self?.handle(
+                    error: error,
+                    scope: "openid create:me:authentication_methods",
+                    retryCallback: {
+                        Task {
+                            await self?.startEnrollment()
+                        }
+                    }
+                )
+            }
+        }
     }
 
-    /// Handles various error types encountered during passkey enrollment.
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
@@ -111,7 +128,7 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
                         .scope(scope)
                         .start()
                     showLoader = false
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
+                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
                     retryCallback()
                 } catch  {
                     await handle(error: error,

@@ -2,7 +2,6 @@ import Auth0
 import Combine
 import Foundation
 
-/// ViewModel managing OTP code entry and confirmation for TOTP, email, and SMS enrollment.
 @MainActor
 final class OTPViewModel: ObservableObject {
     private let totpEnrollmentChallenge: TOTPEnrollmentChallenge?
@@ -52,7 +51,6 @@ final class OTPViewModel: ObservableObject {
         self.delegate = delegate
     }
 
-    /// Submits the OTP code to confirm enrollment for the authentication method.
     func confirmEnrollment() async {
         apiCallInProgress = true
         errorMessage = nil
@@ -95,7 +93,6 @@ final class OTPViewModel: ObservableObject {
         }
     }
 
-    /// Restarts the enrollment process for email or SMS authentication methods.
     func restartEnrollment() async {
         if let emailOrPhoneNumber {
             showLoader = true
@@ -144,7 +141,6 @@ final class OTPViewModel: ObservableObject {
         }
     }
     
-    /// Handles various error types with appropriate user-facing error messages.
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {
