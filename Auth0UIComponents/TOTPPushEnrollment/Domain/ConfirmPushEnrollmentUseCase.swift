@@ -6,14 +6,21 @@ import Combine
 ///
 /// Contains the enrollment session information needed to complete
 /// the push notification authentication method enrollment.
+///
+/// ## See Also
+///
+/// - [Push Notifications](https://auth0.com/docs/secure/multi-factor-authentication/auth0-guardian)
+/// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct ConfirmPushEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The enrollment ID from the initial challenge
+    /// The enrollment ID from the initial challenge. This uniquely identifies the authentication
+    /// method being enrolled.
     let id: String
-    /// The authentication session identifier from the challenge
+    /// The authentication session identifier from the challenge. Used to maintain session state
+    /// during the enrollment flow.
     let authSession: String
 }
 

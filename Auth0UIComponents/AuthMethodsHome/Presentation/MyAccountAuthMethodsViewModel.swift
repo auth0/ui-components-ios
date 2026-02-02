@@ -63,7 +63,7 @@ enum MyAccountAuthViewComponentData: Hashable {
 }
 
 @MainActor
-final class MyAccountAuthMethodsViewModel: ObservableObject {
+final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandler {
 
     private let factorsUseCase: GetFactorsUseCaseable
 
@@ -80,6 +80,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
     private var authMethodsFetched: Bool = false
     private var factors: [Factor] = []
     private var authMethods: [AuthenticationMethod] = []
+    private let errorHandler = ErrorHandler()
  
     init(factorsUseCase: GetFactorsUseCaseable = GetFactorsUseCase(),
          authMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
@@ -155,57 +156,8 @@ final class MyAccountAuthMethodsViewModel: ObservableObject {
         }
     }
 
-    @MainActor func handle(error: Error,
-                           scope: String,
-                           retryCallback: @escaping () -> Void) async {
-        showLoader = false
-
-        if let error = error as? CredentialsManagerError {
-            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-
-            if case .mfaRequired = uiComponentError {
-                showLoader = true
-
-                do {
-                    let credentials = try await Auth0.webAuth(
-                        clientId: dependencies.clientId,
-                        domain: dependencies.domain,
-                        session: dependencies.session
-                    )
-                        .audience(dependencies.audience)
-                        .scope(scope)
-                        .start()
-
-                    dependencies.tokenProvider.store(
-                        apiCredentials: APICredentials(from: credentials),
-                        for: dependencies.audience
-                    )
-
-                    showLoader = false
-                    retryCallback()
-                } catch  {
-                    await handle(error: error,
-                                 scope: scope,
-                                 retryCallback: retryCallback)
-                }
-            } else {
-                errorViewModel = uiComponentError.errorViewModel(completion: {
-                    retryCallback()
-                })
-            }
-        }
-        else if let error  = error as? MyAccountError {
-            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel(completion: {
-                retryCallback()
-            })
-        }
-        else if let error = error as? WebAuthError {
-            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel {
-                retryCallback()
-            }
-        }
+    func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
+        await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }
 
 }

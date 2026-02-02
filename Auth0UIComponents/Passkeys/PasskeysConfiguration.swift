@@ -32,8 +32,16 @@ public struct PasskeysConfiguration {
     /// Initializes the passkey configuration.
     ///
     /// - Parameters:
-    ///   - userIdentityId: The user's identity ID (defaults to nil)
-    ///   - connection: The connection name for passkey operations (defaults to nil)
+    ///   - userIdentityId: The user's identity ID. The identity ID to link the passkey to.
+    ///   This is typically the `sub` claim from the user's ID token. (defaults to nil)
+    ///   - connection: The connection name for passkey operations. Specifies the database connection
+    ///   to use when enrolling the passkey. (defaults to nil)
+    ///
+    /// ## See Also
+    ///
+    /// - [Passkeys](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
+    /// - [User Identity](https://auth0.com/docs/manage-users/user-accounts/identify-users)
+    /// - [Database Connections](https://auth0.com/docs/authenticate/database-connections)
     public init(userIdentityId: String? = nil,
                 connection: String? = nil) {
         self.userIdentityId = userIdentityId

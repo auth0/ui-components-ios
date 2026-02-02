@@ -17,12 +17,17 @@ protocol StartEmailEnrollmentUseCaseable {
 ///
 /// Contains the authentication token, Auth0 domain, and email address
 /// to be enrolled as an authentication method.
+///
+/// ## See Also
+///
+/// - [Email MFA](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#email)
 struct StartEmailEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The email address to enroll for authentication
+    /// The email address to enroll for authentication. The user will receive a verification code
+    /// at this email address to complete enrollment.
     let email: String
 }
 

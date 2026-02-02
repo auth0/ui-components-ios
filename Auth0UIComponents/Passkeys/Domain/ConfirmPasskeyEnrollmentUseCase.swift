@@ -5,15 +5,22 @@ import Combine
 ///
 /// Contains the newly created passkey and enrollment details needed
 /// to complete the passkey registration with Auth0.
+///
+/// ## See Also
+///
+/// - [Passkeys](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
+/// - [WebAuthn Credentials](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn)
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct ConfirmPasskeyEnrollmentRequest {
-    /// The newly created passkey from the credential provider
+    /// The newly created passkey from the credential provider. This contains the public key credential
+    /// created by the platform's authenticator (Touch ID, Face ID, etc.).
     let passkey: any NewPasskey
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The passkey enrollment challenge received from the start use case
+    /// The passkey enrollment challenge received from the start use case. Contains the server-generated
+    /// challenge and parameters required for WebAuthn registration.
     let challenge: PasskeyEnrollmentChallenge
 }
 

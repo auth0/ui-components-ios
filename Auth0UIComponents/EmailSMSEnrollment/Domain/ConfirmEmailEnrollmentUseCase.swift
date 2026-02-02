@@ -18,16 +18,24 @@ protocol ConfirmEmailEnrollmentUseCaseable {
 ///
 /// Contains all the necessary information to verify the email enrollment
 /// by providing the one-time password sent to the user's email.
+///
+/// ## See Also
+///
+/// - [Email MFA](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#email)
+/// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct ConfirmEmailEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The enrollment ID from the initial challenge
+    /// The enrollment ID from the initial challenge. This uniquely identifies the authentication
+    /// method being enrolled.
     let id: String
-    /// The authentication session identifier from the challenge
+    /// The authentication session identifier from the challenge. Used to maintain session state
+    /// during the enrollment flow.
     let authSession: String
-    /// The OTP code from the email verification message
+    /// The OTP code from the email verification message. This is the one-time code sent to
+    /// the user's email address to verify ownership.
     let otpCode: String
 }
 

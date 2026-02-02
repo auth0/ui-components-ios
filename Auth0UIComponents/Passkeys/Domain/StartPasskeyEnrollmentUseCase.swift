@@ -4,15 +4,23 @@ import Auth0
 ///
 /// Contains the authentication token, Auth0 domain, and optional configuration
 /// for passkey enrollment.
+///
+/// ## See Also
+///
+/// - [Passkeys](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
+/// - [User Identity](https://auth0.com/docs/manage-users/user-accounts/identify-users)
+/// - [Database Connections](https://auth0.com/docs/authenticate/database-connections)
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct StartPasskeyEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// Optional user identity ID for the passkey enrollment
+    /// Optional user identity ID for the passkey enrollment. The identity ID to link the passkey to.
+    /// This is typically the `sub` claim from the user's ID token.
     let userIdentityId: String?
-    /// Optional connection name for the passkey
+    /// Optional connection name for the passkey. Specifies the database connection to use when
+    /// enrolling the passkey.
     let connection: String?
 }
 

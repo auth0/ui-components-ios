@@ -18,14 +18,21 @@ protocol ConfirmRecoveryCodeEnrollmentUseCaseable {
 ///
 /// Contains the enrollment session information needed to complete
 /// the recovery code enrollment process.
+///
+/// ## See Also
+///
+/// - [Recovery Codes](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#recovery-codes)
+/// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct ConfirmRecoveryCodeEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The enrollment ID from the initial challenge
+    /// The enrollment ID from the initial challenge. This uniquely identifies the authentication
+    /// method being enrolled.
     let id: String
-    /// The authentication session identifier from the challenge
+    /// The authentication session identifier from the challenge. Used to maintain session state
+    /// during the enrollment flow.
     let authSession: String
 }
 

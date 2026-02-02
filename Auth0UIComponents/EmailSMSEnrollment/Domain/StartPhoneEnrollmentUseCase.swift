@@ -5,14 +5,20 @@ import Foundation
 ///
 /// Contains the authentication token, Auth0 domain, phone number, and preferred
 /// authentication method (SMS or voice call).
+///
+/// ## See Also
+///
+/// - [SMS MFA](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#sms)
 struct StartPhoneEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The phone number to enroll for authentication
+    /// The phone number to enroll for authentication. Must be in E.164 format (e.g., +1234567890).
+    /// The user will receive a verification code at this number.
     let phoneNumber: String
-    /// The preferred method to receive codes (SMS by default, or voice call)
+    /// The preferred method to receive codes. Choose between SMS text message or voice call delivery.
+    /// Defaults to SMS if not specified.
     let preferredAuthenticationMethod: PreferredAuthenticationMethod = .sms
 }
 

@@ -17,12 +17,17 @@ protocol DeleteAuthMethodUseCaseable {
 ///
 /// Contains the authentication token, Auth0 domain, and the ID of the
 /// authentication method to delete.
+///
+/// ## See Also
+///
+/// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct DeleteAuthMethodRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The ID of the authentication method to delete
+    /// The ID of the authentication method to delete. This is the unique identifier
+    /// of the enrolled authenticator (e.g., "totp|abc123", "sms|xyz789").
     let id: String
 }
 

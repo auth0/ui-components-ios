@@ -25,7 +25,7 @@ struct EnrollPasskeyView: View {
                     Text("What are passkeys?")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-                    Text(" Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.")
+                    Text("Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.")
                         .font(.system(size: 14))
                         .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
                 }

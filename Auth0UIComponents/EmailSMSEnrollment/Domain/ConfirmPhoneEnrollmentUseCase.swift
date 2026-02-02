@@ -18,16 +18,24 @@ protocol ConfirmPhoneEnrollmentUseCaseable {
 ///
 /// Contains all the necessary information to verify the phone enrollment
 /// by providing the one-time password sent via SMS or received via voice call.
+///
+/// ## See Also
+///
+/// - [SMS MFA](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#sms)
+/// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct ConfirmPhoneEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API
     let token: String
     /// Auth0 tenant domain (e.g., "example.auth0.com")
     let domain: String
-    /// The enrollment ID from the initial challenge
+    /// The enrollment ID from the initial challenge. This uniquely identifies the authentication
+    /// method being enrolled.
     let id: String
-    /// The authentication session identifier from the challenge
+    /// The authentication session identifier from the challenge. Used to maintain session state
+    /// during the enrollment flow.
     let authSession: String
-    /// The OTP code from the SMS or voice call
+    /// The OTP code from the SMS or voice call. This is the one-time code sent to
+    /// the user's phone number to verify ownership.
     let otpCode: String
 }
 
