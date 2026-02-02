@@ -2,7 +2,7 @@ name: CI
 
 on:
     pull_request:
-        types:
+      types:
         - opened
         - synchronize
 
@@ -22,39 +22,39 @@ jobs:
             xcodeproj: Auth0UIComponents.xcodeproj
 
         strategy:
-            matrix:
-            platform:
-                - { os: iOS, scheme: Auth0UIComponents.iOS }
-                - { os: macOS, scheme: Auth0UIComponents.macOS }
-                - { os: visionOS, scheme: Auth0UIComponents.visionOS }
+          matrix:
+            platform: 
+              - { os: iOS, scheme: Auth0UIComponents.iOS }
+              - { os: macOS, scheme: Auth0UIComponents.macOS }
+              - { os: visionOS, scheme: Auth0UIComponents.visionOS }
             xcode:
-                - '26.0'
+              - '26.0'
 
         steps:
             - name: Checkout
-                uses: actions/checkout@v6
+              uses: actions/checkout@v6
 
             - name: Set up environment
-                uses: ./.github/actions/setup
-                with:
+              uses: ./.github/actions/setup
+              with:
                 ruby: ${{ env.ruby }}
                 xcode: ${{ matrix.xcode }}
 
             - name: Run tests
-                uses: ./.github/actions/test
-                with:
+              uses: ./.github/actions/test
+              with:
                 xcode: ${{ matrix.xcode }}
                 scheme: ${{ matrix.platform.scheme }}
                 platform: ${{ matrix.platform.os }}
 
             - name: Convert coverage report
-                if: ${{ matrix.platform.os == 'iOS' }}
-                run: bundle exec slather coverage -x --scheme ${{ matrix.platform.scheme }} ${{ env.xcodeproj }}
+              if: ${{ matrix.platform.os == 'iOS' }}
+              run: bundle exec slather coverage -x --scheme ${{ matrix.platform.scheme }} ${{ env.xcodeproj }}
 
             - name: Upload coverage report
-                if: ${{ matrix.platform.os == 'iOS' }}
-                uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # pin@5.5.1
-                with:
+              if: ${{ matrix.platform.os == 'iOS' }}
+              uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # pin@5.5.1
+              with:
                 token: ${{ secrets.CODECOV_TOKEN }}
 
     test-package:
@@ -62,44 +62,44 @@ jobs:
         runs-on: macos-15
 
         strategy:
-            matrix:
-            xcode:
-                - '26.0'
+          matrix:
+            xcode: 
+              - '26.0'
 
         steps:
             - name: Checkout
-                uses: actions/checkout@v6
+              uses: actions/checkout@v6
 
             - name: Set up environment
-                uses: ./.github/actions/setup
-                with:
+              uses: ./.github/actions/setup
+              with:
                 ruby: ${{ env.ruby }}
                 xcode: ${{ matrix.xcode }}
 
             - name: Run tests
-                run: swift test --no-parallel
+              run: swift test --no-parallel
 
     pod-lint:
         name: Lint podspec using Xcode ${{ matrix.xcode }}
         runs-on: macos-15-xlarge
 
         strategy:
-            matrix:
-            xcode:
-                - '26.0'
+          matrix:
+            xcode: 
+              - '26.0'
 
         steps:
             - name: Checkout
-                uses: actions/checkout@v6
+              uses: actions/checkout@v6
 
             - name: Set up environment
-                uses: ./.github/actions/setup
-                with:
+              uses: ./.github/actions/setup
+              with:
                 ruby: ${{ env.ruby }}
                 xcode: ${{ matrix.xcode }}
 
             - name: Run pod lib lint
-                run: bundle exec pod lib lint --allow-warnings --fail-fast
+              run: bundle exec pod lib lint --allow-warnings --fail-fast
 
     swiftlint:
         name: Lint code with SwiftLint
@@ -107,10 +107,10 @@ jobs:
 
         steps:
             - name: Checkout
-                uses: actions/checkout@v6
-
+              uses: actions/checkout@v6
+              
             - name: Install SwiftLint
-                run: brew install swiftlint
+              run: brew install swiftlint
 
             - name: Run SwiftLint
-                run: swiftlint lint --reporter github-actions-logging
+              run: swiftlint lint --reporter github-actions-logging
