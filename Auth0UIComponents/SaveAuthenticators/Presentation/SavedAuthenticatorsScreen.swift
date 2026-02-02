@@ -1,8 +1,14 @@
 import SwiftUI
 import Auth0
 
+/// Screen for selecting and managing saved authentication methods.
+///
+/// Displays a list of previously enrolled authentication methods for a specific
+/// type (email, SMS, TOTP, push, etc.) that users can select to manage or delete.
 struct SavedAuthenticatorsScreen: View {
+    /// View model managing saved authenticators and deletion logic
     @ObservedObject var viewModel: SavedAuthenticatorsScreenViewModel
+
     var body: some View {
         ZStack {
             if viewModel.showLoader {

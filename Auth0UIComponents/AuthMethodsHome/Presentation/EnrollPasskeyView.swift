@@ -1,9 +1,19 @@
 import SwiftUI
 
+/// A promotional banner view for passkey enrollment.
+///
+/// This view displays information about passkeys and encourages users to enroll
+/// in passkey authentication. It includes educational content about what passkeys
+/// are and where they are stored, along with an action button to start passkey enrollment.
+///
+/// Availability: Requires iOS 16.6, macOS 13.5, or visionOS 1.0+
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct EnrollPasskeyView: View {
+    /// Controls whether the passkey enrollment banner is displayed
     @Binding var collapsePasskeyBanner: Bool
+    /// View model handling passkey enrollment logic
     var viewModel: PasskeysEnrollmentViewModel
+
     var body: some View {
         VStack {
             Text("With Passkey, you don’t have to remember complex passwords.")

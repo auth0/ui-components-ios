@@ -2,6 +2,11 @@ import Auth0
 import Combine
 import Foundation
 
+/// View model for email and phone number enrollment.
+///
+/// Manages the enrollment process for email and SMS authentication methods,
+/// including country code selection for phone numbers, input validation,
+/// and initiation of the enrollment flow.
 @MainActor
 final class EmailPhoneEnrollmentViewModel: ObservableObject {
     private let startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable

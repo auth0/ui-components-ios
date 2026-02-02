@@ -2,6 +2,11 @@ import Combine
 import Auth0
 import SwiftUI
 
+/// View model for a single authentication method card.
+///
+/// Manages the display and interaction state of one authentication method
+/// in the My Account authentication methods list. Tracks whether the method
+/// is enrolled and handles navigation to management screens.
 final class MyAccountAuthMethodViewModel: ObservableObject {
     private let authMethods: [AuthenticationMethod]
     private let type: AuthMethodType

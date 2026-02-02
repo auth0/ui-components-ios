@@ -1,6 +1,12 @@
 import Combine
 import Auth0
 
+/// View model for recovery code enrollment.
+///
+/// Manages the recovery code enrollment process including:
+/// - Loading recovery codes from the Auth0 API
+/// - Confirming enrollment with the user
+/// - Providing codes for secure storage and backup
 @MainActor
 final class RecoveryCodeEnrollmentViewModel: ObservableObject {
 

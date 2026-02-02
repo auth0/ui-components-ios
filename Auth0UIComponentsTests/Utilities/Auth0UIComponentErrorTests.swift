@@ -324,7 +324,7 @@ extension Auth0UIComponentError {
 
 // MARK: - Swift Testing Implementation
 
-struct Auth0UIComponentErrorSwiftTests {
+struct Auth0UIComponentErrorTests {
     
     // MARK: - View Model Generation Tests
     

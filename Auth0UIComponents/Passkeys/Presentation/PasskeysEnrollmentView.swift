@@ -1,9 +1,20 @@
 import SwiftUI
 
+/// Full-screen view for passkey enrollment.
+///
+/// Guides users through the complete passkey enrollment process, including
+/// educational content about passkeys, the platform credential provider integration,
+/// and confirmation of enrollment.
+///
+/// Availability: Requires iOS 16.6, macOS 13.5, or visionOS 1.0+
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct PasskeysEnrollmentView: View {
+    /// View model handling passkey enrollment state and logic
     @ObservedObject var viewModel: PasskeysEnrollmentViewModel
 
+    /// Initializes the passkey enrollment view.
+    ///
+    /// - Parameter viewModel: The view model managing enrollment state
     init(viewModel: PasskeysEnrollmentViewModel) {
         self.viewModel = viewModel
     }

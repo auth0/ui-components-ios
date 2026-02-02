@@ -2,6 +2,11 @@ import Auth0
 import Combine
 import Foundation
 
+/// View model for managing saved authenticators of a specific type.
+///
+/// Manages the display and deletion of previously enrolled authentication methods
+/// for a specific type (email, SMS, TOTP, etc.). Allows users to remove authenticators
+/// they no longer need.
 @MainActor
 final class SavedAuthenticatorsScreenViewModel: ObservableObject {
     private let dependencies: Auth0UIComponentsSDKInitializer

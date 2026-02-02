@@ -10,6 +10,11 @@ import UIKit
 import AppKit
 #endif
 
+/// View model for displaying QR codes for TOTP and push notification enrollment.
+///
+/// Manages the generation and display of QR codes for authenticator app setup,
+/// as well as push notification enrollment. Provides manual entry codes as a fallback
+/// for users unable to scan QR codes.
 @MainActor
 final class TOTPPushQRCodeViewModel: ObservableObject {
     private let startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable

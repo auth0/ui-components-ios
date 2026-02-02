@@ -1,8 +1,15 @@
 import SwiftUI
 import Auth0
 
+/// View for displaying and saving recovery codes.
+///
+/// Shows generated recovery codes that users should save securely as backup
+/// authentication methods. These codes can be used to sign in if their primary
+/// authentication methods are unavailable.
 struct RecoveryCodeEnrollmentView: View {
+    /// View model managing recovery code state and enrollment logic
     @ObservedObject var viewModel: RecoveryCodeEnrollmentViewModel
+
     var body: some View {
         ZStack {
             if viewModel.showLoader {

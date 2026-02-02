@@ -3,17 +3,22 @@ import Combine
 import SwiftUI
 import Auth0
 
+/// Represents a single component to display in the My Account Auth Methods view.
+///
+/// This enum allows for composable UI components representing different sections
+/// of the authentication methods management interface.
 enum MyAccountAuthViewComponentData: Hashable {
+    /// A heading section with title text
     case title(text: String)
-
+    /// A subtitle or description section
     case subtitle(text: String)
-
+    /// Promotional banner for passkey enrollment
     case createPasskey(model: Any)
-
+    /// A sign-in method card (displayed under "Sign-in Methods")
     case signinMethods(model: MyAccountAuthMethodViewModel)
-
+    /// An additional verification method card (displayed under "Additional Verification")
     case additionalVerificationMethods(model: MyAccountAuthMethodViewModel)
-
+    /// An informational view indicating no factors are configured
     case emptyFactors
 
     static func == (lhs: MyAccountAuthViewComponentData, rhs: MyAccountAuthViewComponentData) -> Bool {

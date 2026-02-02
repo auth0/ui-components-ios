@@ -1,7 +1,13 @@
 import SwiftUI
 
+/// View for entering email or phone number for enrollment.
+///
+/// Allows users to input an email address or phone number to enroll as an
+/// authentication method. For phone numbers, includes a country code picker.
 struct EmailPhoneEnrollmentView: View {
+    /// View model managing email/phone enrollment state and validation
     @ObservedObject var viewModel: EmailPhoneEnrollmentViewModel
+    /// Manages focus state of the text input field
     @FocusState private var textFieldFocused: Bool
 
     var body: some View {

@@ -1,9 +1,19 @@
 import SwiftUI
 
+/// View for entering one-time passwords (OTP/MFA codes).
+///
+/// Displays a form for users to enter 6-digit codes from various sources:
+/// - Email or SMS messages
+/// - Authenticator apps (TOTP)
+/// - Push notification confirmations
+///
+/// The view auto-advances between fields and validates codes on entry.
 struct OTPView: View {
+    /// View model managing OTP verification state and logic
     @ObservedObject var viewModel: OTPViewModel
+    /// Tracks which OTP field currently has focus
     @FocusState private var focusedField: Int?
-    
+
     var body: some View {
         VStack {
             if viewModel.showLoader {

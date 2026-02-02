@@ -1,7 +1,14 @@
 import SwiftUI
 
+/// Displays a single authentication method as a selectable card.
+///
+/// This view shows one authentication method (email, SMS, TOTP, push, passkeys, or recovery codes)
+/// with an icon, title, and enrollment status indicator. It is tappable to navigate to the
+/// management or enrollment screen for that authentication method.
 struct MyAccountAuthMethodView: View {
+    /// View model providing authentication method details and actions
     @ObservedObject var viewModel: MyAccountAuthMethodViewModel
+
     var body: some View {
         HStack() {
             Image(viewModel.image(), bundle: ResourceBundle.default)

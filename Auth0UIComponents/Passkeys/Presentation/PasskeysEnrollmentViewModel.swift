@@ -2,6 +2,14 @@ import Auth0
 import Combine
 import AuthenticationServices
 
+/// View model for passkey enrollment.
+///
+/// Manages the complete passkey enrollment flow including:
+/// - Requesting enrollment challenges from Auth0
+/// - Integrating with the platform's credential provider (ASAuthorizationController)
+/// - Confirming enrollment with newly created passkeys
+///
+/// Availability: Requires iOS 16.6, macOS 13.5, or visionOS 1.0+
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 @MainActor
 final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthorizationControllerDelegate {

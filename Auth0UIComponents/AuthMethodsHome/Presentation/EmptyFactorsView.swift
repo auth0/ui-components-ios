@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// An informational view displayed when no authentication factors are configured.
+///
+/// This view shows a warning message to users indicating that they have not
+/// configured any authentication factors on their account, which may be required
+/// for security or access purposes.
 struct EmptyFactorsView: View {
     var body: some View {
         HStack {

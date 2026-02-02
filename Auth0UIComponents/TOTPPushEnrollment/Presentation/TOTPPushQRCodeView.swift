@@ -1,10 +1,19 @@
 import SwiftUI
 
+/// View for displaying QR code for TOTP or push notification enrollment.
+///
+/// Shows a QR code that users can scan with their authenticator app (for TOTP)
+/// or other MFA setup process. Also provides a manual entry code option for
+/// cases where QR code scanning is not possible.
 struct TOTPPushQRCodeView: View {
+    /// View model managing QR code generation and enrollment state
     @ObservedObject var viewModel: TOTPPushQRCodeViewModel
+    /// Controls visibility of the "code copied" alert
     @State private var showCopiedAlert = false
 
+    /// Core Image context for QR code generation
     private let context = CIContext()
+    /// QR code filter for generating QR codes
     private let filter = CIFilter.qrCodeGenerator()
 
     var body: some View {

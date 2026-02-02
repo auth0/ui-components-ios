@@ -2,6 +2,14 @@ import Auth0
 import Combine
 import Foundation
 
+/// View model for OTP (one-time password) verification.
+///
+/// Manages OTP code entry and verification for various authentication methods:
+/// - Email/SMS verification codes
+/// - TOTP codes from authenticator apps
+/// - Push notification verification
+///
+/// Handles input validation, code confirmation, and transitions to next steps.
 @MainActor
 final class OTPViewModel: ObservableObject {
     private let totpEnrollmentChallenge: TOTPEnrollmentChallenge?
