@@ -1,6 +1,7 @@
 import Auth0
 import Foundation
 
+/// Request parameters for initiating phone enrollment.
 struct StartPhoneEnrollmentRequest {
     let token: String
     let domain: String
@@ -8,11 +9,13 @@ struct StartPhoneEnrollmentRequest {
     let preferredAuthenticationMethod: PreferredAuthenticationMethod = .sms
 }
 
+/// Protocol for initiating phone enrollment.
 protocol StartPhoneEnrollmentUseCaseable {
     var session: URLSession { get }
     func execute(request: StartPhoneEnrollmentRequest) async throws -> PhoneEnrollmentChallenge
 }
 
+/// Use case for initiating phone enrollment and retrieving enrollment challenge.
 struct StartPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable {
     var session: URLSession
     

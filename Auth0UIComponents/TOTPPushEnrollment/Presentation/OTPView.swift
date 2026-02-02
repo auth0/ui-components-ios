@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view for entering a 6-digit OTP code during enrollment confirmation.
 struct OTPView: View {
     @ObservedObject var viewModel: OTPViewModel
     @FocusState private var focusedField: Int?
@@ -7,11 +8,7 @@ struct OTPView: View {
     var body: some View {
         VStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else {
                 VStack(alignment: .leading) {
                     if viewModel.isEmailOrSMS == false {
@@ -65,9 +62,7 @@ struct OTPView: View {
                         HStack {
                             Spacer()
                             if viewModel.apiCallInProgress {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                                Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
                             } else {
                                 Text("Continue")
                                     .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))

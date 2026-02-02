@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 import Auth0
 
+/// Enum representing the different components that can be displayed in the My Account auth methods view.
 enum MyAccountAuthViewComponentData: Hashable {
     case title(text: String)
 
@@ -57,6 +58,7 @@ enum MyAccountAuthViewComponentData: Hashable {
     }
 }
 
+/// ViewModel managing the My Account authentication methods view with data fetching and composition.
 @MainActor
 final class MyAccountAuthMethodsViewModel: ObservableObject {
 

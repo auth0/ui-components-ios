@@ -1,6 +1,7 @@
 import Combine
 import Auth0
 
+/// ViewModel for managing recovery code enrollment and confirmation.
 @MainActor
 final class RecoveryCodeEnrollmentViewModel: ObservableObject {
     
@@ -24,6 +25,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         self.delegate = delegate
     }
 
+    /// Fetches the recovery code challenge from the server.
     func loadData() async {
         showLoader = true
         errorViewModel = nil
@@ -40,6 +42,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         }
     }
 
+    /// Confirms the recovery code enrollment.
     func confirmEnrollment() async {
         apiCallInProgress = true
         if let recoveryCodeChallenge {
@@ -64,6 +67,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
         }
     }
     
+    /// Handles various error types encountered during recovery code enrollment.
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {

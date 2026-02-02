@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+/// Struct representing a country with its name, phone code, and flag emoji.
 struct Country: Codable, Identifiable {
     let id = UUID()
     let name: String
@@ -12,6 +13,7 @@ struct Country: Codable, Identifiable {
     }
 }
 
+/// ObservableObject managing the list of countries loaded from a JSON resource.
 final class CountryStore: ObservableObject {
     @Published var countries: [Country] = []
     

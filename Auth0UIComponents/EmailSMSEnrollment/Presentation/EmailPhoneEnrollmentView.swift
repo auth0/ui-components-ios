@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view for entering email or phone number during enrollment.
 struct EmailPhoneEnrollmentView: View {
     @ObservedObject var viewModel: EmailPhoneEnrollmentViewModel
     @FocusState private var textFieldFocused: Bool
@@ -69,9 +70,7 @@ struct EmailPhoneEnrollmentView: View {
                 HStack {
                     Spacer()
                     if viewModel.apiCallInProgress {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                        Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
                     } else {
                         Text("Continue")
                             .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))

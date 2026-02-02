@@ -78,6 +78,28 @@ jobs:
 
             - name: Run tests
               run: swift test --no-parallel
+              
+      pod-lint:
+        name: Lint podspec using Xcode ${{ matrix.xcode }}
+        runs-on: macos-15-xlarge
+
+        strategy:
+          matrix:
+            xcode:
+              - '26.0'
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Set up environment
+              uses: ./.github/actions/setup
+              with:
+                ruby: ${{ env.ruby }}
+                xcode: ${{ matrix.xcode }}
+
+            - name: Run pod lib lint
+              run: bundle exec pod lib lint --allow-warnings --fail-fast
 
     swiftlint:
         name: Lint code with SwiftLint

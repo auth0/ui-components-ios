@@ -2,6 +2,7 @@ import Auth0
 import Combine
 import Foundation
 
+/// ViewModel for email or phone number enrollment input.
 @MainActor
 final class EmailPhoneEnrollmentViewModel: ObservableObject {
     private let startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable
@@ -29,6 +30,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject {
         self.type = type
     }
     
+    /// Initiates the enrollment process for the provided email or phone number.
     func startEnrollment() async {
         apiCallInProgress = true
         do {
@@ -78,6 +80,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject {
         }
     }
 
+    /// Handles various error types with appropriate error messages.
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {

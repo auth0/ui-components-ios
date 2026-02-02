@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view displaying an empty state when no factors are configured.
 struct EmptyFactorsView: View {
     var body: some View {
         HStack {

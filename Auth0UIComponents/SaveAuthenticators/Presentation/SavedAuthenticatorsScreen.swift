@@ -1,16 +1,13 @@
 import SwiftUI
 import Auth0
 
+/// SwiftUI view displaying a list of saved authentication methods with delete capability.
 struct SavedAuthenticatorsScreen: View {
     @ObservedObject var viewModel: SavedAuthenticatorsScreenViewModel
     var body: some View {
         ZStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {

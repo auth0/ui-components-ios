@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// ViewModifier that displays a toast notification with automatic dismissal.
 struct ToastModifier: ViewModifier {
   
   @Binding var toast: Toast?

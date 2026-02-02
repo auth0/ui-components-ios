@@ -330,9 +330,9 @@
 		D4011DA22E901ADC002F57A0 /* Auth0UIComponents */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				D4C3F3522E9D5E3F00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.iOS" target */,
 				D4C3F3562E9D5E4C00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.macOS" target */,
 				D4C3F3542E9D5E4800D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.visionOS" target */,
-				D4C3F3522E9D5E3F00D5A06D /* Exceptions for "Auth0UIComponents" folder in "Auth0UIComponents.iOS" target */,
 			);
 			path = Auth0UIComponents;
 			sourceTree = "<group>";
@@ -770,9 +770,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */,
 				D4011CAB2E8FEA60002F57A0 /* Auth0UIComponents.macOS */,
 				D4011D5F2E9019D7002F57A0 /* Auth0UIComponents.visionOS */,
-				D4C3EFB62E94F33E00D5A06D /* Auth0UIComponents.iOS */,
 				D4C3F04A2E96834F00D5A06D /* Auth0UIComponentsTests.iOS */,
 				D4C3F05A2E9683B700D5A06D /* Auth0UIComponentsTests.macOS */,
 				D4C3F0652E9683F100D5A06D /* Auth0UIComponentsTests.visionOS */,

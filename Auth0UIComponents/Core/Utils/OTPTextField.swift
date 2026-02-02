@@ -7,6 +7,7 @@ import UIKit
 import AppKit
 #endif
 
+/// UIViewRepresentable for individual OTP digit input fields with specialized keyboard handling.
 #if !os(macOS)
 struct OTPTextField: UIViewRepresentable {
     

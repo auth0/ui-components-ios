@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view displaying a single authentication method with enrollment status.
 struct MyAccountAuthMethodView: View {
     @ObservedObject var viewModel: MyAccountAuthMethodViewModel
     var body: some View {

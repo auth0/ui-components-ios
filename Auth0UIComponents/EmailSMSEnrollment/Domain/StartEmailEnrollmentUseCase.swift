@@ -1,11 +1,13 @@
 import Auth0
 import Foundation
 
+/// Protocol for initiating email enrollment.
 protocol StartEmailEnrollmentUseCaseable {
     var session: URLSession { get }
     func execute(request: StartEmailEnrollmentRequest)  async throws -> EmailEnrollmentChallenge
 }
 
+/// Request parameters for initiating email enrollment.
 struct StartEmailEnrollmentRequest {
     let token: String
     let domain: String
@@ -13,6 +15,7 @@ struct StartEmailEnrollmentRequest {
 }
 
 
+/// Use case for initiating email enrollment and retrieving enrollment challenge.
 struct StartEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable {
     var session: URLSession
     

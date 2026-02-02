@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view for passkey enrollment with informational content.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct PasskeysEnrollmentView: View {
     @ObservedObject var viewModel: PasskeysEnrollmentViewModel
@@ -11,11 +12,7 @@ struct PasskeysEnrollmentView: View {
     var body: some View {
         ZStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {

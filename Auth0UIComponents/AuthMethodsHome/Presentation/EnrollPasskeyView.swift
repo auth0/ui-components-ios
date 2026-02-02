@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view promoting passkey enrollment with informational content.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct EnrollPasskeyView: View {
     @Binding var collapsePasskeyBanner: Bool

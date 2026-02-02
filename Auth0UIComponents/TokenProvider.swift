@@ -1,6 +1,7 @@
 import Auth0
 import Combine
 
+/// Protocol for providing credentials and managing API credentials for Auth0.
 public protocol TokenProvider: Sendable {
     func fetchCredentials() async throws -> Credentials
  

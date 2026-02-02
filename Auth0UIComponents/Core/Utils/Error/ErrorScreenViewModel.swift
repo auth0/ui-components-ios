@@ -1,4 +1,6 @@
 import Foundation
+
+/// ViewModel for displaying error information with user interaction handlers.
 struct ErrorScreenViewModel {
     let title: String
     let subTitle: AttributedString

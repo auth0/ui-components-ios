@@ -2,12 +2,14 @@ import Auth0
 import Foundation
 import Combine
 
+/// Protocol for confirming phone enrollment with an OTP code.
 protocol ConfirmPhoneEnrollmentUseCaseable {
     var session: URLSession { get }
     
     func execute(request: ConfirmPhoneEnrollmentRequest) async throws -> AuthenticationMethod
 }
 
+/// Request parameters for confirming phone enrollment.
 struct ConfirmPhoneEnrollmentRequest {
     let token: String
     let domain: String
@@ -16,6 +18,7 @@ struct ConfirmPhoneEnrollmentRequest {
     let otpCode: String
 }
 
+/// Use case for confirming phone enrollment via OTP verification.
 struct ConfirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable {
     var session: URLSession
     

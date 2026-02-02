@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 
+/// Public SwiftUI view for managing user authentication methods in My Account.
 public struct MyAccountAuthMethodsView: View {
     @StateObject private var navigationStore = NavigationStore.shared
     @ObservedObject private var viewModel: MyAccountAuthMethodsViewModel
@@ -14,11 +15,7 @@ public struct MyAccountAuthMethodsView: View {
         NavigationStack(path: $navigationStore.path) {
             ZStack {
                 if viewModel.showLoader {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .tint(Color("3C3C43", bundle: ResourceBundle.default)) // Brand-compliant dark gray
-                        .scaleEffect(1.5) // Enlarged for better visibility
-                        .frame(width: 50, height: 50) // Fixed size container
+                    Auth0Loader()
                 }
                 else if let errorViewModel = viewModel.errorViewModel {
                     ErrorScreen(viewModel: errorViewModel)

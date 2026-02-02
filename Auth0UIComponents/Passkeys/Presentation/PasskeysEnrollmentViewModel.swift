@@ -2,6 +2,7 @@ import Auth0
 import Combine
 import AuthenticationServices
 
+/// ViewModel managing passkey enrollment with ASAuthorizationControllerDelegate integration.
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 @MainActor
 final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthorizationControllerDelegate {
@@ -41,6 +42,7 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
         }
     }
 
+    /// Initiates the passkey enrollment process.
     func startEnrollment() async {
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
@@ -92,6 +94,7 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
         
     }
 
+    /// Handles various error types encountered during passkey enrollment.
     @MainActor func handle(error: Error,
                            scope: String,
                            retryCallback: @escaping () -> Void) async {

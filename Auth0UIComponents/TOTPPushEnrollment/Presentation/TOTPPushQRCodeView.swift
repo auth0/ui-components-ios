@@ -1,20 +1,17 @@
 import SwiftUI
 
+/// View for displaying QR code for TOTP and Push notification enrollment
 struct TOTPPushQRCodeView: View {
     @ObservedObject var viewModel: TOTPPushQRCodeViewModel
     @State private var showCopiedAlert = false
-    
+
     private let context = CIContext()
     private let filter = CIFilter.qrCodeGenerator()
 
     var body: some View {
         VStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -24,13 +21,13 @@ struct TOTPPushQRCodeView: View {
                         .interpolation(.none)
                         .aspectRatio(1.0, contentMode: .fit)
                         .padding(.horizontal)
-                    
+
                     Text("Use your Authenticator App (like Google Authenticator or Auth0 Guardian) to scan this QR code.")
                         .font(Font.system(size: 16))
                         .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
                         .multilineTextAlignment(.center)
                 }
-                
+
                 if let manualInputCode = viewModel.manualInputCode {
                     Text(manualInputCode)
                         .font(.system(size: 14))
@@ -52,7 +49,7 @@ struct TOTPPushQRCodeView: View {
                         HStack(alignment: .center, spacing: 8) {
                             Image("copy", bundle: ResourceBundle.default)
                                 .frame(width: 16, height: 16)
-                            
+
                             Text("Copy as Code")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
@@ -73,9 +70,7 @@ struct TOTPPushQRCodeView: View {
                     HStack {
                         Spacer()
                         if viewModel.apiCallInProgress {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                            Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
                         } else {
                             Text("Continue")
                                 .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
@@ -97,7 +92,7 @@ struct TOTPPushQRCodeView: View {
                             )
                     )
                     .padding(.bottom, 30)
-                
+
             Text(attributedString())
                     .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
                     .font(Font.system(size: 16))
@@ -124,9 +119,9 @@ struct TOTPPushQRCodeView: View {
                 }
             }
     }
-    
+
     func attributedString() -> AttributedString {
-        var attributed = AttributedString("Don’t have the Auth0 Guardian App?\nDownload it here")
+        var attributed = AttributedString("Don't have the Auth0 Guardian App?\nDownload it here")
         if let range = attributed.range(of: "Download it here") {
             attributed[range].foregroundColor = Color("000000", bundle: ResourceBundle.default)
             attributed[range].underlineStyle = .single

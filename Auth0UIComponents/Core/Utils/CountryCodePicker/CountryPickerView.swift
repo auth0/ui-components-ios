@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view for selecting a country and its phone code.
 struct CountryPickerView: View {
     @Binding var selectedCountry: Country?
     @Binding var isPickerVisible: Bool

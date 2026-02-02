@@ -2,6 +2,7 @@ import Auth0
 import SwiftUI
 import Foundation
 
+/// Enum representing various error types that can occur in Auth0 UI Components.
 enum Auth0UIComponentError {
     case idTokenValidationFailed(message: String,
                                  cause: Error? = nil)

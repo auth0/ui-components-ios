@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SwiftUI view displaying an error message with title, description, and action button.
 struct ErrorScreen: View {
     let viewModel: ErrorScreenViewModel
 

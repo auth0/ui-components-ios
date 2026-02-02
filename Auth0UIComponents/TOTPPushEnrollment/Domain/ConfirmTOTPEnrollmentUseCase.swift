@@ -2,6 +2,7 @@ import Auth0
 import Foundation
 import Combine
 
+/// Request model for confirming TOTP enrollment with OTP code
 struct ConfirmTOTPEnrollmentRequest {
     let token: String
     let domain: String
@@ -10,11 +11,13 @@ struct ConfirmTOTPEnrollmentRequest {
     let otpCode: String
 }
 
+/// Protocol for confirming TOTP enrollment
 protocol ConfirmTOTPEnrollmentUseCaseable {
     var session: URLSession { get }
     func execute(request: ConfirmTOTPEnrollmentRequest) async throws -> AuthenticationMethod
 }
 
+/// Use case to confirm TOTP enrollment with verification code
 struct ConfirmTOTPEnrollmentUseCase: ConfirmTOTPEnrollmentUseCaseable {
     var session: URLSession
 

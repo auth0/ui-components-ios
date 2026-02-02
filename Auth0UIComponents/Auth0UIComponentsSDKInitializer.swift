@@ -1,6 +1,7 @@
 import Foundation
 import Auth0
 
+/// Public actor that initializes and manages Auth0 UI Components SDK configuration.
 public actor Auth0UIComponentsSDKInitializer {
     let audience: String
     let domain: String

@@ -2,17 +2,20 @@ import Auth0
 import Foundation
 import Combine
 
+/// Protocol for deleting an authentication method.
 protocol DeleteAuthMethodUseCaseable {
     var session: URLSession  { get }
     func execute(request: DeleteAuthMethodRequest) async throws
 }
 
+/// Request parameters for deleting an authentication method.
 struct DeleteAuthMethodRequest {
     let token: String
     let domain: String
     let id: String
 }
 
+/// Use case for deleting an authentication method.
 struct DeleteAuthMethodUseCase: DeleteAuthMethodUseCaseable {
     var session: URLSession = .shared
     
