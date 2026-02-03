@@ -23,8 +23,11 @@ This library provides ready-to-use UI components for multi-factor authentication
 - 💬 **SMS OTP** - Phone number verification via one-time codes
 - 📧 **Email OTP** - Email-based verification
 - 🔑 **Recovery Codes** - Backup authentication codes for account recovery
+- 🔐 **Passkeys** - Passwordless authentication using FIDO2/WebAuthn standards (Requires iOS 16.6+, macOS 13.5+, visionOS 1.0+)
 
 All components are built on top of the [Auth0 Swift SDK](https://github.com/auth0/Auth0.swift) and integrate with Auth0's My Account APIs.
+
+> ⚠️ **My Account APIs Required** - This SDK requires [My Account APIs](https://auth0.com/docs/manage-users/my-account-api) which are currently in early access. Please reach out to Auth0 support to enable My Account APIs for your tenant.
 
 > ⚠️ **BETA RELEASE** - This SDK is currently in beta. APIs may change before the stable release.
 

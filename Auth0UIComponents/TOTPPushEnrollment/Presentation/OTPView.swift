@@ -1,17 +1,31 @@
 import SwiftUI
+import Auth0
 
+/// View for entering one-time passwords (OTP/MFA codes).
+///
+/// Displays a form for users to enter 6-digit codes from various sources:
+/// - Email or SMS messages
+/// - Authenticator apps (TOTP)
+/// - Push notification confirmations
+///
+/// The view auto-advances between fields and validates codes on entry.
 struct OTPView: View {
-    @ObservedObject var viewModel: OTPViewModel
+    /// View model managing OTP verification state and logic
+    @StateObject private var viewModel: OTPViewModel
+    /// Tracks which OTP field currently has focus
     @FocusState private var focusedField: Int?
-    
+
+    /// Initializes the OTP verification view.
+    ///
+    /// - Parameter viewModel: The view model managing OTP verification state and logic
+    init(viewModel: OTPViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View {
         VStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else {
                 VStack(alignment: .leading) {
                     if viewModel.isEmailOrSMS == false {
@@ -65,9 +79,7 @@ struct OTPView: View {
                         HStack {
                             Spacer()
                             if viewModel.apiCallInProgress {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                                Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
                             } else {
                                 Text("Continue")
                                     .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
@@ -98,9 +110,8 @@ struct OTPView: View {
                 focusedField = 0
             }
     }
-    
+
     private func otpTextFieldView() -> some View {
-        
         HStack(spacing: 8) {
             ForEach(0..<6, id: \.self, content: { index in
                 OTPTextField(
@@ -129,40 +140,37 @@ struct OTPView: View {
     }
 
     private func setTextAtIndex(_ string: String, at index: Int) {
-        
         let old = viewModel.otpText
-        
+
         let strBefore = old.prefix(length: index)
         let suffixLength = old.count - index - (string.isEmpty ? 1 : string.count)
-        
+
         let strAfter = suffixLength <= 0 ? "" : old.suffix(length: suffixLength)
-        
+
         let new = (strBefore + string + strAfter).prefix(length: 6)
-        
+
         viewModel.otpText = new
-        
+
         guard let focusedField = self.focusedField else {
             return
         }
-        
+
         if focusedField <= old.count - 1 {
             let newFocus = focusedField + (string.isEmpty ? -1 : string.count)
-            
+
             self.focusedField = newFocus >= 6 ? nil : newFocus
             return
         }
-        
-        
+
         let newFocus = new.count
         if newFocus >= 6 {
             self.focusedField = nil
             return
         }
-        
+
         self.focusedField = newFocus
-        
     }
-    
+
     private func enterKeyPressed() {
         self.focusedField = nil
     }
