@@ -2,11 +2,17 @@ import Auth0
 import Combine
 import Foundation
 
+/// View model for email and phone number enrollment.
+///
+/// Manages the enrollment process for email and SMS authentication methods,
+/// including country code selection for phone numbers, input validation,
+/// and initiation of the enrollment flow.
 @MainActor
-final class EmailPhoneEnrollmentViewModel: ObservableObject {
+final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler {
     private let startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable
     private let startEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable
     private let dependencies: Auth0UIComponentsSDKInitializer
+    private let errorHandler = ErrorHandler()
     @Published var errorMessage: String?
     @Published var selectedCountry: Country? = Country(name: "United States", code: "+1",
                                                                          flag: "🇺🇸")
@@ -31,6 +37,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject {
     
     func startEnrollment() async {
         apiCallInProgress = true
+        errorMessage = nil
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
             if type == .sms, let phoneNumber = selectedCountry?.code.appending(phoneNumber) {
@@ -78,34 +85,8 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject {
         }
     }
 
-    @MainActor func handle(error: Error,
-                           scope: String,
-                           retryCallback: @escaping () -> Void) async {
-        if let error = error as? CredentialsManagerError {
-            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-            if case .mfaRequired = uiComponentError {
-                do {
-                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
-                                                              domain: dependencies.domain,
-                                                              session: dependencies.session)
-                        .audience(dependencies.audience)
-                        .scope(scope)
-                        .start()
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
-                    retryCallback()
-                } catch  {
-                    await handle(error: error,
-                                 scope: scope,
-                                 retryCallback: retryCallback)
-                }
-            } else {
-                errorMessage = error.message
-            }
-        } else if let error  = error as? MyAccountError {
-            errorMessage = error.message
-        } else if let error = error as? WebAuthError {
-            errorMessage = error.message
-        }
+    func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
+        await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }
 
 }

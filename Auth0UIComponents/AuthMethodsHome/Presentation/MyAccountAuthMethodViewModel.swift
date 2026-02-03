@@ -2,10 +2,14 @@ import Combine
 import Auth0
 import SwiftUI
 
+/// View model for a single authentication method card.
+///
+/// Manages the display and interaction state of one authentication method
+/// in the My Account authentication methods list. Tracks whether the method
+/// is enrolled and handles navigation to management screens.
 final class MyAccountAuthMethodViewModel: ObservableObject {
     private let authMethods: [AuthenticationMethod]
     private let type: AuthMethodType
-
     private let dependencies: Auth0UIComponentsSDKInitializer
 
     init(authMethods: [AuthenticationMethod],
@@ -17,6 +21,9 @@ final class MyAccountAuthMethodViewModel: ObservableObject {
     }
 
     func isAtleastOnceAuthFactorEnrolled() -> Bool {
+        if type == .passkey {
+            return authMethods.isEmpty == false
+        }
         return authMethods.first(where: { $0.confirmed == true }) != nil
     }
 
@@ -36,6 +43,7 @@ final class MyAccountAuthMethodViewModel: ObservableObject {
 }
 
 extension MyAccountAuthMethodViewModel: Hashable {
+
     static func == (lhs: MyAccountAuthMethodViewModel, rhs: MyAccountAuthMethodViewModel) -> Bool {
         lhs.type == rhs.type
     }
@@ -53,10 +61,16 @@ extension AuthenticationMethod: @retroactive Hashable {
 
 enum AuthMethodType: String, CaseIterable {
     case email = "email"
+
     case sms = "phone"
+
     case totp = "totp"
+
     case pushNotification = "push-notification"
+
     case recoveryCode = "recovery-code"
+
+    case passkey = "passkey"
 }
 
 extension AuthMethodType {
@@ -72,6 +86,8 @@ extension AuthMethodType {
             "Recovery Code"
         case .sms:
             "SMS OTP"
+        case .passkey:
+            "Passkeys"
         }
     }
 
@@ -86,21 +102,25 @@ extension AuthMethodType {
             "code"
         case .sms:
             "sms"
+        case .passkey:
+            "passkey"
         }
     }
 
     var savedAuthenticatorsCellTitle: String {
         switch self {
         case .email:
-            "Email OTP"
+            "Email"
         case .totp:
-            "Authenticator App"
+            "Authenticator"
         case .pushNotification:
-            "Push Notifications via Guardian"
+            "Push"
         case .recoveryCode:
-            "Recovery code generated"
+            "Recovery code"
         case .sms:
-            "SMS OTP"
+            "Phone"
+        case .passkey:
+            "Passkey"
         }
     }
 
@@ -116,6 +136,8 @@ extension AuthMethodType {
             "Saved Apps for Push"
         case .recoveryCode:
             "Generated Recovery code"
+        case .passkey:
+            "Saved on your devices"
         }
     }
 
@@ -131,6 +153,8 @@ extension AuthMethodType {
             "Email OTP"
         case .sms:
             "Phone for SMS OTP"
+        case .passkey:
+            "Passkeys"
         }
     }
 
@@ -146,6 +170,8 @@ extension AuthMethodType {
             "Manage your email"
         case .sms:
             "Manage your phone for SMS OTP"
+        case .passkey:
+            "Manage your passkey"
         }
     }
 
@@ -157,7 +183,8 @@ extension AuthMethodType {
             "Revoke"
         case .recoveryCode,
                 .email,
-                .sms:
+                .sms,
+                .passkey:
             "Remove"
         }
     }
@@ -174,10 +201,15 @@ extension AuthMethodType {
             return "No Phone was saved."
         case .totp:
             return "No Authenticator was added."
+        case .passkey:
+            return "No passkeys saved"
         }
     }
 
     private func isAtleastOnceAuthFactorEnrolled(_ authMethods: [AuthenticationMethod]) -> Bool {
+        if self == .passkey {
+            return authMethods.isEmpty == false
+        }
         return authMethods.first(where: { $0.confirmed == true }) != nil
     }
 
@@ -195,6 +227,8 @@ extension AuthMethodType {
                return .emailPhoneEnrollmentScreen(type: self)
             case .recoveryCode:
                return .recoveryCodeScreen
+            case .passkey:
+                return .enrollPasskeyScreen
             }
         }
     }

@@ -1,14 +1,24 @@
 import SwiftUI
 
+/// Defines the visual style and semantic meaning of a toast notification.
+///
+/// Each style determines the colors used for the toast background and text,
+/// conveying different types of messages to the user.
 enum ToastStyle {
-  case error
-  case warning
-  case success
-  case info
-  case notify
+    /// Error messages - displayed in red
+    case error
+    /// Warning messages - displayed in orange
+    case warning
+    /// Success messages - displayed in green
+    case success
+    /// Informational messages - displayed in blue
+    case info
+    /// Neutral notification messages - displayed with dark background and white text
+    case notify
 }
 
 extension ToastStyle {
+    /// The theme color for this toast style
     var themeColor: Color {
         switch self {
         case .error: return Color.red
@@ -19,6 +29,7 @@ extension ToastStyle {
         }
     }
 
+    /// The color to use for the toast message text
     var messageColor: Color {
         switch self {
         case .notify:
@@ -28,6 +39,7 @@ extension ToastStyle {
         }
     }
 
+    /// The background color for the toast container
     var toastBackgroundColor: Color {
         switch self {
         case .notify:

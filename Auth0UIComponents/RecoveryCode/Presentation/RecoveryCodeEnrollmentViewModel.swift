@@ -1,13 +1,20 @@
 import Combine
 import Auth0
 
+/// View model for recovery code enrollment.
+///
+/// Manages the recovery code enrollment process including:
+/// - Loading recovery codes from the Auth0 API
+/// - Confirming enrollment with the user
+/// - Providing codes for secure storage and backup
 @MainActor
-final class RecoveryCodeEnrollmentViewModel: ObservableObject {
-    
+final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHandler {
+
     private let startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable
     private let confirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCaseable
     private let dependencies: Auth0UIComponentsSDKInitializer
     private weak var delegate: RefreshAuthDataProtocol?
+    private let errorHandler = ErrorHandler()
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
@@ -63,46 +70,9 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject {
             }
         }
     }
-    
-    @MainActor func handle(error: Error,
-                           scope: String,
-                           retryCallback: @escaping () -> Void) async {
-        showLoader = false
-        if let error = error as? CredentialsManagerError {
-            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-            if case .mfaRequired = uiComponentError {
-                showLoader = true
-                do {
-                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
-                                                              domain: dependencies.domain,
-                                                              session: dependencies.session)
-                        .audience(dependencies.audience)
-                        .scope(scope)
-                        .start()
-                    showLoader = false
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
-                    retryCallback()
-                } catch  {
-                    await handle(error: error,
-                                 scope: scope,
-                                 retryCallback: retryCallback)
-                }
-            } else {
-                errorViewModel = uiComponentError.errorViewModel(completion: {
-                    retryCallback()
-                })
-            }
-        } else if let error  = error as? MyAccountError {
-            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel(completion: {
-                retryCallback()
-            })
-        } else if let error = error as? WebAuthError {
-            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel(completion: {
-                retryCallback()
-            })
-        }
+
+    func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
+        await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }
 }
 
