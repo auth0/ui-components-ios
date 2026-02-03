@@ -1,14 +1,26 @@
 import SwiftUI
 
+/// View for displaying QR code for TOTP or push notification enrollment.
+///
+/// Shows a QR code that users can scan with their authenticator app (for TOTP)
+/// or other MFA setup process. Also provides a manual entry code option for
+/// cases where QR code scanning is not possible.
 struct TOTPPushQRCodeView: View {
-    // MARK: - State Properties
+    /// View model managing QR code generation and enrollment state
+    @StateObject private var viewModel: TOTPPushQRCodeViewModel
+    /// Controls visibility of the "code copied" alert
     @State private var showCopiedAlert = false
-    
-    // MARK: - View Model
-    @ObservedObject var viewModel: TOTPPushQRCodeViewModel
-    
-    // MARK: - Properties
+
+    /// Initializes the TOTP/Push QR code view.
+    ///
+    /// - Parameter viewModel: The view model managing QR code state and enrollment
+    init(viewModel: TOTPPushQRCodeViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    /// Core Image context for QR code generation
     private let context = CIContext()
+    /// QR code filter for generating QR codes
     private let filter = CIFilter.qrCodeGenerator()
     
     // MARK: - Theme
@@ -18,11 +30,7 @@ struct TOTPPushQRCodeView: View {
     var body: some View {
         VStack(spacing: 16) {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -32,12 +40,12 @@ struct TOTPPushQRCodeView: View {
                         .interpolation(.none)
                         .aspectRatio(1.0, contentMode: .fit)
                         .padding(.horizontal)
-                    
+
                     Text("Use your Authenticator App (like Google Authenticator or Auth0 Guardian) to scan this QR code.")
                         .textStyle(.bodySmall)
                         .multilineTextAlignment(.center)
                 }
-                
+
                 if let manualInputCode = viewModel.manualInputCode {
                     Text(manualInputCode)
                         .font(.system(size: 14))
@@ -56,7 +64,7 @@ struct TOTPPushQRCodeView: View {
                         HStack(alignment: .center, spacing: 8) {
                             Image("copy", bundle: ResourceBundle.default)
                                 .frame(width: 16, height: 16)
-                            
+
                             Text("Copy as Code")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
@@ -111,9 +119,9 @@ struct TOTPPushQRCodeView: View {
                 }
             }
     }
-    
+
     func attributedString() -> AttributedString {
-        var attributed = AttributedString("Don’t have the Auth0 Guardian App?\nDownload it here")
+        var attributed = AttributedString("Don't have the Auth0 Guardian App?\nDownload it here")
         if let range = attributed.range(of: "Download it here") {
             attributed[range].foregroundColor = Color("000000", bundle: ResourceBundle.default)
             attributed[range].underlineStyle = .single

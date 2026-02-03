@@ -1,16 +1,26 @@
 import SwiftUI
 import Auth0
 
+/// View for displaying and saving recovery codes.
+///
+/// Shows generated recovery codes that users should save securely as backup
+/// authentication methods. These codes can be used to sign in if their primary
+/// authentication methods are unavailable.
 struct RecoveryCodeEnrollmentView: View {
-    @ObservedObject var viewModel: RecoveryCodeEnrollmentViewModel
+    /// View model managing recovery code state and enrollment logic
+    @StateObject private var viewModel: RecoveryCodeEnrollmentViewModel
+
+    /// Initializes the recovery code enrollment view.
+    ///
+    /// - Parameter viewModel: The view model managing recovery code state and enrollment
+    init(viewModel: RecoveryCodeEnrollmentViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View {
         ZStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -73,9 +83,7 @@ struct RecoveryCodeEnrollmentView: View {
                         HStack {
                             Spacer()
                             if viewModel.apiCallInProgress {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                                Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
                             } else {
                                 Text("Continue")
                                     .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))

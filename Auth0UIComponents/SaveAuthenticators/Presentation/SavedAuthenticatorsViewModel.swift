@@ -2,14 +2,20 @@ import Auth0
 import Combine
 import Foundation
 
+/// View model for managing saved authenticators of a specific type.
+///
+/// Manages the display and deletion of previously enrolled authentication methods
+/// for a specific type (email, SMS, TOTP, etc.). Allows users to remove authenticators
+/// they no longer need.
 @MainActor
-final class SavedAuthenticatorsScreenViewModel: ObservableObject {
+final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandler {
     private let dependencies: Auth0UIComponentsSDKInitializer
     private let authenticationMethods: [AuthenticationMethod]
     let type: AuthMethodType
     private let getAuthMethodsUseCase: GetAuthMethodsUseCaseable
     private let deleteAuthMethodUseCase: DeleteAuthMethodUseCaseable
     private weak var delegate: RefreshAuthDataProtocol?
+    private let errorHandler = ErrorHandler()
     @Published var showManageAuthSheet: Bool = false
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel? = nil
@@ -50,7 +56,11 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         guard postDeletion || authenticationMethods.isEmpty else {
             showLoader = false
             viewAuthenticationMethods = authenticationMethods.filter {
-                $0.type == type.rawValue && $0.confirmed == true
+                if type == .passkey {
+                    $0.type == type.rawValue
+                } else {
+                    $0.type == type.rawValue && $0.confirmed == true
+                }
             }
             return
         }
@@ -60,7 +70,11 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
             self.showLoader = false
             let filteredAuthMethods = apiAuthMethods
                 .filter {
-                    return $0.type == type.rawValue && $0.confirmed == true
+                    if type == .passkey {
+                        $0.type == type.rawValue
+                    } else {
+                        $0.type == type.rawValue && $0.confirmed == true
+                    }
                 }
             if filteredAuthMethods.isEmpty {
                 viewAuthenticationMethods = []
@@ -76,45 +90,8 @@ final class SavedAuthenticatorsScreenViewModel: ObservableObject {
         }
     }
 
-    @MainActor func handle(error: Error,
-                           scope: String,
-                           retryCallback: @escaping () -> Void) async {
-        showLoader = false
-        if let error = error as? CredentialsManagerError {
-            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-            if case .mfaRequired = uiComponentError {
-                showLoader = true
-                do {
-                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
-                                                              domain: dependencies.domain,
-                                                              session: dependencies.session)
-                        .audience(dependencies.audience)
-                        .scope(scope)
-                        .start()
-                    showLoader = false
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
-                    retryCallback()
-                } catch  {
-                    await handle(error: error,
-                                 scope: scope,
-                                 retryCallback: retryCallback)
-                }
-            } else {
-                errorViewModel = uiComponentError.errorViewModel(completion: {
-                    retryCallback()
-                })
-            }
-        } else if let error  = error as? MyAccountError {
-            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel(completion: {
-                retryCallback()
-            })
-        } else if let error = error as? WebAuthError {
-            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel(completion: {
-                retryCallback()
-            })
-        }
+    func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
+        await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }
 }
 

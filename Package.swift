@@ -8,7 +8,7 @@ let swiftSettings: [SwiftSetting] = [
 
 let package = Package(
     name: "Auth0UIComponents",
-    platforms: [.iOS(.v16), .macOS(.v14), .visionOS(.v1)],
+    platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UIComponents", targets: ["Auth0UIComponents"])],
     dependencies: [
         .package(url: "https://github.com/auth0/Auth0.swift.git", exact:"2.16.1")

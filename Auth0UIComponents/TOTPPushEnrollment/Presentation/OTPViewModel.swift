@@ -2,8 +2,16 @@ import Auth0
 import Combine
 import Foundation
 
+/// View model for OTP (one-time password) verification.
+///
+/// Manages OTP code entry and verification for various authentication methods:
+/// - Email/SMS verification codes
+/// - TOTP codes from authenticator apps
+/// - Push notification verification
+///
+/// Handles input validation, code confirmation, and transitions to next steps.
 @MainActor
-final class OTPViewModel: ObservableObject {
+final class OTPViewModel: ObservableObject, ErrorMessageHandler {
     private let totpEnrollmentChallenge: TOTPEnrollmentChallenge?
     private var phoneEnrollmentChallenge: PhoneEnrollmentChallenge?
     private var emailEnrollmentChallenge: EmailEnrollmentChallenge?
@@ -16,6 +24,7 @@ final class OTPViewModel: ObservableObject {
     private let type: AuthMethodType
     private let emailOrPhoneNumber: String?
     private weak var delegate: RefreshAuthDataProtocol?
+    private let errorHandler = ErrorHandler()
     @Published var showLoader: Bool = false
     @Published var errorMessage: String?
     @Published var otpText: String = ""
@@ -141,43 +150,7 @@ final class OTPViewModel: ObservableObject {
         }
     }
     
-    @MainActor func handle(error: Error,
-                           scope: String,
-                           retryCallback: @escaping () -> Void) async {
-        if let error = error as? CredentialsManagerError {
-            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-            if case .mfaRequired = uiComponentError {
-                do {
-                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
-                                                              domain: dependencies.domain,
-                                                              session: dependencies.session)
-                        .audience(dependencies.audience)
-                        .scope(scope)
-                        .start()
-                    dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
-                    retryCallback()
-                } catch  {
-                    await handle(error: error,
-                                 scope: scope,
-                                 retryCallback: retryCallback)
-                }
-            } else {
-                
-            }
-        } else if let error = error as? MyAccountError {
-            if error.code == "invalid_grant" ||
-                error.message.localizedStandardContains("invalid") ||
-                error.message.localizedStandardContains("incorrect") {
-                errorMessage = "Invalid passcode. Please try again."
-            } else if error.message.localizedStandardContains("expired") {
-                errorMessage = "Passcode expired. Please request a new one."
-            } else if error.message.localizedStandardContains("rate") {
-                errorMessage = "Too many attempts. Please try again later."
-            } else {
-                errorMessage = error.message
-            }
-        } else if let error = error as? WebAuthError {
-            errorMessage = error.message
-        }
+    func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
+        await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }
 }

@@ -10,8 +10,13 @@ import UIKit
 import AppKit
 #endif
 
+/// View model for displaying QR codes for TOTP and push notification enrollment.
+///
+/// Manages the generation and display of QR codes for authenticator app setup,
+/// as well as push notification enrollment. Provides manual entry codes as a fallback
+/// for users unable to scan QR codes.
 @MainActor
-final class TOTPPushQRCodeViewModel: ObservableObject {
+final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     private let startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable
     private let startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable
     private let confirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable
@@ -20,6 +25,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
     private var pushEnrollmentChallenge: PushEnrollmentChallenge?
     private var totpEnrollmentChallenge: TOTPEnrollmentChallenge?
     private weak var delegate: RefreshAuthDataProtocol?
+    private let errorHandler = ErrorHandler()
     @Published var qrCodeImage: Image?
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String? = nil
@@ -140,44 +146,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject {
         }
     }
 
-    @MainActor func handle(error: Error,
-                           scope: String,
-                           retryCallback: @escaping () -> Void) async {
-        showLoader = false
-        if let error = error as? CredentialsManagerError {
-            let uiComponentError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-            if case .mfaRequired = uiComponentError {
-                showLoader = true
-                do {
-                    let credentials = try await Auth0.webAuth(clientId: dependencies.clientId,
-                                                              domain: dependencies.domain,
-                                                              session: dependencies.session)
-                        .audience(dependencies.audience)
-                        .scope(scope)
-                        .start()
-                    showLoader = false
-                    await dependencies.tokenProvider.store(apiCredentials: APICredentials(from: credentials), for: dependencies.audience)
-                    retryCallback()
-                } catch  {
-                    await handle(error: error,
-                                 scope: scope,
-                                 retryCallback: retryCallback)
-                }
-            } else {
-                errorViewModel = uiComponentError.errorViewModel(completion: {
-                    retryCallback()
-                })
-            }
-        } else if let error  = error as? MyAccountError {
-            let uiComponentError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel(completion: {
-                retryCallback()
-            })
-        } else if let error = error as? WebAuthError {
-            let uiComponentError = Auth0UIComponentError.handleWebAuthError(error: error)
-            errorViewModel = uiComponentError.errorViewModel {
-                retryCallback()
-            }
-        }
+    func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
+        await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }
 }

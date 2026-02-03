@@ -1,8 +1,21 @@
 import SwiftUI
 
+/// View for entering email or phone number for enrollment.
+///
+/// Allows users to input an email address or phone number to enroll as an
+/// authentication method. For phone numbers, includes a country code picker.
 struct EmailPhoneEnrollmentView: View {
-    @ObservedObject var viewModel: EmailPhoneEnrollmentViewModel
+    /// View model managing email/phone enrollment state and validation
+    @StateObject private var viewModel: EmailPhoneEnrollmentViewModel
+    /// Manages focus state of the text input field
     @FocusState private var textFieldFocused: Bool
+
+    /// Initializes the email/phone enrollment view.
+    ///
+    /// - Parameter viewModel: The view model managing email/phone enrollment state
+    init(viewModel: EmailPhoneEnrollmentViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -49,7 +62,17 @@ struct EmailPhoneEnrollmentView: View {
                     .overlay {
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(Color("CECECE", bundle: ResourceBundle.default), lineWidth: 1)
-                    }.padding(.bottom, 100)
+                    }
+                
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
+                        .font(.system(size: 16))
+                        .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
+                } else {
+                    EmptyView()
+                    .padding(.bottom, 100)
+                }
             } else {
                 TextField("Email", text: $viewModel.email)
                     .focused($textFieldFocused)
@@ -59,7 +82,17 @@ struct EmailPhoneEnrollmentView: View {
                         .overlay {
                             RoundedRectangle(cornerRadius: 14)
                                 .stroke(Color("CECECE", bundle: ResourceBundle.default), lineWidth: 1)
-                        }.padding(.bottom, 100)
+                        }
+
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
+                        .font(.system(size: 16))
+                        .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
+                } else {
+                    EmptyView()
+                        .padding(.bottom, 100)
+                }
             }
             Button(action: {
                 Task {
@@ -69,9 +102,7 @@ struct EmailPhoneEnrollmentView: View {
                 HStack {
                     Spacer()
                     if viewModel.apiCallInProgress {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .tint(Color("FFFFFF", bundle: ResourceBundle.default))
+                        Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
                     } else {
                         Text("Continue")
                             .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))

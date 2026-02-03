@@ -1,7 +1,11 @@
 import SwiftUI
 
+/// Displays an error message screen to the user.
+///
+/// This view presents an error state with a title, detailed message, and an action button.
+/// It is used throughout Auth0 UI Components to display error states from failed operations.
 struct ErrorScreen: View {
-    // MARK: - View Model
+    /// The view model providing error information and callbacks
     let viewModel: ErrorScreenViewModel
     
     // MARK: - Theme

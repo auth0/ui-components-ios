@@ -1,16 +1,25 @@
 import SwiftUI
 import Auth0
 
-struct SavedAuthenticatorsScreen: View {
-    @ObservedObject var viewModel: SavedAuthenticatorsScreenViewModel
+/// Screen for selecting and managing saved authentication methods.
+///
+/// Displays a list of previously enrolled authentication methods for a specific
+/// type (email, SMS, TOTP, push, etc.) that users can select to manage or delete.
+struct SavedAuthenticatorsView: View {
+    /// View model managing saved authenticators and deletion logic
+    @StateObject private var viewModel: SavedAuthenticatorsViewModel
+
+    /// Initializes the saved authenticators screen.
+    ///
+    /// - Parameter viewModel: The view model managing saved authenticators and deletion logic
+    init(viewModel: SavedAuthenticatorsViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View {
         ZStack {
             if viewModel.showLoader {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .tint(Color("3C3C43", bundle: ResourceBundle.default))
-                    .scaleEffect(1.5 )
-                    .frame(width: 50, height: 50)
+                Auth0Loader()
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -93,7 +102,7 @@ struct AuthenticatorView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(type.savedAuthenticatorsCellTitle)
+                Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
 
