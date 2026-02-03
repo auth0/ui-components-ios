@@ -1152,7 +1152,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.5;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.auth0.AppAuth0UIComponents;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.auth0.AppUIComponents;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=xros*]" = com.auth0.AppUIComponentsVision;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
