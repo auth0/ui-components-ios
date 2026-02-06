@@ -35,6 +35,7 @@ struct MyAccountAuthMethodView: View {
             Image("chevron", bundle: ResourceBundle.default)
                 .frame(width: 16, height: 16)
         }
+        .contentShape(Rectangle())
         .padding(.all, 20)
         .overlay {
             RoundedRectangle(cornerRadius: 16)
