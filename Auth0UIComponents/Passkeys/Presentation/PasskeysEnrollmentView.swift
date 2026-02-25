@@ -9,6 +9,8 @@ import SwiftUI
 /// Availability: Requires iOS 16.6, macOS 13.5, or visionOS 1.0+
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct PasskeysEnrollmentView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// View model handling passkey enrollment state and logic
     @StateObject private var viewModel: PasskeysEnrollmentViewModel
 
@@ -30,67 +32,91 @@ struct PasskeysEnrollmentView: View {
                     VStack {
                         Image("Shape", bundle: ResourceBundle.default)
                             .frame(width: 165, height: 165)
-                            .padding(.vertical, 40)
-                        
+                            .padding(.top, theme.spacing.`5xl`)
+                            .padding(.bottom, theme.spacing.`4xl`)
+
                         Text("Enable Passkey")
-                            .font(.system(size: 32, weight: .medium))
-                            .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                            .padding(.bottom, 20)
+                            .auth0TextStyle(theme.typography.displayMedium)
+                            .foregroundStyle(theme.colors.textPrimary)
+                            .padding(.bottom, theme.spacing.lg)
+
                         HStack {
                             VStack(alignment: .leading) {
-                                Text("What are passkeys?")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                                    .padding(.bottom, 4)
-                                
+                                HStack {
+                                    Text("• What are passkeys?")
+                                        .auth0TextStyle(theme.typography.title)
+                                        .foregroundStyle(theme.colors.textPrimary)
+                                        .padding(.bottom, theme.spacing.xs)
+                                }
+                                .padding(.leading, theme.spacing.xs)
+
                                 Text("Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.")
                                     .multilineTextAlignment(.leading)
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                                    .auth0TextStyle(theme.typography.body)
+                                    .foregroundStyle(theme.colors.textSecondary)
                                     .padding(.bottom, 30)
-                                
-                                Text("Where are passkeys saved?")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                                    .padding(.bottom, 4)
-                                
+
+                                Text("• Where are passkeys saved?")
+                                    .auth0TextStyle(theme.typography.title)
+                                    .foregroundStyle(theme.colors.textPrimary)
+                                    .padding(.bottom, theme.spacing.xs)
+                                    .padding(.leading, theme.spacing.xs)
+
                                 Text("Passkeys are saved in your credential manager, so you can sign in on other devices.")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                                    .auth0TextStyle(theme.typography.body)
+                                    .foregroundStyle(theme.colors.textSecondary)
                                     .padding(.bottom, 30)
                             }
-                            Spacer()
                         }
-                        
+
                         Button {
                             Task {
                                 await viewModel.startEnrollment()
                             }
                         } label: {
-                            Text("Enable")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                        }.frame(height: 48)
-                            .background(Color("262420", bundle: ResourceBundle.default))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .padding(.top, 30)
-                        
+                            Label {
+                                Text("Create a Passkey")
+                                    .auth0TextStyle(theme.typography.label)
+                                    .foregroundStyle(theme.colors.onPrimary)
+                                    .padding(.vertical, 10)
+                            } icon: {
+                                Image("passkey", bundle: ResourceBundle.default)
+                                    .resizable()
+                                    .renderingMode(.template)
+                                    .foregroundColor(theme.colors.onPrimary)
+                                    .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
+                            }.frame(maxWidth: .infinity)
+                        }
+                        .frame(height: theme.sizes.buttonHeight)
+                        .background(
+                            LinearGradient(
+                                stops: [
+                                    Gradient.Stop(color: Color.white.opacity(0.15), location: 0.00),
+                                    Gradient.Stop(color: Color.white.opacity(0.00), location: 1.00),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .background(theme.colors.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
+                        .shadow(color: Color.black.opacity(0.20), radius: 2, x: 0, y: 1)
+                        .padding(.top, theme.spacing.`4xl`)
+
                         Text("Skip")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
+                            .auth0TextStyle(theme.typography.label)
+                            .foregroundStyle(theme.colors.textPrimary)
                             .onTapGesture {
                                 NavigationStore.shared.pop()
                             }
-                            .padding(.top, 20)
+                            .padding(.top, theme.spacing.lg)
                     }
-                }.padding()
+                }
             }
         }
-        .navigationTitle(Text("Enable Passkey"))
-#if os(iOS) || os(watchOS)
-        .navigationBarTitleDisplayMode(.inline)
-#endif
+        .padding(theme.spacing.xl)
+        .padding(.top, theme.spacing.`3xl`)
+        .background(Color("PasskeyBackground", bundle: ResourceBundle.default))
+        .ignoresSafeArea()
     }
 }

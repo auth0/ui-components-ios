@@ -21,7 +21,7 @@ let package = Package(
             ],
             path: "Auth0UIComponents",
             exclude: ["Info.plist"],
-            resources: [.copy("PrivacyInfo.xcprivacy"), .process("Media.xcassets")],
+            resources: [.copy("PrivacyInfo.xcprivacy"), .process("Resources/Media/Media.xcassets"), .process("Resources/Colors/Colors.xcassets"), .copy("Resources/Fonts")],
             swiftSettings: swiftSettings),
         .testTarget(
             name: "Auth0UIComponentsTests",

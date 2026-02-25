@@ -7,6 +7,7 @@ struct AppUIComponentsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(viewModel: ContentViewModel())
+                .auth0Theme(Auth0Theme())
                 .onAppear {
                     Auth0UIComponentsSDKInitializer.initialize(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
                 }

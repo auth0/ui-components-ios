@@ -10,6 +10,8 @@ import Auth0
 ///
 /// The view auto-advances between fields and validates codes on entry.
 struct OTPView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// View model managing OTP verification state and logic
     @StateObject private var viewModel: OTPViewModel
     /// Tracks which OTP field currently has focus
@@ -30,38 +32,39 @@ struct OTPView: View {
                 VStack(alignment: .leading) {
                     if viewModel.isEmailOrSMS == false {
                         Text("Enter the 6-digit code")
-                            .font(Font.system(size: 20, weight: .semibold))
-                            .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                            .padding(.bottom, 8)
-                        
+                            .auth0TextStyle(theme.typography.titleLarge)
+                            .foregroundStyle(theme.colors.textPrimary)
+                            .padding(.bottom, theme.spacing.sm)
+
                         Text("From your authenticator app")
-                            .font(Font.system(size: 16))
-                            .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                            .auth0TextStyle(theme.typography.body)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .padding(.bottom, 76)
                     } else {
                         Text("Enter the 6 digit code we sent to \(viewModel.formattedEmailOrPhoneNumber)")
                             .multilineTextAlignment(.leading)
-                            .font(Font.system(size: 20, weight: .semibold))
-                            .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
+                            .auth0TextStyle(theme.typography.titleLarge)
+                            .foregroundStyle(theme.colors.textPrimary)
                             .padding(.bottom, 30)
                     }
-                    
+
                     Text("One-Time Passcode")
-                        .font(Font.system(size: 16, weight: .medium))
-                        .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-                        .padding(.bottom, 16)
-                    
+                        .auth0TextStyle(theme.typography.label)
+                        .foregroundStyle(theme.colors.textPrimary)
+                        .padding(.bottom, theme.spacing.base)
+
                     otpTextFieldView()
+
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
-                            .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
-                            .font(.system(size: 16))
+                            .foregroundStyle(theme.colors.onError)
+                            .auth0TextStyle(theme.typography.body)
                             .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
                     } else {
                         if viewModel.isEmailOrSMS {
                             Text(attributedString())
-                                .font(.system(size: 16))
-                                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                                .auth0TextStyle(theme.typography.body)
+                                .foregroundStyle(theme.colors.textSecondary)
                                 .onTapGesture {
                                     Task {
                                         await viewModel.restartEnrollment()
@@ -71,6 +74,7 @@ struct OTPView: View {
                             Spacer()
                         }
                     }
+
                     Button(action: {
                         Task {
                             await viewModel.confirmEnrollment()
@@ -79,40 +83,41 @@ struct OTPView: View {
                         HStack {
                             Spacer()
                             if viewModel.apiCallInProgress {
-                                Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
+                                Auth0Loader(tintColor: theme.colors.onPrimary)
                             } else {
                                 Text("Continue")
-                                    .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
-                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundStyle(theme.colors.onPrimary)
+                                    .auth0TextStyle(theme.typography.label)
                             }
                             Spacer()
                         }.frame(maxWidth: .infinity)
                     })
                     .disabled(!viewModel.buttonEnabled)
-                    .frame(height: 48)
+                    .frame(height: theme.sizes.buttonHeight)
                     .background(
-                        Color("262420", bundle: ResourceBundle.default).opacity(viewModel.buttonEnabled ? 1.0 : 0.5)
+                        theme.colors.primary.opacity(viewModel.buttonEnabled ? 1.0 : 0.5)
                     )
-                    .cornerRadius(16)
+                    .cornerRadius(theme.radius.button)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: theme.radius.button)
                             .stroke(
-                                Color("262420", bundle: ResourceBundle.default).opacity(viewModel.buttonEnabled ? 1.0 : 0.5),
+                                theme.colors.primary.opacity(viewModel.buttonEnabled ? 1.0 : 0.5),
                                 lineWidth: 2
                             )
                     )
                     Spacer()
                 }.padding(EdgeInsets(top: 39, leading: 16, bottom: 40, trailing: 16))
             }
-        }.ignoresSafeArea(.keyboard)
-            .navigationTitle(viewModel.navigationTitle)
-            .onAppear {
-                focusedField = 0
-            }
+        }
+        .ignoresSafeArea(.keyboard)
+        .navigationTitle(viewModel.navigationTitle)
+        .onAppear {
+            focusedField = 0
+        }
     }
 
     private func otpTextFieldView() -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: theme.spacing.sm) {
             ForEach(0..<6, id: \.self, content: { index in
                 OTPTextField(
                     fullText: $viewModel.otpText,
@@ -128,9 +133,9 @@ struct OTPView: View {
                         self.emptyBackspaceKeyPressed()
                     }
                 )
-                .frame(width: 48, height: 56, alignment: .center)
+                .frame(width: theme.sizes.size4xlDimen, height: theme.sizes.size5xlDimen, alignment: .center)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
                         .stroke(Color.gray, lineWidth: 2)
                 )
                 .tag(index)
@@ -174,7 +179,7 @@ struct OTPView: View {
     private func enterKeyPressed() {
         self.focusedField = nil
     }
-    
+
     private func emptyBackspaceKeyPressed() {
         guard let focusedField = self.focusedField, focusedField > 0 else {
             return
@@ -183,9 +188,9 @@ struct OTPView: View {
     }
 
     func attributedString() -> AttributedString {
-        var attributed = AttributedString("Didn’t get a code? Resend it.")
+        var attributed = AttributedString("Didn't get a code? Resend it.")
         if let range = attributed.range(of: "Resend it.") {
-            attributed[range].foregroundColor = Color("000000", bundle: ResourceBundle.default)
+            attributed[range].foregroundColor = theme.colors.textPrimary
             attributed[range].underlineStyle = .single
         }
         return attributed

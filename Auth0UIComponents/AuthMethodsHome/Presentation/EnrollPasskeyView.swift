@@ -9,6 +9,8 @@ import SwiftUI
 /// Availability: Requires iOS 16.6, macOS 13.5, or visionOS 1.0+
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct EnrollPasskeyView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// Controls whether the passkey enrollment banner is displayed
     @Binding var collapsePasskeyBanner: Bool
     /// View model handling passkey enrollment logic
@@ -16,33 +18,35 @@ struct EnrollPasskeyView: View {
 
     var body: some View {
         VStack {
-            Text("With Passkey, you don’t have to remember complex passwords.")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
+            Text("With Passkey, you don't have to remember complex passwords.")
+                .auth0TextStyle(theme.typography.label)
+                .foregroundStyle(theme.colors.textPrimary)
 
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: theme.spacing.xs) {
                     Text("What are passkeys?")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
+                        .auth0TextStyle(theme.typography.label)
+                        .fontWeight(.bold)
+                        .foregroundStyle(theme.colors.textPrimary)
                     Text("Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                        .auth0TextStyle(theme.typography.helper)
+                        .foregroundStyle(theme.colors.textPrimary)
                 }
                 Spacer()
-            }.padding(.top, 24)
-  
+            }.padding(.top, theme.spacing.xl)
+
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: theme.spacing.xs) {
                     Text("Where are passkeys saved?")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
+                        .auth0TextStyle(theme.typography.label)
+                        .fontWeight(.bold)
+                        .foregroundStyle(theme.colors.textPrimary)
                     Text("Passkeys are saved in your credential manager, so you can sign in on other devices.")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                        .auth0TextStyle(theme.typography.helper)
+                        .foregroundStyle(theme.colors.textPrimary)
                 }
                 Spacer()
-            }.padding(.top, 24)
+            }.padding(.top, theme.spacing.xl)
 
             Button {
                 Task {
@@ -51,40 +55,52 @@ struct EnrollPasskeyView: View {
             } label: {
                 Label {
                     Text("Add a Passkey")
-                        .font(.system(size: 16).weight(.medium))
-                        .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
+                        .auth0TextStyle(theme.typography.label)
+                        .foregroundStyle(theme.colors.primary)
                 } icon: {
                     Image("passkey", bundle: ResourceBundle.default)
+                        .resizable()
+                        .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
                 }.frame(maxWidth: .infinity)
-            }.frame(height: 48)
-                .background(
-                    LinearGradient(
-                        stops: [
-                            Gradient.Stop(color: Color("262421", bundle: ResourceBundle.default).opacity(0), location: 0.00),
-                            Gradient.Stop(color: Color("262421", bundle: ResourceBundle.default).opacity(0.05), location: 1.00),
-                        ],
-                        startPoint: UnitPoint(x: 0.5, y: 0),
-                        endPoint: UnitPoint(x: 0.5, y: 1)
-                    )
+            }
+            .frame(height: theme.sizes.buttonHeight)
+            .background(
+                LinearGradient(
+                    stops: [
+                        Gradient.Stop(color: theme.colors.primary.opacity(0), location: 0.00),
+                        Gradient.Stop(color: theme.colors.primary.opacity(0.05), location: 1.00),
+                    ],
+                    startPoint: UnitPoint(x: 0.5, y: 0),
+                    endPoint: UnitPoint(x: 0.5, y: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .inset(by: 0.5)
-                        .stroke(Color("262420", bundle: ResourceBundle.default).opacity(0.35), lineWidth: 1)
-                )
-                .padding(.top, 16)
+            )
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.radius.button)
+                    .inset(by: 0.5)
+                    .stroke(theme.colors.primary.opacity(0.35), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.20), radius: 2, x: 0, y: 1)
+            .padding(.top, theme.spacing.base)
 
-            Text("Remind me later")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
-                .onTapGesture {
-                    withAnimation {
-                        collapsePasskeyBanner.toggle()
-                    }
+            Button {
+                withAnimation {
+                    collapsePasskeyBanner.toggle()
                 }
-                .padding(EdgeInsets(top: 20, leading: 0, bottom: 32, trailing: 0))
+            } label: {
+                Text("Remind me later")
+                    .auth0TextStyle(theme.typography.label)
+                    .foregroundStyle(theme.colors.primary)
+            }
+            .frame(height: theme.sizes.buttonHeight)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
+            .padding(.top, theme.spacing.sm)
 
-        }.padding(.all, 20).background(Color("F0F0F0", bundle: ResourceBundle.default).opacity(0.90)).clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .padding(.all, theme.spacing.lg)
+        .background(Color("Muted", bundle: ResourceBundle.default))
+//        .background(theme.colors.surface.opacity(0.90))
+        .clipShape(RoundedRectangle(cornerRadius: theme.radius.medium))
     }
 }

@@ -24,7 +24,7 @@ struct ContentView: View {
                                 case .success(let credentials):
                                     viewModel.storeCredentials(credentials)
                                     viewModel.getCredentials()
-                                case .failure(let error):
+                                case .failure:
                                     break
                                 }
                             }
@@ -37,7 +37,7 @@ struct ContentView: View {
                                 case .success(_):
                                     viewModel.clearCredentials()
                                     break
-                                case .failure(let error):
+                                case .failure:
                                     break
                                 }
                             }
@@ -51,6 +51,7 @@ struct ContentView: View {
                     Text(viewModel.loginStatusMessage)
                         .foregroundStyle(Color.black)
                         .font(.system(size: 16, weight: .semibold))
+                        .redacted(reason: .placeholder)
                         .padding()
                     
                     Spacer()

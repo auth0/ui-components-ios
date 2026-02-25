@@ -7,9 +7,11 @@ import Auth0
 /// with an icon, title, and enrollment status indicator. It is tappable to navigate to the
 /// management or enrollment screen for that authentication method.
 struct MyAccountAuthMethodView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// View model providing authentication method details and actions
     @StateObject var viewModel: MyAccountAuthMethodViewModel
- 
+
     init(viewModel: MyAccountAuthMethodViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
@@ -17,29 +19,30 @@ struct MyAccountAuthMethodView: View {
     var body: some View {
         HStack() {
             Image(viewModel.image(), bundle: ResourceBundle.default)
-                .frame(width: 24, height: 24)
-                .padding(.trailing, 16)
+                .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
+                .padding(.trailing, theme.spacing.base)
 
             Text(viewModel.title())
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                .padding(.trailing, 16)
+                .auth0TextStyle(theme.typography.label)
+                .foregroundStyle(theme.colors.cardForeground)
+                .padding(.trailing, theme.spacing.base)
 
             Spacer()
 
             if viewModel.isAtleastOnceAuthFactorEnrolled() {
                 Image("checkmark.green", bundle: ResourceBundle.default)
-                    .frame(width: 24, height: 24)
-                    .padding(.trailing, 22)
+                    .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
+                    .padding(.trailing, theme.spacing.base)
             }
+            
             Image("chevron", bundle: ResourceBundle.default)
-                .frame(width: 16, height: 16)
+                .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
         }
         .contentShape(Rectangle())
-        .padding(.all, 20)
+        .padding(.all, theme.spacing.lg)
         .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color("D9D9D9", bundle: ResourceBundle.default), lineWidth: 1)
+            RoundedRectangle(cornerRadius: theme.radius.button)
+                .stroke(theme.colors.border, lineWidth: 1)
         }
         .onTapGesture {
             viewModel.handleNavigation()

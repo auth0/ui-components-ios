@@ -5,6 +5,8 @@ import SwiftUI
 /// Allows users to input an email address or phone number to enroll as an
 /// authentication method. For phone numbers, includes a country code picker.
 struct EmailPhoneEnrollmentView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// View model managing email/phone enrollment state and validation
     @StateObject private var viewModel: EmailPhoneEnrollmentViewModel
     /// Manages focus state of the text input field
@@ -20,32 +22,32 @@ struct EmailPhoneEnrollmentView: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(viewModel.title)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                .padding(.bottom, 8)
+                .auth0TextStyle(theme.typography.titleLarge)
+                .foregroundStyle(theme.colors.textPrimary)
+                .padding(.bottom, theme.spacing.sm)
 
             Text("We will text you a verification code.")
-                .font(.system(size: 16))
-                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                .auth0TextStyle(theme.typography.body)
+                .foregroundStyle(theme.colors.textSecondary)
                 .padding(.bottom, 25)
 
             Text(viewModel.isPhoneAuthMethod ? "Phone number" : "Email")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-                .padding(.bottom, 8)
+                .auth0TextStyle(theme.typography.label)
+                .foregroundStyle(theme.colors.textPrimary)
+                .padding(.bottom, theme.spacing.sm)
 
             if viewModel.isPhoneAuthMethod {
-                HStack(spacing: 8) {
+                HStack(spacing: theme.spacing.sm) {
                     Button(action: {
                         viewModel.isPickerVisible.toggle()
                     }) {
                         HStack {
                             Text(viewModel.selectedCountry?.flag ?? "")
                                 .frame(height: 20)
-                            
+
                             Text(viewModel.selectedCountry?.code ?? "")
-                                .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(theme.colors.textPrimary)
+                                .auth0TextStyle(theme.typography.titleLarge)
                         }.padding(5)
                     }
 
@@ -56,18 +58,19 @@ struct EmailPhoneEnrollmentView: View {
                         .keyboardType(.numberPad)
                     #endif
                         .focused($textFieldFocused)
-                }.padding()
-                    .frame(height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color("CECECE", bundle: ResourceBundle.default), lineWidth: 1)
-                    }
-                
+                }
+                .padding()
+                .frame(height: theme.sizes.inputHeight)
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.inputField))
+                .overlay {
+                    RoundedRectangle(cornerRadius: theme.radius.inputField)
+                        .stroke(theme.colors.border, lineWidth: 1)
+                }
+
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
-                        .font(.system(size: 16))
+                        .foregroundStyle(theme.colors.onError)
+                        .auth0TextStyle(theme.typography.body)
                         .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
                 } else {
                     EmptyView()
@@ -77,23 +80,24 @@ struct EmailPhoneEnrollmentView: View {
                 TextField("Email", text: $viewModel.email)
                     .focused($textFieldFocused)
                     .padding()
-                    .frame(height: 60)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color("CECECE", bundle: ResourceBundle.default), lineWidth: 1)
-                        }
+                    .frame(height: theme.sizes.inputHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.radius.inputField))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: theme.radius.inputField)
+                            .stroke(theme.colors.border, lineWidth: 1)
+                    }
 
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(Color("B82819", bundle: ResourceBundle.default))
-                        .font(.system(size: 16))
+                        .foregroundStyle(theme.colors.onError)
+                        .auth0TextStyle(theme.typography.body)
                         .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
                 } else {
                     EmptyView()
                         .padding(.bottom, 100)
                 }
             }
+
             Button(action: {
                 Task {
                     await viewModel.startEnrollment()
@@ -102,49 +106,52 @@ struct EmailPhoneEnrollmentView: View {
                 HStack {
                     Spacer()
                     if viewModel.apiCallInProgress {
-                        Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
+                        Auth0Loader(tintColor: theme.colors.onPrimary)
                     } else {
                         Text("Continue")
-                            .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
-                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(theme.colors.onPrimary)
+                            .auth0TextStyle(theme.typography.label)
                     }
                     Spacer()
                 }.frame(maxWidth: .infinity)
             })
             .disabled(!viewModel.isButtonEnabled)
-            .frame(height: 48)
+            .frame(height: theme.sizes.buttonHeight)
             .background(
-                Color("262420", bundle: ResourceBundle.default).opacity(viewModel.isButtonEnabled ? 1.0 : 0.5)
+                theme.colors.primary.opacity(viewModel.isButtonEnabled ? 1.0 : 0.5)
             )
-            .cornerRadius(16)
+            .cornerRadius(theme.radius.button)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: theme.radius.button)
                     .stroke(
-                        Color("262420", bundle: ResourceBundle.default).opacity(viewModel.isButtonEnabled ? 1.0 : 0.5),
+                        theme.colors.primary.opacity(viewModel.isButtonEnabled ? 1.0 : 0.5),
                         lineWidth: 2
                     )
             )
             Spacer()
-        }.padding()
-            .ignoresSafeArea(.keyboard)
-            .navigationTitle(Text(viewModel.navigationTitle))
-            .toolbar {
-                #if !os(visionOS)
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        textFieldFocused = false
-                    }
+        }
+        .padding()
+        .ignoresSafeArea(.keyboard)
+        .navigationTitle(Text(viewModel.navigationTitle))
+        .toolbar {
+            #if !os(visionOS)
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    textFieldFocused = false
                 }
-                #endif
             }
-            .sheet(isPresented: $viewModel.isPickerVisible) {
-                CountryPickerView(selectedCountry: $viewModel.selectedCountry,
-                                  isPickerVisible: $viewModel.isPickerVisible)
-            }.onAppear {
-                textFieldFocused = true
-            }.onDisappear {
-                textFieldFocused = false
-            }
+            #endif
+        }
+        .sheet(isPresented: $viewModel.isPickerVisible) {
+            CountryPickerView(selectedCountry: $viewModel.selectedCountry,
+                              isPickerVisible: $viewModel.isPickerVisible)
+        }
+        .onAppear {
+            textFieldFocused = true
+        }
+        .onDisappear {
+            textFieldFocused = false
+        }
     }
 }

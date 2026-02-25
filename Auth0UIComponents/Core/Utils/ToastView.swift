@@ -1,24 +1,28 @@
 import SwiftUI
 
-/// Displays a toast notification message with styled appearance.
+/// Renders a single toast notification message.
 ///
-/// Renders the toast message text with colors and styling determined by the ToastStyle.
-/// This view handles the visual presentation of toast notifications.
+/// Colours and layout metrics are resolved from the active ``Auth0Theme``,
+/// so the toast automatically matches any custom theme injected with
+/// ``SwiftUI/View/auth0Theme(_:)``.
 struct ToastView: View {
-    /// The visual style of the toast (error, warning, success, etc.)
+
+    @Environment(\.auth0Theme) private var theme
+
+    /// The semantic intent that determines colours.
     var style: ToastStyle
-    /// The message text to display
+    /// The message text to display.
     var message: String
-    /// Callback invoked when the user cancels/dismisses the toast
+    /// Callback invoked when the user dismisses the toast.
     var onCancelTapped: (() -> Void)
 
     var body: some View {
         Text(message)
-            .font(Font.caption)
-            .foregroundColor(style.messageColor)
+            .auth0TextStyle(theme.typography.helper)
+            .foregroundColor(style.messageColor(from: theme))
             .padding()
-            .background(style.toastBackgroundColor)
-            .cornerRadius(8)
-            .padding(.horizontal, 16)
+            .background(style.toastBackgroundColor(from: theme))
+            .cornerRadius(theme.radius.small)
+            .padding(.horizontal, theme.spacing.base)
     }
 }

@@ -1,45 +1,45 @@
 import SwiftUI
 
-/// Displays an error message screen to the user.
+/// Displays a full-screen error state with a title, description, and action button.
 ///
-/// This view presents an error state with a title, detailed message, and an action button.
-/// It is used throughout Auth0 UI Components to display error states from failed operations.
+/// Colours, typography, and sizing are all resolved from the active
+/// ``Auth0Theme``, so the screen matches any custom theme injected with
+/// ``SwiftUI/View/auth0Theme(_:)``.
 struct ErrorScreen: View {
-    /// The view model providing error information and callbacks
+
+    @Environment(\.auth0Theme) private var theme
+
+    /// The view model providing error copy and button callbacks.
     let viewModel: ErrorScreenViewModel
 
     var body: some View {
         VStack {
             Spacer()
-            VStack(spacing: 12) {
+            VStack(spacing: theme.spacing.md) {
                 Text(viewModel.title)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(Color("191919", bundle: ResourceBundle.default))
-                
+                    .auth0TextStyle(theme.typography.displayMedium)
+                    .foregroundStyle(theme.colors.textPrimary)
+
                 Text(viewModel.subTitle)
                     .onTapGesture {
                         viewModel.handleTextTap()
                     }
-                
+
                 Button {
                     viewModel.handleButtonClick()
                 } label: {
                     Text(viewModel.buttonTitle)
-                        .foregroundStyle(Color.white)
-                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(theme.colors.onPrimary)
+                        .auth0TextStyle(theme.typography.label)
                         .frame(maxWidth: .infinity)
-                }.frame(height: 48)
-                    .background(
-                        Color("262420", bundle: ResourceBundle.default)
-                    )
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                Color("262420", bundle: ResourceBundle.default),
-                                lineWidth: 2
-                            )
-                    )
+                }
+                .frame(height: theme.sizes.buttonHeight)
+                .background(theme.colors.primary)
+                .cornerRadius(theme.radius.button)
+                .overlay(
+                    RoundedRectangle(cornerRadius: theme.radius.button)
+                        .stroke(theme.colors.primary, lineWidth: 2)
+                )
             }
             Spacer()
         }.padding()

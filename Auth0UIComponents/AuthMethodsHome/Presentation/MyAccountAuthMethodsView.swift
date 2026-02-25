@@ -48,6 +48,8 @@ import Auth0
 /// }
 /// ```
 public struct MyAccountAuthMethodsView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// Shared navigation store for managing route state
     @StateObject private var navigationStore = NavigationStore.shared
     /// The main view model managing data and business logic
@@ -74,11 +76,11 @@ public struct MyAccountAuthMethodsView: View {
                 }
                 else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(alignment: .leading) {
+                        LazyVStack(alignment: .leading, spacing: theme.spacing.sm) {
                             ForEach(viewModel.viewComponents, id: \.self) { component in
                                 authMethodView(component)
                             }
-                        }.padding(.all, 16)
+                        }.padding(.all, theme.spacing.base)
                     }
                 }
             }
@@ -117,22 +119,22 @@ public struct MyAccountAuthMethodsView: View {
                     collapsePasskeyBanner == false {
                     EnrollPasskeyView(collapsePasskeyBanner: $collapsePasskeyBanner,
                                       viewModel: viewModel)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, theme.spacing.xl)
                 }
             }
         case .signinMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
-                .padding(.bottom, 48)
+                .padding(.bottom, theme.spacing.`3xl`)
         case .title(let text):
             Text(text)
-                .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
-                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(theme.colors.textPrimary)
+                .auth0TextStyle(theme.typography.titleLarge)
 
         case .subtitle(let text):
             Text(text)
-                .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                .font(.system(size: 14, weight: .regular))
-
+                .foregroundStyle(theme.colors.textSecondary)
+                .auth0TextStyle(theme.typography.helper)
+                .padding(.bottom, theme.spacing.base)
         case .additionalVerificationMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
         case .emptyFactors:
