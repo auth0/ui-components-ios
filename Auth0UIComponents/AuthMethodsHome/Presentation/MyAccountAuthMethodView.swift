@@ -20,19 +20,19 @@ struct MyAccountAuthMethodView: View {
         HStack() {
             Image(viewModel.image(), bundle: ResourceBundle.default)
                 .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
-                .padding(.trailing, theme.spacing.base)
+                .padding(.trailing, theme.spacing.md)
 
             Text(viewModel.title())
                 .auth0TextStyle(theme.typography.label)
                 .foregroundStyle(theme.colors.text.bold)
-                .padding(.trailing, theme.spacing.base)
+                .padding(.trailing, theme.spacing.md)
 
             Spacer()
 
             if viewModel.isAtleastOnceAuthFactorEnrolled() {
                 Image("checkmark.green", bundle: ResourceBundle.default)
                     .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
-                    .padding(.trailing, theme.spacing.base)
+                    .padding(.trailing, theme.spacing.md)
             }
             
             Image("chevron", bundle: ResourceBundle.default)

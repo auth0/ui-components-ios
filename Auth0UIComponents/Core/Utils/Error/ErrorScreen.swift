@@ -15,7 +15,7 @@ struct ErrorScreen: View {
     var body: some View {
         VStack {
             Spacer()
-            VStack(spacing: theme.spacing.md) {
+            VStack(spacing: theme.spacing.sm) {
                 Text(viewModel.title)
                     .auth0TextStyle(theme.typography.displayMedium)
                     .foregroundStyle(theme.colors.text.bold)

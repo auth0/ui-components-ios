@@ -49,11 +49,11 @@ struct TOTPPushQRCodeView: View {
                     Text(manualInputCode)
                         .auth0TextStyle(theme.typography.helper)
                         .foregroundStyle(theme.colors.text.bold)
-                        .padding(EdgeInsets(top: 10, leading: theme.spacing.md, bottom: 10, trailing: theme.spacing.md))
+                        .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
                         .overlay {
                             RoundedRectangle(cornerRadius: theme.radius.inputField)
                                 .stroke(theme.colors.background.primary, lineWidth: 1)
-                        }.padding(.bottom, theme.spacing.base)
+                        }.padding(.bottom, theme.spacing.md)
 
                     Button {
                         #if os(macOS)
@@ -63,7 +63,7 @@ struct TOTPPushQRCodeView: View {
                         #endif
                         viewModel.toast = Toast(style: .notify, message: "Copied")
                     } label: {
-                        HStack(alignment: .center, spacing: theme.spacing.sm) {
+                        HStack(alignment: .center, spacing: theme.spacing.xs) {
                             Image("copy", bundle: ResourceBundle.default)
                                 .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
 
@@ -96,7 +96,7 @@ struct TOTPPushQRCodeView: View {
                         }
                         Spacer()
                     }.frame(maxWidth: .infinity)
-                        .padding(.vertical, theme.spacing.md)
+                        .padding(.vertical, theme.spacing.sm)
                 }
                 .frame(height: theme.sizes.buttonHeight)
                 .background(theme.colors.background.primary)
@@ -122,7 +122,7 @@ struct TOTPPushQRCodeView: View {
                     }
             }
         }
-        .padding(.all, theme.spacing.base)
+        .padding(.all, theme.spacing.md)
         .toastView(toast: $viewModel.toast)
         .navigationTitle(viewModel.navigationTitle())
         #if !os(macOS)

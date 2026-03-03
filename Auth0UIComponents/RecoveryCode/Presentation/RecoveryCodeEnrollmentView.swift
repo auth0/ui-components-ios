@@ -31,19 +31,19 @@ struct RecoveryCodeEnrollmentView: View {
                     Text("Save your recovery code")
                         .auth0TextStyle(theme.typography.displayMedium)
                         .foregroundStyle(theme.colors.text.bold)
-                        .padding(.bottom, theme.spacing.md)
+                        .padding(.bottom, theme.spacing.sm)
 
                     Text("Save these codes in a secure location. They are your backup sign-in method if your multifactor device is unavailable. Each code may only be used once")
                         .multilineTextAlignment(.center)
                         .auth0TextStyle(theme.typography.label)
                         .foregroundStyle(theme.colors.text.regular)
-                        .padding(.bottom, theme.spacing.`3xl`)
+                        .padding(.bottom, theme.spacing.xxl)
 
                     HStack {
                         Text("Recovery code")
                             .auth0TextStyle(theme.typography.label)
                             .foregroundStyle(theme.colors.text.bold)
-                            .padding(.bottom, theme.spacing.base)
+                            .padding(.bottom, theme.spacing.md)
                         Spacer()
                     }
 
@@ -54,14 +54,14 @@ struct RecoveryCodeEnrollmentView: View {
                             .foregroundStyle(theme.colors.text.bold)
                         Spacer()
                     }
-                    .padding(EdgeInsets(top: 10, leading: theme.spacing.md, bottom: 10, trailing: theme.spacing.md))
+                    .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
                     .frame(height: theme.sizes.containerSizeLargeDimen)
                     .cornerRadius(theme.radius.inputField)
                     .overlay(
                         RoundedRectangle(cornerRadius: theme.radius.inputField)
                             .stroke(theme.colors.background.primary, lineWidth: 1)
                     )
-                    .padding(.bottom, theme.spacing.`3xl`)
+                    .padding(.bottom, theme.spacing.xxl)
 
                     Button {
                         if let recoveryCodeChallenge = viewModel.recoveryCodeChallenge {
@@ -85,7 +85,7 @@ struct RecoveryCodeEnrollmentView: View {
                             .stroke(theme.colors.background.primary, lineWidth: 2)
                     )
                     .cornerRadius(theme.radius.pill)
-                    .padding(.bottom, theme.spacing.`3xl`)
+                    .padding(.bottom, theme.spacing.xxl)
 
                     Button {
                         Task {
@@ -103,7 +103,7 @@ struct RecoveryCodeEnrollmentView: View {
                             }
                             Spacer()
                         }.frame(maxWidth: .infinity)
-                            .padding(.vertical, theme.spacing.md)
+                            .padding(.vertical, theme.spacing.sm)
                     }
                     .frame(height: theme.sizes.buttonHeight)
                     .background(theme.colors.background.primary)

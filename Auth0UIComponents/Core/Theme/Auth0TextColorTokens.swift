@@ -36,29 +36,23 @@ public protocol Auth0TextColorTokens: Sendable {
     // MARK: - Content
 
     /// High-emphasis text — default body and heading text on neutral surfaces.
-    /// Mobile Design System: `color.text.bold`
     var bold: Color { get }
 
     /// Lower-emphasis text — helper text, captions, and secondary information.
-    /// Mobile Design System: `color.text.default`
     var regular: Color { get }
 
     /// Colour for disabled and placeholder text.
-    /// Mobile Design System: `color.text.disabled`
     var disabled: Color { get }
 
     // MARK: - On Color
 
     /// Colour for text and icons placed on top of a `background.primary` surface.
-    /// Mobile Design System: `color.text.onPrimary`
     var onPrimary: Color { get }
 
     /// Colour for text and icons placed on top of a `background.success` surface.
-    /// Mobile Design System: `color.text.onSuccess`
     var onSuccess: Color { get }
 
     /// Colour for text and icons placed on top of a `background.error` surface.
-    /// Mobile Design System: `color.text.onError`
     var onError: Color { get }
 }
 

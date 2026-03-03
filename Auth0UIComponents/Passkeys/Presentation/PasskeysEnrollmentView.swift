@@ -32,8 +32,8 @@ struct PasskeysEnrollmentView: View {
                     VStack {
                         Image("Shape", bundle: ResourceBundle.default)
                             .frame(width: 165, height: 165)
-                            .padding(.top, theme.spacing.`5xl`)
-                            .padding(.bottom, theme.spacing.`4xl`)
+                            .padding(.top, theme.spacing.xxxl)
+                            .padding(.bottom, theme.spacing.xxl)
 
                         Text("Enable Passkey")
                             .auth0TextStyle(theme.typography.displayMedium)
@@ -46,9 +46,9 @@ struct PasskeysEnrollmentView: View {
                                     Text("• What are passkeys?")
                                         .auth0TextStyle(theme.typography.title)
                                         .foregroundStyle(theme.colors.text.bold)
-                                        .padding(.bottom, theme.spacing.xs)
+                                        .padding(.bottom, theme.spacing.xxs)
                                 }
-                                .padding(.leading, theme.spacing.xs)
+                                .padding(.leading, theme.spacing.xxs)
 
                                 Text("Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.")
                                     .multilineTextAlignment(.leading)
@@ -59,8 +59,8 @@ struct PasskeysEnrollmentView: View {
                                 Text("• Where are passkeys saved?")
                                     .auth0TextStyle(theme.typography.title)
                                     .foregroundStyle(theme.colors.text.bold)
-                                    .padding(.bottom, theme.spacing.xs)
-                                    .padding(.leading, theme.spacing.xs)
+                                    .padding(.bottom, theme.spacing.xxs)
+                                    .padding(.leading, theme.spacing.xxs)
 
                                 Text("Passkeys are saved in your credential manager, so you can sign in on other devices.")
                                     .auth0TextStyle(theme.typography.body)
@@ -101,7 +101,7 @@ struct PasskeysEnrollmentView: View {
                         .background(theme.colors.background.primary)
                         .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
                         .shadow(color: Color.black.opacity(0.20), radius: 2, x: 0, y: 1)
-                        .padding(.top, theme.spacing.`4xl`)
+                        .padding(.top, theme.spacing.xxl)
 
                         Text("Skip")
                             .auth0TextStyle(theme.typography.label)
@@ -115,7 +115,7 @@ struct PasskeysEnrollmentView: View {
             }
         }
         .padding(theme.spacing.xl)
-        .padding(.top, theme.spacing.`3xl`)
+        .padding(.top, theme.spacing.xxl)
         .background(theme.colors.background.layerBase)
         .ignoresSafeArea()
     }

@@ -29,7 +29,7 @@ struct SavedAuthenticatorsView: View {
                     Text(viewModel.type.savedAuthenticatorsTitle)
                         .auth0TextStyle(theme.typography.helper)
                         .foregroundStyle(theme.colors.text.regular)
-                        .padding(.bottom, theme.spacing.sm)
+                        .padding(.bottom, theme.spacing.xs)
 
                     if viewModel.viewAuthenticationMethods.isEmpty {
                         Text(viewModel.type.savedAuthenticatorsEmptyStateMessage)
@@ -114,7 +114,7 @@ struct AuthenticatorView: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: theme.spacing.xs) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxs) {
                 Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
                     .auth0TextStyle(theme.typography.label)
                     .foregroundStyle(theme.colors.text.bold)

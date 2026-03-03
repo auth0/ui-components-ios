@@ -23,7 +23,7 @@ struct EnrollPasskeyView: View {
                 .foregroundStyle(theme.colors.text.bold)
 
             HStack {
-                VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                VStack(alignment: .leading, spacing: theme.spacing.xxs) {
                     Text("What are passkeys?")
                         .auth0TextStyle(theme.typography.label)
                         .fontWeight(.bold)
@@ -36,7 +36,7 @@ struct EnrollPasskeyView: View {
             }.padding(.top, theme.spacing.xl)
 
             HStack {
-                VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                VStack(alignment: .leading, spacing: theme.spacing.xxs) {
                     Text("Where are passkeys saved?")
                         .auth0TextStyle(theme.typography.label)
                         .fontWeight(.bold)
@@ -82,7 +82,7 @@ struct EnrollPasskeyView: View {
                     .stroke(theme.colors.background.primary.opacity(0.35), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.20), radius: 2, x: 0, y: 1)
-            .padding(.top, theme.spacing.base)
+            .padding(.top, theme.spacing.md)
 
             Button {
                 withAnimation {
@@ -95,7 +95,7 @@ struct EnrollPasskeyView: View {
             }
             .frame(height: theme.sizes.buttonHeight)
             .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
-            .padding(.top, theme.spacing.sm)
+            .padding(.top, theme.spacing.xs)
 
         }
         .padding(.all, theme.spacing.lg)

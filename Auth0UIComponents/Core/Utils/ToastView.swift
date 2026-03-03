@@ -23,6 +23,6 @@ struct ToastView: View {
             .padding()
             .background(style.toastBackgroundColor(from: theme))
             .cornerRadius(theme.radius.small)
-            .padding(.horizontal, theme.spacing.base)
+            .padding(.horizontal, theme.spacing.md)
     }
 }

@@ -19,7 +19,7 @@ struct EmptyFactorsView: View {
                 .auth0TextStyle(theme.typography.label)
             Spacer()
         }
-        .padding(.all, theme.spacing.md)
+        .padding(.all, theme.spacing.sm)
         .overlay {
             RoundedRectangle(cornerRadius: theme.radius.button)
                 .stroke(theme.colors.border.regular, lineWidth: 1)

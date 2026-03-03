@@ -34,21 +34,17 @@ public protocol Auth0BorderColorTokens: Sendable {
     // MARK: - Emphasis
 
     /// High-contrast border for emphasis, strong separation, or selected elements.
-    /// Mobile Design System: `color.border.bold`
     var bold: Color { get }
 
     /// Standard border colour for most UI elements and containers.
-    /// Mobile Design System: `color.border.default`
     var regular: Color { get }
 
     /// Low-contrast border for delicate dividers and understated boundaries.
-    /// Mobile Design System: `color.border.subtle`
     var subtle: Color { get }
 
     // MARK: - Elevation
 
     /// Border-like shadow colour for depth and elevation cues.
-    /// Mobile Design System: `color.border.shadow`
     var shadow: Color { get }
 }
 

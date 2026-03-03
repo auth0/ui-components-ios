@@ -79,7 +79,7 @@ import SwiftUI
 ///         Text("Hello")
 ///             .auth0TextStyle(theme.typography.body)
 ///             .foregroundStyle(theme.colors.text.bold)
-///             .padding(theme.spacing.base)
+///             .padding(theme.spacing.md)
 ///     }
 /// }
 /// ```

@@ -76,11 +76,11 @@ public struct MyAccountAuthMethodsView: View {
                 }
                 else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(alignment: .leading, spacing: theme.spacing.sm) {
+                        LazyVStack(alignment: .leading, spacing: theme.spacing.xs) {
                             ForEach(viewModel.viewComponents, id: \.self) { component in
                                 authMethodView(component)
                             }
-                        }.padding(.all, theme.spacing.base)
+                        }.padding(.all, theme.spacing.md)
                     }
                 }
             }
@@ -124,7 +124,7 @@ public struct MyAccountAuthMethodsView: View {
             }
         case .signinMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
-                .padding(.bottom, theme.spacing.`3xl`)
+                .padding(.bottom, theme.spacing.xxl)
         case .title(let text):
             Text(text)
                 .foregroundStyle(theme.colors.text.bold)
@@ -134,7 +134,7 @@ public struct MyAccountAuthMethodsView: View {
             Text(text)
                 .foregroundStyle(theme.colors.text.regular)
                 .auth0TextStyle(theme.typography.helper)
-                .padding(.bottom, theme.spacing.base)
+                .padding(.bottom, theme.spacing.md)
         case .additionalVerificationMethods(let viewModel):
             MyAccountAuthMethodView(viewModel: viewModel)
         case .emptyFactors:

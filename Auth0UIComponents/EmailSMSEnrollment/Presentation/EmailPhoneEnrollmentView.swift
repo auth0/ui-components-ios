@@ -24,7 +24,7 @@ struct EmailPhoneEnrollmentView: View {
             Text(viewModel.title)
                 .auth0TextStyle(theme.typography.titleLarge)
                 .foregroundStyle(theme.colors.text.bold)
-                .padding(.bottom, theme.spacing.sm)
+                .padding(.bottom, theme.spacing.xs)
 
             Text("We will text you a verification code.")
                 .auth0TextStyle(theme.typography.body)
@@ -34,10 +34,10 @@ struct EmailPhoneEnrollmentView: View {
             Text(viewModel.isPhoneAuthMethod ? "Phone number" : "Email")
                 .auth0TextStyle(theme.typography.label)
                 .foregroundStyle(theme.colors.text.bold)
-                .padding(.bottom, theme.spacing.sm)
+                .padding(.bottom, theme.spacing.xs)
 
             if viewModel.isPhoneAuthMethod {
-                HStack(spacing: theme.spacing.sm) {
+                HStack(spacing: theme.spacing.xs) {
                     Button(action: {
                         viewModel.isPickerVisible.toggle()
                     }) {

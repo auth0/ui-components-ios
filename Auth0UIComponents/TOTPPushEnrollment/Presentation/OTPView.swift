@@ -34,7 +34,7 @@ struct OTPView: View {
                         Text("Enter the 6-digit code")
                             .auth0TextStyle(theme.typography.titleLarge)
                             .foregroundStyle(theme.colors.text.bold)
-                            .padding(.bottom, theme.spacing.sm)
+                            .padding(.bottom, theme.spacing.xs)
 
                         Text("From your authenticator app")
                             .auth0TextStyle(theme.typography.body)
@@ -51,7 +51,7 @@ struct OTPView: View {
                     Text("One-Time Passcode")
                         .auth0TextStyle(theme.typography.label)
                         .foregroundStyle(theme.colors.text.bold)
-                        .padding(.bottom, theme.spacing.base)
+                        .padding(.bottom, theme.spacing.md)
 
                     otpTextFieldView()
 
@@ -117,7 +117,7 @@ struct OTPView: View {
     }
 
     private func otpTextFieldView() -> some View {
-        HStack(spacing: theme.spacing.sm) {
+        HStack(spacing: theme.spacing.xs) {
             ForEach(0..<6, id: \.self, content: { index in
                 OTPTextField(
                     fullText: $viewModel.otpText,

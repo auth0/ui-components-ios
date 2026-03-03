@@ -215,7 +215,7 @@ struct MyCustomStep: View {
     @Environment(\.auth0Theme) private var theme
 
     var body: some View {
-        VStack(spacing: theme.spacing.base) {
+        VStack(spacing: theme.spacing.md) {
             Text("Almost there!")
                 .auth0TextStyle(theme.typography.titleLarge)
                 .foregroundStyle(theme.colors.text.bold)
@@ -225,7 +225,7 @@ struct MyCustomStep: View {
                 .background(theme.colors.background.primary)
                 .cornerRadius(theme.radius.button)
         }
-        .padding(theme.spacing.base)
+        .padding(theme.spacing.md)
     }
 }
 ```
@@ -396,16 +396,14 @@ The spacing scale is based on a **4 pt grid**. Every token is a multiple of 4, w
 
 | Token | Default | Description |
 |---|---|---|
-| `xs` | 4 pt | Minimal gap between tightly coupled elements |
-| `sm` | 8 pt | Small gap between grouped elements |
-| `md` | 12 pt | Medium internal padding |
-| `base` | 16 pt | Standard component and container padding |
-| `lg` | 20 pt | Larger padding for major sections |
-| `xl` | 24 pt | Extra-large padding |
-| `2xl` | 32 pt | Double-extra-large padding |
-| `3xl` | 40 pt | Triple-extra-large padding |
-| `4xl` | 48 pt | Quadruple-extra-large padding |
-| `5xl` | 56 pt | Quintuple-extra-large padding |
+| `xxs` | 4 pt | Minimal gap between tightly coupled elements |
+| `xs` | 8 pt | Small gap between grouped elements |
+| `sm` | 12 pt | Medium internal padding |
+| `md` | 16 pt | Standard component and container padding |
+| `lg` | 24 pt | Larger padding for major sections |
+| `xl` | 32 pt | Extra-large padding |
+| `xxl` | 48 pt | Double-extra-large padding |
+| `xxxl` | 56 pt | Triple-extra-large padding |
 
 ---
 
