@@ -25,31 +25,31 @@ extension ToastStyle {
     /// semantic cases and from system colours for warning/info.
     func themeColor(from theme: Auth0Theme) -> Color {
         switch self {
-        case .error:   return theme.colors.onError
+        case .error:   return theme.colors.text.onError
         case .warning: return .orange
         case .info:    return .blue
-        case .success: return theme.colors.onSuccess
-        case .notify:  return theme.colors.primary
+        case .success: return theme.colors.text.onSuccess
+        case .notify:  return theme.colors.background.primary
         }
     }
 
     /// Returns the message text colour appropriate for the toast background.
     func messageColor(from theme: Auth0Theme) -> Color {
         switch self {
-        case .error:   return theme.colors.onError
-        case .success: return theme.colors.onSuccess
-        case .notify:  return theme.colors.onPrimary
-        default:       return theme.colors.textPrimary
+        case .error:   return theme.colors.text.onError
+        case .success: return theme.colors.text.onSuccess
+        case .notify:  return theme.colors.text.onPrimary
+        default:       return theme.colors.text.bold
         }
     }
 
     /// Returns the background colour of the toast container.
     func toastBackgroundColor(from theme: Auth0Theme) -> Color {
         switch self {
-        case .error:   return theme.colors.errorContainer
-        case .success: return theme.colors.successContainer
-        case .notify:  return theme.colors.primary
-        default:       return theme.colors.onPrimary
+        case .error:   return theme.colors.background.errorSubtle
+        case .success: return theme.colors.background.successSubtle
+        case .notify:  return theme.colors.background.primary
+        default:       return theme.colors.text.onPrimary
         }
     }
 }

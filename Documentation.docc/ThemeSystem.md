@@ -28,19 +28,19 @@ The theme is organised in three layers that separate raw values from their meani
 │  Auth0ColorTokens    ·  DefaultAuth0ColorTokens │
 │  Auth0TypographyTokens ·  …SizeTokens  …etc.   │
 └──────────────────────┬──────────────────────────┘
-                       │  maps role → palette step
+                       │  maps role → palette entry
 ┌──────────────────────▼──────────────────────────┐
 │  Layer 1 — Palette  (raw values)                │
-│  Colors.xcassets                                │
-│    Neutral/1 … Neutral/12  (greyscale scale)    │
-│    Red/1     … Red/12      (red / error scale)  │
-│    Green/1   … Green/12    (green / success)    │
+│  Colors.xcassets  (Mobile Design System namespaces) │
+│    Background/Primary … Background/Accent       │
+│    Border/Bold    … Border/Shadow               │
+│    Text/Bold      … Text/OnError                │
 └─────────────────────────────────────────────────┘
 ```
 
-**Layer 1 (Palette)** stores the raw, brand-agnostic colour values in `Colors.xcassets`. Every palette entry is an *adaptive* colorset — a single asset that contains both a light-mode and a dark-mode swatch. Separating the palette from semantic names means the entire colour system is interchangeable: swap the palette, keep the semantics, or keep the palette and redefine the semantics.
+**Layer 1 (Palette)** stores the raw colour values in `Colors.xcassets`, organised into three Mobile Design System namespaces: `Background/`, `Border/`, and `Text/`. Every palette entry is an *adaptive* colorset — a single asset that contains both a light-mode and a dark-mode swatch. Separating the palette from semantic names means the entire colour system is interchangeable: swap the palette, keep the semantics, or keep the palette and redefine the semantics.
 
-**Layer 2 (Semantic tokens)** is the public API. The `Auth0ColorTokens` protocol defines *roles* (`primary`, `onError`, `textSecondary`, …) that the SDK's views consume. `DefaultAuth0ColorTokens` wires each role to a palette step — for example, `primary → Neutral/12` and `onError → Red/12`. This is the *only* place the palette-to-semantic mapping exists.
+**Layer 2 (Semantic tokens)** is the public API. Colours are split across three focused protocols — ``Auth0BackgroundColorTokens``, ``Auth0TextColorTokens``, and ``Auth0BorderColorTokens`` — each mapping roles onto palette entries. `Auth0ColorTokens` is a thin container that aggregates all three under `background`, `text`, and `border` properties. SDK views consume tokens via `theme.colors.background.primary`, `theme.colors.text.bold`, etc.
 
 **Layer 3 (Injection)** wraps the active token set in a plain `Auth0Theme` struct and pushes it through the SwiftUI Environment with a single `.auth0Theme(_:)` modifier.
 
@@ -58,7 +58,7 @@ The five token categories map directly to the visual properties a designer contr
 | **Radius** | Corner rounding of buttons, cards, and input fields | Corner radius presets |
 | **Sizes** | Fixed dimensions — button heights, icon sizes, input cell dimensions | Component size specs |
 
-> **For designers:** When you hand off a design that uses a different colour for the primary button, you provide the hex value for `primary` (and `onPrimary` for the button label). The engineer overrides that single token; nothing else in the layout needs to change.
+> **For designers:** When you hand off a design that uses a different colour for the primary button, you provide the hex value for `background.primary` (and `text.onPrimary` for the button label). The engineer overrides those tokens; nothing else in the layout needs to change.
 
 ---
 
@@ -92,7 +92,7 @@ struct ContentView: View {
 
 ## Partial Token Override
 
-Use ``DefaultAuth0ColorTokens``'s init parameters to change only the tokens you need. All others keep the built-in Auth0 values:
+Pass a custom `Default*` sub-struct for the colour category you want to change. All other tokens in that category keep the built-in Auth0 values:
 
 ```swift
 import Auth0UIComponents
@@ -104,8 +104,8 @@ struct MyApp: App {
                 .auth0Theme(
                     Auth0Theme(
                         colors: DefaultAuth0ColorTokens(
-                            primary: Color("BrandBlue"),
-                            onPrimary: .white
+                            background: DefaultAuth0BackgroundColorTokens(primary: Color("BrandBlue")),
+                            text: DefaultAuth0TextColorTokens(onPrimary: .white)
                         )
                     )
                 )
@@ -130,28 +130,47 @@ Auth0Theme(
 
 ## Full Category Override
 
-For complete brand alignment, implement the `Auth0ColorTokens` protocol and supply your own palette → semantic mapping:
+For complete brand alignment, implement the three colour category protocols and wire them together into an `Auth0ColorTokens` container:
 
 ```swift
-// Your brand's own palette, defined in your app's asset catalog
+// Your brand's background colours — sourced from your app's asset catalog
+struct BrandBackground: Auth0BackgroundColorTokens {
+    var primary:       Color { Color("Background/Primary",       bundle: .main) }
+    var primarySubtle: Color { Color("Background/Primary",       bundle: .main).opacity(0.35) }
+    var inverse:       Color { Color("Background/Inverse",       bundle: .main) }
+    var accent:        Color { Color("Background/Accent",        bundle: .main) }
+    var layerTop:      Color { Color("Background/LayerTop",      bundle: .main) }
+    var layerMedium:   Color { Color("Background/LayerMedium",   bundle: .main) }
+    var layerBase:     Color { Color("Background/LayerBase",     bundle: .main) }
+    var error:         Color { Color("Background/Error",         bundle: .main) }
+    var errorSubtle:   Color { Color("Background/ErrorSubtle",   bundle: .main) }
+    var success:       Color { Color("Background/Success",       bundle: .main) }
+    var successSubtle: Color { Color("Background/SuccessSubtle", bundle: .main) }
+}
+
+// Your brand's text colours — sourced from your app's asset catalog
+struct BrandText: Auth0TextColorTokens {
+    var bold:      Color { Color("Text/Bold",      bundle: .main) }
+    var regular:   Color { Color("Text/Default",   bundle: .main) }
+    var disabled:  Color { Color("Text/Disabled",  bundle: .main) }
+    var onPrimary: Color { Color("Text/OnPrimary", bundle: .main) }
+    var onSuccess: Color { Color("Text/OnSuccess", bundle: .main) }
+    var onError:   Color { Color("Text/OnError",   bundle: .main) }
+}
+
+// Your brand's border colours — sourced from your app's asset catalog
+struct BrandBorder: Auth0BorderColorTokens {
+    var bold:    Color { Color("Border/Bold",    bundle: .main) }
+    var regular: Color { Color("Border/Default", bundle: .main) }
+    var subtle:  Color { Color("Border/Subtle",  bundle: .main) }
+    var shadow:  Color { Color("Border/Shadow",  bundle: .main) }
+}
+
+// Container that wires the three categories together
 struct BrandColors: Auth0ColorTokens {
-    var primary:          Color { Color("Brand/Blue/900") }
-    var onPrimary:        Color { Color("Brand/Blue/50") }
-    var background:       Color { Color("Brand/Neutral/50") }
-    var surface:          Color { Color("Brand/Neutral/100") }
-    var onSurface:        Color { Color("Brand/Neutral/600") }
-    var border:           Color { Color("Brand/Neutral/300") }
-    var error:            Color { Color("Brand/Red/100") }
-    var errorContainer:   Color { Color("Brand/Red/50") }
-    var onError:          Color { Color("Brand/Red/800") }
-    var success:          Color { Color("Brand/Green/100") }
-    var successContainer: Color { Color("Brand/Green/50") }
-    var onSuccess:        Color { Color("Brand/Green/800") }
-    var textPrimary:      Color { Color("Brand/Neutral/900") }
-    var textSecondary:    Color { Color("Brand/Neutral/600") }
-    var foreground:       Color { Color("Brand/Neutral/900") }
-    var cardForeground:   Color { .black }
-    var mutedForeground:  Color { Color("Brand/Neutral/500") }
+    var background: any Auth0BackgroundColorTokens { BrandBackground() }
+    var text:       any Auth0TextColorTokens       { BrandText() }
+    var border:     any Auth0BorderColorTokens     { BrandBorder() }
 }
 
 MyAccountAuthMethodsView()
@@ -166,11 +185,22 @@ Because ``Auth0Theme`` is a struct with `var` properties, you can start from the
 
 ```swift
 var theme = Auth0Theme()
-theme.colors     = BrandColors()
+theme.colors     = BrandColors()     // BrandColors implements Auth0ColorTokens
 theme.typography = DefaultAuth0TypographyTokens(
     displayMedium: Auth0TextStyle(font: .custom("Poppins-SemiBold", size: 28), tracking: -0.1, lineSpacing: 6)
 )
 
+MyAccountAuthMethodsView().auth0Theme(theme)
+```
+
+You can also mutate a single colour category inline without replacing the whole colour set:
+
+```swift
+var theme = Auth0Theme()
+theme.colors = DefaultAuth0ColorTokens(
+    background: DefaultAuth0BackgroundColorTokens(primary: Brand.blue),
+    text: DefaultAuth0TextColorTokens(onPrimary: .white)
+)
 MyAccountAuthMethodsView().auth0Theme(theme)
 ```
 
@@ -188,11 +218,11 @@ struct MyCustomStep: View {
         VStack(spacing: theme.spacing.base) {
             Text("Almost there!")
                 .auth0TextStyle(theme.typography.titleLarge)
-                .foregroundStyle(theme.colors.textPrimary)
+                .foregroundStyle(theme.colors.text.bold)
 
             Button("Continue") { /* … */ }
                 .frame(height: theme.sizes.buttonHeight)
-                .background(theme.colors.primary)
+                .background(theme.colors.background.primary)
                 .cornerRadius(theme.radius.button)
         }
         .padding(theme.spacing.base)
@@ -208,53 +238,123 @@ struct MyCustomStep: View {
 
 The colour system is **two-layer**: a raw palette (stored in `Colors.xcassets`) and semantic tokens that map onto it. Every palette entry is an adaptive colorset — a single asset with both light and dark swatches.
 
-> **For designers:** The palette is the set of raw colour values (e.g. `Neutral/12` = near-black in light mode). Semantic tokens assign a *role* to each palette step (e.g. `primary` uses `Neutral/12`). Always refer to the semantic token name in design files, not the hex value — this ensures light/dark mode works without any extra effort.
+> **For designers:** The palette is organised into three Mobile Design System namespaces — `Background`, `Border`, and `Text`. Every colorset is *adaptive*: a single asset that contains both a light-mode and a dark-mode swatch. Semantic tokens map roles (e.g. `background.primary`) onto palette entries. Always refer to the semantic token name in design files, not the hex value — this ensures light/dark mode works without any extra effort.
 
 #### Palette reference
 
-| Asset | Light (hex) | Dark (hex) |
-|---|---|---|
-| `Neutral/1` | `#FCFCFC` | `#111111` |
-| `Neutral/2` | `#F8F8F8` | `#191919` |
-| `Neutral/3` | `#F5F5F5` | `#222222` |
-| `Neutral/4` | `#EBEBEB` | `#2C2C2C` |
-| `Neutral/5` | `#E0E0E0` | `#333333` |
-| `Neutral/6` | `#D9D9D9` | `#3A3A3A` |
-| `Neutral/7` | `#C2C2C2` | `#4D4D4D` |
-| `Neutral/8` | `#ABABAB` | `#666666` |
-| `Neutral/9` | `#929292` | `#808080` |
-| `Neutral/10` | `#7B7B7B` | `#9A9A9A` |
-| `Neutral/11` | `#636363` | `#B4B4B4` |
-| `Neutral/12` | `#1F1F1F` | `#EEEEEE` |
-| `Red/1` | `#FFFCFC` | `#180E0D` |
-| `Red/3` | `#FEE8E6` | `#400D07` |
-| `Red/12` | `#863C2D` | `#FFCFC5` |
-| `Green/1` | `#FAFEFB` | `#0C130E` |
-| `Green/3` | `#E6F7EA` | `#152D1C` |
-| `Green/12` | `#1B3D26` | `#B1F2C2` |
-| `Muted` | `#F4F4F5` | `#18181B` |
+**Background — Primary**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Background/Primary` | `#09090B` | `#FAFAFA` | Default background for CTA buttons and primary surfaces |
+| `Background/PrimarySubtle` | `#09090B · 35%` | `#FAFAFA · 50%` | Low-emphasis primary background |
+| `Background/Inverse` | `#18181B` | `#FAFAFA` | Contrast-flipped background |
+| `Background/Accent` | `#09090B` | `#A7F3D0` | Branded / featured UI highlight |
+
+**Background — Layers**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Background/LayerTop` | `#FFFFFF` | `#3F3F46` | Top-most layer — overlays, modals, popovers |
+| `Background/LayerMedium` | `#FCFCFC` | `#27272A` | Mid-level layer — cards, raised containers |
+| `Background/LayerBase` | `#F4F4F5` | `#09090B` | Foundational layer — main app background |
+
+**Background — Feedback**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Background/Error` | `#FEE2E2` | `#FDA4AF` | Error state container background |
+| `Background/ErrorSubtle` | `#FEF2F2` | `#BE123C` | Muted error banner background |
+| `Background/Success` | `#E6F7EA` | `#A7F3D0` | Success state container background |
+| `Background/SuccessSubtle` | `#FAFEFB` | `#059669` | Muted success banner background |
+
+**Border — Emphasis**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Border/Bold` | `#A1A1AA` | `#71717A` | High-contrast border, selected elements |
+| `Border/Default` | `#D9D9D9` | `#3F3F46` | Standard border for most containers |
+| `Border/Subtle` | `#E4E4E7` | transparent | Delicate dividers |
+
+**Border — Elevation**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Border/Shadow` | `#CECECE · 50%` | `#3F3F46` | Depth / elevation shadow border |
+
+**Text — Content**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Text/Bold` | `#1F1F1F` | `#FAFAFA` | High-emphasis headings and body text |
+| `Text/Default` | `#636363` | `#A1A1AA` | Lower-emphasis body, captions |
+| `Text/Disabled` | `#8E8E8E` | `#52525B` | Disabled and placeholder text |
+
+**Text — On Color**
+
+| Asset | Light (hex) | Dark (hex) | Description |
+|---|---|---|---|
+| `Text/OnPrimary` | `#F0F0F0` | `#18181B` | Text and icons on a primary background |
+| `Text/OnSuccess` | `#6EE7B7` | `#A7F3D0` | Text and icons on a success background |
+| `Text/OnError` | `#991B1B` | `#FFCFC5` | Text and icons on an error background |
 
 #### Default semantic → palette mapping
 
-| Semantic token | Default palette step | Usage |
+**Background — Primary**
+
+| Semantic token | Default palette entry | Usage |
 |---|---|---|
-| `primary` | `Neutral/12` | CTA button background, primary borders |
-| `onPrimary` | `Neutral/3` | Text and icons on a `primary` surface |
-| `background` | `Neutral/1` | Main app background |
-| `surface` | `Neutral/1` | Card and container backgrounds |
-| `onSurface` | `Neutral/11` | Secondary text and icons on surfaces |
-| `border` | `Neutral/6` | Input field and card borders |
-| `error` | `Red/3` | Error state container background |
-| `errorContainer` | `Red/1` | Subtle error banner background |
-| `onError` | `Red/12` | Text and icons on error surfaces, validation messages |
-| `success` | `Green/3` | Success state container background |
-| `successContainer` | `Green/1` | Subtle success banner background |
-| `onSuccess` | `Green/12` | Text and icons on success surfaces |
-| `textPrimary` | `Neutral/12` | Headings and primary body text |
-| `textSecondary` | `Neutral/11` | Descriptions, captions, secondary copy |
-| `foreground` | `Neutral/12` | General foreground content (text, icons) |
-| `cardForeground` | `Color.black` | Text and icons on card surfaces (non-adaptive) |
-| `mutedForeground` | `Neutral/10` | Placeholder text, de-emphasised content on muted backgrounds |
+| `backgroundPrimary` | `Background/Primary` | CTA button background, primary borders |
+| `backgroundPrimarySubtle` | `Background/PrimarySubtle` | Low-emphasis primary background |
+| `backgroundInverse` | `Background/Inverse` | Contrast-flipped background |
+| `backgroundAccent` | `Background/Accent` | Branded / featured UI highlight |
+
+**Background — Layers**
+
+| Semantic token | Default palette entry | Usage |
+|---|---|---|
+| `backgroundLayerTop` | `Background/LayerTop` | Overlay and modal backgrounds |
+| `backgroundLayerMedium` | `Background/LayerMedium` | Card and container backgrounds |
+| `backgroundLayerBase` | `Background/LayerBase` | Main app background |
+
+**Background — Feedback**
+
+| Semantic token | Default palette entry | Usage |
+|---|---|---|
+| `backgroundError` | `Background/Error` | Error state container background |
+| `backgroundErrorSubtle` | `Background/ErrorSubtle` | Subtle error banner background |
+| `backgroundSuccess` | `Background/Success` | Success state container background |
+| `backgroundSuccessSubtle` | `Background/SuccessSubtle` | Subtle success banner background |
+
+**Border — Emphasis**
+
+| Semantic token | Default palette entry | Usage |
+|---|---|---|
+| `borderBold` | `Border/Bold` | High-contrast / selected borders |
+| `borderDefault` | `Border/Default` | Input field and card borders |
+| `borderSubtle` | `Border/Subtle` | Delicate dividers |
+
+**Border — Elevation**
+
+| Semantic token | Default palette entry | Usage |
+|---|---|---|
+| `borderShadow` | `Border/Shadow` | Depth and elevation shadow |
+
+**Text — Content**
+
+| Semantic token | Default palette entry | Usage |
+|---|---|---|
+| `textBold` | `Text/Bold` | Headings, primary body text, and icons |
+| `textDefault` | `Text/Default` | Secondary copy, descriptions, and captions |
+| `textDisabled` | `Text/Disabled` | Disabled and placeholder text |
+
+**Text — On Color**
+
+| Semantic token | Default palette entry | Usage |
+|---|---|---|
+| `textOnPrimary` | `Text/OnPrimary` | Text and icons on a `backgroundPrimary` surface |
+| `textOnSuccess` | `Text/OnSuccess` | Text and icons on a `backgroundSuccess` surface |
+| `textOnError` | `Text/OnError` | Text and icons on a `backgroundError` surface, validation messages |
 
 ---
 
@@ -283,7 +383,7 @@ Every token is an ``Auth0TextStyle`` value bundling `font`, `tracking`, and `lin
 // Apply a single token:
 Text("Continue")
     .auth0TextStyle(theme.typography.label)
-    .foregroundStyle(theme.colors.onPrimary)
+    .foregroundStyle(theme.colors.textOnPrimary)
 ```
 
 ---
@@ -349,9 +449,21 @@ Fixed component dimensions that define the height, width, and icon scale of SDK 
 ### Theme Container
 - ``Auth0Theme``
 
-### Color Tokens
+### Color Tokens — Container
 - ``Auth0ColorTokens``
 - ``DefaultAuth0ColorTokens``
+
+### Color Tokens — Background
+- ``Auth0BackgroundColorTokens``
+- ``DefaultAuth0BackgroundColorTokens``
+
+### Color Tokens — Text
+- ``Auth0TextColorTokens``
+- ``DefaultAuth0TextColorTokens``
+
+### Color Tokens — Border
+- ``Auth0BorderColorTokens``
+- ``DefaultAuth0BorderColorTokens``
 
 ### Typography Tokens
 - ``Auth0TypographyTokens``

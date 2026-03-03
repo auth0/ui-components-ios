@@ -8,24 +8,24 @@ import SwiftUI
 /// white text on a dark primary button).
 ///
 /// ```swift
-/// // Default — uses theme.colors.textSecondary
+/// // Default — uses theme.colors.text.regular
 /// Auth0Loader()
 ///
 /// // Explicit override — used inside primary-colour buttons
-/// Auth0Loader(tintColor: theme.colors.onPrimary)
+/// Auth0Loader(tintColor: theme.colors.text.onPrimary)
 /// ```
 struct Auth0Loader: View {
 
     @Environment(\.auth0Theme) private var theme
 
     /// Optional tint-colour override. When `nil` the active theme's
-    /// ``Auth0ColorTokens/textSecondary`` is used automatically.
+    /// ``Auth0ColorTokens/textDefault`` is used automatically.
     var tintColor: Color?
 
     /// Initialises the loader with an optional tint override.
     ///
     /// - Parameter tintColor: Explicit tint colour. Pass `nil` (the default)
-    ///   to inherit ``Auth0ColorTokens/textSecondary`` from the active theme.
+    ///   to inherit `text.regular` from the active theme's ``Auth0TextColorTokens``.
     init(tintColor: Color? = nil) {
         self.tintColor = tintColor
     }
@@ -33,7 +33,7 @@ struct Auth0Loader: View {
     var body: some View {
         ProgressView()
             .progressViewStyle(CircularProgressViewStyle())
-            .tint(tintColor ?? theme.colors.textSecondary)
+            .tint(tintColor ?? theme.colors.text.regular)
             .scaleEffect(1.5)
             .frame(width: 50, height: 50)
     }

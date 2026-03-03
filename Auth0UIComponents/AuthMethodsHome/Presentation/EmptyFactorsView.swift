@@ -15,14 +15,14 @@ struct EmptyFactorsView: View {
                 .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
 
             Text("No factors configured")
-                .foregroundStyle(theme.colors.onError)
+                .foregroundStyle(theme.colors.text.onError)
                 .auth0TextStyle(theme.typography.label)
             Spacer()
         }
         .padding(.all, theme.spacing.md)
         .overlay {
             RoundedRectangle(cornerRadius: theme.radius.button)
-                .stroke(theme.colors.border, lineWidth: 1)
+                .stroke(theme.colors.border.regular, lineWidth: 1)
         }
     }
 }

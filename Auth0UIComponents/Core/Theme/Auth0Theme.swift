@@ -24,28 +24,28 @@ import SwiftUI
 ///
 /// ## Partial colour override
 ///
-/// Pass custom values to ``DefaultAuth0ColorTokens`` to change only the tokens
-/// you care about; all others stay as the Auth0 defaults:
+/// Pass a custom `Default*` sub-struct for any colour category to change only
+/// the tokens you care about; all others stay as the Auth0 defaults:
 ///
 /// ```swift
 /// MyAccountAuthMethodsView()
 ///     .auth0Theme(Auth0Theme(
 ///         colors: DefaultAuth0ColorTokens(
-///             primary: Brand.primary,
-///             onPrimary: .white
+///             background: DefaultAuth0BackgroundColorTokens(primary: Brand.primary),
+///             text: DefaultAuth0TextColorTokens(onPrimary: .white)
 ///         )
 ///     ))
 /// ```
 ///
 /// ## Full category override
 ///
-/// Implement one of the token protocols for complete control over a category:
+/// Implement the three category protocols for complete control:
 ///
 /// ```swift
 /// struct BrandColors: Auth0ColorTokens {
-///     var primary: Color { Brand.primary }
-///     var onPrimary: Color { .white }
-///     // … all 17 required properties
+///     var background: any Auth0BackgroundColorTokens { BrandBackground() }
+///     var text: any Auth0TextColorTokens { BrandText() }
+///     var border: any Auth0BorderColorTokens { BrandBorder() }
 /// }
 ///
 /// MyAccountAuthMethodsView()
@@ -78,7 +78,7 @@ import SwiftUI
 ///     var body: some View {
 ///         Text("Hello")
 ///             .auth0TextStyle(theme.typography.body)
-///             .foregroundStyle(theme.colors.textPrimary)
+///             .foregroundStyle(theme.colors.text.bold)
 ///             .padding(theme.spacing.base)
 ///     }
 /// }
@@ -154,7 +154,7 @@ extension View {
     /// ```swift
     /// MyAccountAuthMethodsView()
     ///     .auth0Theme(Auth0Theme(
-    ///         colors: DefaultAuth0ColorTokens(primary: Brand.primary)
+    ///         colors: DefaultAuth0ColorTokens(backgroundPrimary: Brand.primary)
     ///     ))
     /// ```
     ///

@@ -41,18 +41,18 @@ struct TOTPPushQRCodeView: View {
 
                     Text("Use your Authenticator App (like Google Authenticator or Auth0 Guardian) to scan this QR code.")
                         .auth0TextStyle(theme.typography.body)
-                        .foregroundStyle(theme.colors.textSecondary)
+                        .foregroundStyle(theme.colors.text.regular)
                         .multilineTextAlignment(.center)
                 }
 
                 if let manualInputCode = viewModel.manualInputCode {
                     Text(manualInputCode)
                         .auth0TextStyle(theme.typography.helper)
-                        .foregroundStyle(theme.colors.textPrimary)
+                        .foregroundStyle(theme.colors.text.bold)
                         .padding(EdgeInsets(top: 10, leading: theme.spacing.md, bottom: 10, trailing: theme.spacing.md))
                         .overlay {
                             RoundedRectangle(cornerRadius: theme.radius.inputField)
-                                .stroke(theme.colors.primary, lineWidth: 1)
+                                .stroke(theme.colors.background.primary, lineWidth: 1)
                         }.padding(.bottom, theme.spacing.base)
 
                     Button {
@@ -69,13 +69,13 @@ struct TOTPPushQRCodeView: View {
 
                             Text("Copy as Code")
                                 .auth0TextStyle(theme.typography.label)
-                                .foregroundStyle(theme.colors.primary)
+                                .foregroundStyle(theme.colors.background.primary)
                         }.padding().frame(maxWidth: .infinity)
                     }
                     .frame(height: theme.sizes.buttonHeight)
                     .overlay(
                         RoundedRectangle(cornerRadius: theme.radius.pill)
-                            .stroke(theme.colors.primary, lineWidth: 2)
+                            .stroke(theme.colors.background.primary, lineWidth: 2)
                     )
                     .cornerRadius(theme.radius.pill)
                 }
@@ -88,10 +88,10 @@ struct TOTPPushQRCodeView: View {
                     HStack {
                         Spacer()
                         if viewModel.apiCallInProgress {
-                            Auth0Loader(tintColor: theme.colors.onPrimary)
+                            Auth0Loader(tintColor: theme.colors.text.onPrimary)
                         } else {
                             Text("Continue")
-                                .foregroundStyle(theme.colors.onPrimary)
+                                .foregroundStyle(theme.colors.text.onPrimary)
                                 .auth0TextStyle(theme.typography.label)
                         }
                         Spacer()
@@ -99,16 +99,16 @@ struct TOTPPushQRCodeView: View {
                         .padding(.vertical, theme.spacing.md)
                 }
                 .frame(height: theme.sizes.buttonHeight)
-                .background(theme.colors.primary)
+                .background(theme.colors.background.primary)
                 .cornerRadius(theme.radius.button)
                 .overlay(
                     RoundedRectangle(cornerRadius: theme.radius.button)
-                        .stroke(theme.colors.primary, lineWidth: 2)
+                        .stroke(theme.colors.background.primary, lineWidth: 2)
                 )
                 .padding(.bottom, 30)
 
                 Text(attributedString())
-                    .foregroundStyle(theme.colors.textSecondary)
+                    .foregroundStyle(theme.colors.text.regular)
                     .auth0TextStyle(theme.typography.body)
                     .multilineTextAlignment(.center)
                     .onTapGesture {
@@ -138,7 +138,7 @@ struct TOTPPushQRCodeView: View {
     func attributedString() -> AttributedString {
         var attributed = AttributedString("Don't have the Auth0 Guardian App?\nDownload it here")
         if let range = attributed.range(of: "Download it here") {
-            attributed[range].foregroundColor = theme.colors.textPrimary
+            attributed[range].foregroundColor = theme.colors.text.bold
             attributed[range].underlineStyle = .single
         }
         return attributed

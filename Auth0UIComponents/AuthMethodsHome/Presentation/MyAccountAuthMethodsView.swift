@@ -127,12 +127,12 @@ public struct MyAccountAuthMethodsView: View {
                 .padding(.bottom, theme.spacing.`3xl`)
         case .title(let text):
             Text(text)
-                .foregroundStyle(theme.colors.textPrimary)
+                .foregroundStyle(theme.colors.text.bold)
                 .auth0TextStyle(theme.typography.titleLarge)
 
         case .subtitle(let text):
             Text(text)
-                .foregroundStyle(theme.colors.textSecondary)
+                .foregroundStyle(theme.colors.text.regular)
                 .auth0TextStyle(theme.typography.helper)
                 .padding(.bottom, theme.spacing.base)
         case .additionalVerificationMethods(let viewModel):

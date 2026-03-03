@@ -18,7 +18,7 @@ struct ErrorScreen: View {
             VStack(spacing: theme.spacing.md) {
                 Text(viewModel.title)
                     .auth0TextStyle(theme.typography.displayMedium)
-                    .foregroundStyle(theme.colors.textPrimary)
+                    .foregroundStyle(theme.colors.text.bold)
 
                 Text(viewModel.subTitle)
                     .onTapGesture {
@@ -29,16 +29,16 @@ struct ErrorScreen: View {
                     viewModel.handleButtonClick()
                 } label: {
                     Text(viewModel.buttonTitle)
-                        .foregroundStyle(theme.colors.onPrimary)
+                        .foregroundStyle(theme.colors.text.onPrimary)
                         .auth0TextStyle(theme.typography.label)
                         .frame(maxWidth: .infinity)
                 }
                 .frame(height: theme.sizes.buttonHeight)
-                .background(theme.colors.primary)
+                .background(theme.colors.background.primary)
                 .cornerRadius(theme.radius.button)
                 .overlay(
                     RoundedRectangle(cornerRadius: theme.radius.button)
-                        .stroke(theme.colors.primary, lineWidth: 2)
+                        .stroke(theme.colors.background.primary, lineWidth: 2)
                 )
             }
             Spacer()

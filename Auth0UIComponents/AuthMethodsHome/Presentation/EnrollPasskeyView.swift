@@ -20,17 +20,17 @@ struct EnrollPasskeyView: View {
         VStack {
             Text("With Passkey, you don't have to remember complex passwords.")
                 .auth0TextStyle(theme.typography.label)
-                .foregroundStyle(theme.colors.textPrimary)
+                .foregroundStyle(theme.colors.text.bold)
 
             HStack {
                 VStack(alignment: .leading, spacing: theme.spacing.xs) {
                     Text("What are passkeys?")
                         .auth0TextStyle(theme.typography.label)
                         .fontWeight(.bold)
-                        .foregroundStyle(theme.colors.textPrimary)
+                        .foregroundStyle(theme.colors.text.bold)
                     Text("Passkeys are encrypted digital keys you create using your fingerprint, face, or screen lock.")
                         .auth0TextStyle(theme.typography.helper)
-                        .foregroundStyle(theme.colors.textPrimary)
+                        .foregroundStyle(theme.colors.text.bold)
                 }
                 Spacer()
             }.padding(.top, theme.spacing.xl)
@@ -40,10 +40,10 @@ struct EnrollPasskeyView: View {
                     Text("Where are passkeys saved?")
                         .auth0TextStyle(theme.typography.label)
                         .fontWeight(.bold)
-                        .foregroundStyle(theme.colors.textPrimary)
+                        .foregroundStyle(theme.colors.text.bold)
                     Text("Passkeys are saved in your credential manager, so you can sign in on other devices.")
                         .auth0TextStyle(theme.typography.helper)
-                        .foregroundStyle(theme.colors.textPrimary)
+                        .foregroundStyle(theme.colors.text.bold)
                 }
                 Spacer()
             }.padding(.top, theme.spacing.xl)
@@ -56,7 +56,7 @@ struct EnrollPasskeyView: View {
                 Label {
                     Text("Add a Passkey")
                         .auth0TextStyle(theme.typography.label)
-                        .foregroundStyle(theme.colors.primary)
+                        .foregroundStyle(theme.colors.background.primary)
                 } icon: {
                     Image("passkey", bundle: ResourceBundle.default)
                         .resizable()
@@ -67,8 +67,8 @@ struct EnrollPasskeyView: View {
             .background(
                 LinearGradient(
                     stops: [
-                        Gradient.Stop(color: theme.colors.primary.opacity(0), location: 0.00),
-                        Gradient.Stop(color: theme.colors.primary.opacity(0.05), location: 1.00),
+                        Gradient.Stop(color: theme.colors.background.primary.opacity(0), location: 0.00),
+                        Gradient.Stop(color: theme.colors.background.primary.opacity(0.05), location: 1.00),
                     ],
                     startPoint: UnitPoint(x: 0.5, y: 0),
                     endPoint: UnitPoint(x: 0.5, y: 1)
@@ -79,7 +79,7 @@ struct EnrollPasskeyView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: theme.radius.button)
                     .inset(by: 0.5)
-                    .stroke(theme.colors.primary.opacity(0.35), lineWidth: 1)
+                    .stroke(theme.colors.background.primary.opacity(0.35), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.20), radius: 2, x: 0, y: 1)
             .padding(.top, theme.spacing.base)
@@ -91,7 +91,7 @@ struct EnrollPasskeyView: View {
             } label: {
                 Text("Remind me later")
                     .auth0TextStyle(theme.typography.label)
-                    .foregroundStyle(theme.colors.primary)
+                    .foregroundStyle(theme.colors.background.primary)
             }
             .frame(height: theme.sizes.buttonHeight)
             .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
@@ -100,7 +100,6 @@ struct EnrollPasskeyView: View {
         }
         .padding(.all, theme.spacing.lg)
         .background(Color("Muted", bundle: ResourceBundle.default))
-//        .background(theme.colors.surface.opacity(0.90))
         .clipShape(RoundedRectangle(cornerRadius: theme.radius.medium))
     }
 }

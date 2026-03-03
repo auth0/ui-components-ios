@@ -23,17 +23,17 @@ struct EmailPhoneEnrollmentView: View {
         VStack(alignment: .leading) {
             Text(viewModel.title)
                 .auth0TextStyle(theme.typography.titleLarge)
-                .foregroundStyle(theme.colors.textPrimary)
+                .foregroundStyle(theme.colors.text.bold)
                 .padding(.bottom, theme.spacing.sm)
 
             Text("We will text you a verification code.")
                 .auth0TextStyle(theme.typography.body)
-                .foregroundStyle(theme.colors.textSecondary)
+                .foregroundStyle(theme.colors.text.regular)
                 .padding(.bottom, 25)
 
             Text(viewModel.isPhoneAuthMethod ? "Phone number" : "Email")
                 .auth0TextStyle(theme.typography.label)
-                .foregroundStyle(theme.colors.textPrimary)
+                .foregroundStyle(theme.colors.text.bold)
                 .padding(.bottom, theme.spacing.sm)
 
             if viewModel.isPhoneAuthMethod {
@@ -46,7 +46,7 @@ struct EmailPhoneEnrollmentView: View {
                                 .frame(height: 20)
 
                             Text(viewModel.selectedCountry?.code ?? "")
-                                .foregroundStyle(theme.colors.textPrimary)
+                                .foregroundStyle(theme.colors.text.bold)
                                 .auth0TextStyle(theme.typography.titleLarge)
                         }.padding(5)
                     }
@@ -64,12 +64,12 @@ struct EmailPhoneEnrollmentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: theme.radius.inputField))
                 .overlay {
                     RoundedRectangle(cornerRadius: theme.radius.inputField)
-                        .stroke(theme.colors.border, lineWidth: 1)
+                        .stroke(theme.colors.border.regular, lineWidth: 1)
                 }
 
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(theme.colors.onError)
+                        .foregroundStyle(theme.colors.text.onError)
                         .auth0TextStyle(theme.typography.body)
                         .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
                 } else {
@@ -84,12 +84,12 @@ struct EmailPhoneEnrollmentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: theme.radius.inputField))
                     .overlay {
                         RoundedRectangle(cornerRadius: theme.radius.inputField)
-                            .stroke(theme.colors.border, lineWidth: 1)
+                            .stroke(theme.colors.border.regular, lineWidth: 1)
                     }
 
                 if let errorMessage = viewModel.errorMessage {
                     Text(errorMessage)
-                        .foregroundStyle(theme.colors.onError)
+                        .foregroundStyle(theme.colors.text.onError)
                         .auth0TextStyle(theme.typography.body)
                         .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
                 } else {
@@ -106,10 +106,10 @@ struct EmailPhoneEnrollmentView: View {
                 HStack {
                     Spacer()
                     if viewModel.apiCallInProgress {
-                        Auth0Loader(tintColor: theme.colors.onPrimary)
+                        Auth0Loader(tintColor: theme.colors.text.onPrimary)
                     } else {
                         Text("Continue")
-                            .foregroundStyle(theme.colors.onPrimary)
+                            .foregroundStyle(theme.colors.text.onPrimary)
                             .auth0TextStyle(theme.typography.label)
                     }
                     Spacer()
@@ -118,13 +118,13 @@ struct EmailPhoneEnrollmentView: View {
             .disabled(!viewModel.isButtonEnabled)
             .frame(height: theme.sizes.buttonHeight)
             .background(
-                theme.colors.primary.opacity(viewModel.isButtonEnabled ? 1.0 : 0.5)
+                theme.colors.background.primary.opacity(viewModel.isButtonEnabled ? 1.0 : 0.5)
             )
             .cornerRadius(theme.radius.button)
             .overlay(
                 RoundedRectangle(cornerRadius: theme.radius.button)
                     .stroke(
-                        theme.colors.primary.opacity(viewModel.isButtonEnabled ? 1.0 : 0.5),
+                        theme.colors.background.primary.opacity(viewModel.isButtonEnabled ? 1.0 : 0.5),
                         lineWidth: 2
                     )
             )

@@ -28,16 +28,16 @@ struct SavedAuthenticatorsView: View {
                 VStack(alignment: .leading) {
                     Text(viewModel.type.savedAuthenticatorsTitle)
                         .auth0TextStyle(theme.typography.helper)
-                        .foregroundStyle(theme.colors.textSecondary)
+                        .foregroundStyle(theme.colors.text.regular)
                         .padding(.bottom, theme.spacing.sm)
 
                     if viewModel.viewAuthenticationMethods.isEmpty {
                         Text(viewModel.type.savedAuthenticatorsEmptyStateMessage)
                             .auth0TextStyle(theme.typography.helper)
-                            .foregroundStyle(theme.colors.textSecondary)
+                            .foregroundStyle(theme.colors.text.regular)
                             .padding(.vertical, 25.5)
                             .frame(maxWidth: .infinity)
-                            .background(theme.colors.surface)
+                            .background(theme.colors.background.layerMedium)
                         Spacer()
                     } else {
                         ScrollView(showsIndicators: false) {
@@ -117,11 +117,11 @@ struct AuthenticatorView: View {
             VStack(alignment: .leading, spacing: theme.spacing.xs) {
                 Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
                     .auth0TextStyle(theme.typography.label)
-                    .foregroundStyle(theme.colors.textPrimary)
+                    .foregroundStyle(theme.colors.text.bold)
 
                 Text("Created on \(authenticationMethod.formatIsoDate)")
                     .auth0TextStyle(theme.typography.helper)
-                    .foregroundStyle(theme.colors.textSecondary)
+                    .foregroundStyle(theme.colors.text.regular)
             }
             Spacer()
             Image("threedots", bundle: ResourceBundle.default)
@@ -135,7 +135,7 @@ struct AuthenticatorView: View {
         .padding()
         .overlay {
             RoundedRectangle(cornerRadius: theme.radius.button)
-                .stroke(theme.colors.border, lineWidth: 1)
+                .stroke(theme.colors.border.regular, lineWidth: 1)
         }
     }
 }

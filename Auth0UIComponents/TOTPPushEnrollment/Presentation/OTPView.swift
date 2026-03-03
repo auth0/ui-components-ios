@@ -33,38 +33,38 @@ struct OTPView: View {
                     if viewModel.isEmailOrSMS == false {
                         Text("Enter the 6-digit code")
                             .auth0TextStyle(theme.typography.titleLarge)
-                            .foregroundStyle(theme.colors.textPrimary)
+                            .foregroundStyle(theme.colors.text.bold)
                             .padding(.bottom, theme.spacing.sm)
 
                         Text("From your authenticator app")
                             .auth0TextStyle(theme.typography.body)
-                            .foregroundStyle(theme.colors.textSecondary)
+                            .foregroundStyle(theme.colors.text.regular)
                             .padding(.bottom, 76)
                     } else {
                         Text("Enter the 6 digit code we sent to \(viewModel.formattedEmailOrPhoneNumber)")
                             .multilineTextAlignment(.leading)
                             .auth0TextStyle(theme.typography.titleLarge)
-                            .foregroundStyle(theme.colors.textPrimary)
+                            .foregroundStyle(theme.colors.text.bold)
                             .padding(.bottom, 30)
                     }
 
                     Text("One-Time Passcode")
                         .auth0TextStyle(theme.typography.label)
-                        .foregroundStyle(theme.colors.textPrimary)
+                        .foregroundStyle(theme.colors.text.bold)
                         .padding(.bottom, theme.spacing.base)
 
                     otpTextFieldView()
 
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
-                            .foregroundStyle(theme.colors.onError)
+                            .foregroundStyle(theme.colors.text.onError)
                             .auth0TextStyle(theme.typography.body)
                             .padding(EdgeInsets(top: 16, leading: 0, bottom: 100, trailing: 0))
                     } else {
                         if viewModel.isEmailOrSMS {
                             Text(attributedString())
                                 .auth0TextStyle(theme.typography.body)
-                                .foregroundStyle(theme.colors.textSecondary)
+                                .foregroundStyle(theme.colors.text.regular)
                                 .onTapGesture {
                                     Task {
                                         await viewModel.restartEnrollment()
@@ -83,10 +83,10 @@ struct OTPView: View {
                         HStack {
                             Spacer()
                             if viewModel.apiCallInProgress {
-                                Auth0Loader(tintColor: theme.colors.onPrimary)
+                                Auth0Loader(tintColor: theme.colors.text.onPrimary)
                             } else {
                                 Text("Continue")
-                                    .foregroundStyle(theme.colors.onPrimary)
+                                    .foregroundStyle(theme.colors.text.onPrimary)
                                     .auth0TextStyle(theme.typography.label)
                             }
                             Spacer()
@@ -95,13 +95,13 @@ struct OTPView: View {
                     .disabled(!viewModel.buttonEnabled)
                     .frame(height: theme.sizes.buttonHeight)
                     .background(
-                        theme.colors.primary.opacity(viewModel.buttonEnabled ? 1.0 : 0.5)
+                        theme.colors.background.primary.opacity(viewModel.buttonEnabled ? 1.0 : 0.5)
                     )
                     .cornerRadius(theme.radius.button)
                     .overlay(
                         RoundedRectangle(cornerRadius: theme.radius.button)
                             .stroke(
-                                theme.colors.primary.opacity(viewModel.buttonEnabled ? 1.0 : 0.5),
+                                theme.colors.background.primary.opacity(viewModel.buttonEnabled ? 1.0 : 0.5),
                                 lineWidth: 2
                             )
                     )
@@ -190,7 +190,7 @@ struct OTPView: View {
     func attributedString() -> AttributedString {
         var attributed = AttributedString("Didn't get a code? Resend it.")
         if let range = attributed.range(of: "Resend it.") {
-            attributed[range].foregroundColor = theme.colors.textPrimary
+            attributed[range].foregroundColor = theme.colors.text.bold
             attributed[range].underlineStyle = .single
         }
         return attributed

@@ -24,7 +24,7 @@ struct MyAccountAuthMethodView: View {
 
             Text(viewModel.title())
                 .auth0TextStyle(theme.typography.label)
-                .foregroundStyle(theme.colors.cardForeground)
+                .foregroundStyle(theme.colors.text.bold)
                 .padding(.trailing, theme.spacing.base)
 
             Spacer()
@@ -42,7 +42,7 @@ struct MyAccountAuthMethodView: View {
         .padding(.all, theme.spacing.lg)
         .overlay {
             RoundedRectangle(cornerRadius: theme.radius.button)
-                .stroke(theme.colors.border, lineWidth: 1)
+                .stroke(theme.colors.border.regular, lineWidth: 1)
         }
         .onTapGesture {
             viewModel.handleNavigation()

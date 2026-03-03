@@ -13,7 +13,7 @@ import SwiftUI
 /// ```swift
 /// Text("Almost there!")
 ///     .auth0TextStyle(theme.typography.body)
-///     .foregroundStyle(theme.colors.textPrimary)
+///     .foregroundStyle(theme.colors.text.bold)
 /// ```
 public struct Auth0TextStyle: Sendable {
 
@@ -164,7 +164,7 @@ extension View {
     /// ```swift
     /// Text("Sign in")
     ///     .auth0TextStyle(theme.typography.label)
-    ///     .foregroundStyle(theme.colors.onPrimary)
+    ///     .foregroundStyle(theme.colors.text.onPrimary)
     /// ```
     public func auth0TextStyle(_ style: Auth0TextStyle) -> some View {
         self.font(style.font)
