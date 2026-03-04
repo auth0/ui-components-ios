@@ -73,7 +73,7 @@ extension Auth0UIComponentError {
         switch self {
         case .networkError:
             var subTitleText = AttributedString("Please check your internet connection")
-            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
             
             return ErrorScreenViewModel(
                 title: "Connection problem",
@@ -86,7 +86,7 @@ extension Auth0UIComponentError {
             )
         case .invalidMfaCode:
             var subTitleText = AttributedString("The code you entered is incorrect or has expired. Please try again.")
-            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
             
             return ErrorScreenViewModel(
                 title: "Invalid verification code",
@@ -99,7 +99,7 @@ extension Auth0UIComponentError {
             )
         case .sessionExpired:
             var subTitleText = AttributedString("Your session has expired. Please login again to continue.")
-            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
             
             return ErrorScreenViewModel(
                 title: "Session expired",
@@ -112,7 +112,7 @@ extension Auth0UIComponentError {
             )
         case .tooManyAttempts:
             var subTitleText = AttributedString("Your account has been temporarily blocked due to too many failed attempts. Please try again later.")
-            subTitleText.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
             
             return ErrorScreenViewModel(
                 title: "Too many attempts",
@@ -142,7 +142,7 @@ extension Auth0UIComponentError {
              .idTokenValidationFailed(let message, _),
              .userCancelled(let message, _):
             var full = AttributedString("We are unable to process your request. Please try again in a few minutes. If this problem persists, please contact us.")
-            full.foregroundColor = Color("737373", bundle: ResourceBundle.default)
+            full.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
             
             if let range = full.range(of: "contact us.") {
                 full[range].underlineStyle = .single
