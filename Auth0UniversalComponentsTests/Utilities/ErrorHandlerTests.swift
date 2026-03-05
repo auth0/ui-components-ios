@@ -100,14 +100,14 @@ struct ErrorHandlerTests {
             tokenProvider: mockTokenProvider
         )
 
-        let totpEnrollmentChallengeData = """
+        let totpEnrollmentChallengeData = Data("""
         {
          "id" : "totp|test_nkfnbkfnb",
          "barcode_uri" : "otpauth://test",
          "manual_input_code" : "CODE123",
          "auth_session" : "session123"
         }
-        Data(""".utf8)!
+        """.utf8)
 
         let mockLocationHeader = "https://\(mockDomain)/me/v1/authentication-methods/totp%7Ctest_nkfnbkfnb"
         let decoder = JSONDecoder()
@@ -135,13 +135,13 @@ struct ErrorHandlerTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 400,
                     "error": "invalid_grant",
                     "error_description": "Invalid code"
                 }
-                Data(""".utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -222,13 +222,13 @@ struct ErrorHandlerTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 500,
                     "error": "Internal Server Error",
                     "message": "Server error occurred"
                 }
-                Data(""".utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 

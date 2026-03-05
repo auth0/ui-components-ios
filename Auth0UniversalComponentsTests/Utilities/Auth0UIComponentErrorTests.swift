@@ -25,7 +25,7 @@ struct MockAttributedString: Equatable {
 
     subscript(range: Range<String.Index>) -> MockAttributedString {
         get { return self }
-        set { _ in /* No-op for testing */ }
+        set { }
     }
 
     func range(of string: String) -> Range<String.Index>? {

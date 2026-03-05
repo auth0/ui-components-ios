@@ -20,7 +20,7 @@ struct MyAccountAuthMethodsViewModelTests {
     }
 
     var authMethodsData: Data {
-        let authMethods = """
+        let authMethods = Data("""
                   {
                    "authentication_methods" : [
                     {
@@ -73,12 +73,12 @@ struct MyAccountAuthMethodsViewModelTests {
                     }
                    ]
                   }
-            Data(""".utf8)!
+            """.utf8)
         return authMethods
     }
 
     var factorsData: Data {
-        let factors = """
+        let factors = Data("""
             {
             "factors": [
             {
@@ -112,7 +112,7 @@ struct MyAccountAuthMethodsViewModelTests {
              ]
             }
             ]}
-            Data(""".utf8)!
+            """.utf8)
         return factors
     }
 

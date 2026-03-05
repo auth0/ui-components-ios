@@ -40,12 +40,12 @@ struct EmailPhoneViewModelTests {
     }
 
     private var enrollmentChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
         {
             "id": "phone|test_nkfnbkfnb",
             "auth_session": "eS7ZBG9gItW5uA2xk3m8be5DrmbreOT5"
         }
-        Data(""".utf8)!
+        """.utf8)
         return mockJsonData
     }
 
@@ -55,7 +55,7 @@ struct EmailPhoneViewModelTests {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await EmailPhoneEnrollmentViewModel(type: .email)
+        let viewModel = await EmailPhoneEnrollmentViewModel(type: .email)
         await MainActor.run {
             #expect(viewModel.apiCallInProgress == false)
             #expect(viewModel.errorMessage == nil)

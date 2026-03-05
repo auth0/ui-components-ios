@@ -20,14 +20,14 @@ struct TOTPPushQRCodeViewModelTests {
     }
 
     private var totpEnrollmentChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
                {
                 "id" : "totp|test_nkfnbkfnb",
                 "barcode_uri" : "otpauth://test-tenant-test:auth0%7C6889c0a8a1354b593f53e35f?secret&issuer=test-tenant-test&algorithm=SHA1&digits=6&period=30",
                 "manual_input_code" : "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5",
                 "auth_session" : "jfnfgnbkbnLfiurfg"
                }
-        Data(""".utf8)!
+        """.utf8)
         return mockJsonData
     }
 
@@ -43,20 +43,18 @@ struct TOTPPushQRCodeViewModelTests {
     }
 
     private var pushEnrollmentChallengeData: Data {
-        let data = """
+        let data = Data("""
             {
              "id" : "push-notification|test_nkfnbkfnb",
              "auth_session" : "jfnfgnbkbnLfiurfg",
              "barcode_uri" : "otpauth://totp/test-tenant-test:auth0%7C689b3c89a51b6e7534dd0bed?enrollment_tx_id=epz2WsTxWCRBNOGJeZGdDY5Q0X28BpEm&base_url=https%3A%2F%2F\(mockDomain)%2Fappliance-mfa"
             }
-            """
- ).data(using: .utf8)!
+            """.utf8)
         return data
     }
 
     private var confirmEnrollmentTOTPData: Data {
-       let data =
-        """
+       let data = Data("""
         {
          "id" : "totp|test_nkfnbkfnb",
          "confirmed" : true,
@@ -66,7 +64,7 @@ struct TOTPPushQRCodeViewModelTests {
          ],
          "created_at" : "2025-07-30T13:08:49.508Z"
         }
-        Data(""".utf8)!
+        """.utf8)
         return data
     }
 
@@ -75,7 +73,7 @@ struct TOTPPushQRCodeViewModelTests {
 
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
-        let vm = await TOTPPushQRCodeViewModel(
+        let viewModel = await TOTPPushQRCodeViewModel(
             startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCase(session: makeMockSession()),
             startPushEnrollmentUseCase: StartPushEnrollmentUseCase(session: makeMockSession()),
             type: .totp,

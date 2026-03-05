@@ -22,7 +22,7 @@ struct PasskeysEnrollmentViewModelTests {
     }
 
     private var passkeyEnrollmentChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
         {
           "id": "passkey|test_abc123",
           "publicKey": {
@@ -50,12 +50,12 @@ struct PasskeysEnrollmentViewModelTests {
             }
           }
         }
-        Data(""".utf8)!
+        """.utf8)
         return mockJsonData
     }
 
     private var confirmPasskeyEnrollmentData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
         {
           "id": "passkey|test_abc123",
           "confirmed": true,
@@ -64,7 +64,7 @@ struct PasskeysEnrollmentViewModelTests {
           "created_at": "2025-11-11T03:42:03.571Z",
           "name": "iPhone"
         }
-        Data(""".utf8)!
+       """.utf8)
         return mockJsonData
     }
 
@@ -95,7 +95,7 @@ struct PasskeysEnrollmentViewModelTests {
             tokenProvider: mockTokenProvider
         )
 
-        let vm = await PasskeysEnrollmentViewModel(delegate: nil)
+        let viewModel = await PasskeysEnrollmentViewModel(delegate: nil)
 
         await MainActor.run {
             #expect(viewModel.showLoader == false)
@@ -120,7 +120,7 @@ struct PasskeysEnrollmentViewModelTests {
             tokenProvider: mockTokenProvider
         )
 
-        let vm = await PasskeysEnrollmentViewModel(delegate: mockDelegate)
+        let viewModel = await PasskeysEnrollmentViewModel(delegate: mockDelegate)
 
         await MainActor.run {
             #expect(viewModel.showLoader == false)
