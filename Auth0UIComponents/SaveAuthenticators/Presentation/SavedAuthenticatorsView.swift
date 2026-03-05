@@ -6,6 +6,8 @@ import Auth0
 /// Displays a list of previously enrolled authentication methods for a specific
 /// type (email, SMS, TOTP, push, etc.) that users can select to manage or delete.
 struct SavedAuthenticatorsView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// View model managing saved authenticators and deletion logic
     @StateObject private var viewModel: SavedAuthenticatorsViewModel
 
@@ -25,24 +27,30 @@ struct SavedAuthenticatorsView: View {
             } else {
                 VStack(alignment: .leading) {
                     Text(viewModel.type.savedAuthenticatorsTitle)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                        .padding(.bottom, 8)
+                        .auth0TextStyle(theme.typography.helper)
+                        .foregroundStyle(theme.colors.text.regular)
+                        .padding(.bottom, theme.spacing.xs)
+
                     if viewModel.viewAuthenticationMethods.isEmpty {
                         Text(viewModel.type.savedAuthenticatorsEmptyStateMessage)
-                            .font(.system(size: 14))
-                            .foregroundStyle(Color("000000_24", bundle: ResourceBundle.default))
+                            .auth0TextStyle(theme.typography.helper)
+                            .foregroundStyle(theme.colors.text.regular)
                             .padding(.vertical, 25.5)
                             .frame(maxWidth: .infinity)
-                            .background(Color("F9F9F9", bundle: ResourceBundle.default))
+                            .background(theme.colors.background.layerMedium)
                         Spacer()
                     } else {
                         ScrollView(showsIndicators: false) {
                             LazyVStack {
                                 ForEach(viewModel.viewAuthenticationMethods, id: \.self) { authMethod in
-                                    AuthenticatorView(type: viewModel.type, authenticationMethod: authMethod, showManageBottomSheet: $viewModel.showManageAuthSheet)
-                                        .confirmationDialog(viewModel.type.confirmationDialogTitle, isPresented: $viewModel.showManageAuthSheet, titleVisibility: .visible) {
-                                            Button(viewModel.type.confirmationDialogDestructiveButtonTitle, role: .destructive) {
+                                    AuthenticatorView(type: viewModel.type,
+                                                      authenticationMethod: authMethod,
+                                                      showManageBottomSheet: $viewModel.showManageAuthSheet)
+                                        .confirmationDialog(viewModel.type.confirmationDialogTitle,
+                                                            isPresented: $viewModel.showManageAuthSheet,
+                                                            titleVisibility: .visible) {
+                                            Button(viewModel.type.confirmationDialogDestructiveButtonTitle,
+                                                   role: .destructive) {
                                                 Task {
                                                    await viewModel.deleteAuthMethod(authMethod: authMethod)
                                                 }
@@ -54,74 +62,80 @@ struct SavedAuthenticatorsView: View {
                     }
                 }.padding(EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16))
             }
-        }.navigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: trailingPlacement) {
-                    Image("plus", bundle: ResourceBundle.default)
-                        .onTapGesture {
-                            NavigationStore.shared.push(viewModel.type.navigationDestination([]))
-                        }
-                }
-                
-                ToolbarItem(placement: leadingPlacement) {
-                    Image("back", bundle: ResourceBundle.default)
-                        .onTapGesture {
-                            NavigationStore.shared.popToRoot()
-                        }
-                }
-            }.onAppear {
-                Task {
-                    await viewModel.loadData()
-                }
+        }
+        .navigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: trailingPlacement) {
+                Image("plus", bundle: ResourceBundle.default)
+                    .onTapGesture {
+                        NavigationStore.shared.push(viewModel.type.navigationDestination([]))
+                    }
             }
+
+            ToolbarItem(placement: leadingPlacement) {
+                Image("back", bundle: ResourceBundle.default)
+                    .onTapGesture {
+                        NavigationStore.shared.popToRoot()
+                    }
+            }
+        }
+        .onAppear {
+            Task {
+                await viewModel.loadData()
+            }
+        }
     }
-    
+
     var trailingPlacement: ToolbarItemPlacement {
-            #if os(macOS)
-            return .automatic
-            #else
-            return .topBarTrailing
-            #endif
-        }
-        
-        var leadingPlacement: ToolbarItemPlacement {
-            #if os(macOS)
-            return . navigation
-            #else
-            return .topBarLeading
-            #endif
-        }
+        #if os(macOS)
+        return .automatic
+        #else
+        return .topBarTrailing
+        #endif
+    }
+
+    var leadingPlacement: ToolbarItemPlacement {
+        #if os(macOS)
+        return .navigation
+        #else
+        return .topBarLeading
+        #endif
+    }
 }
 
 struct AuthenticatorView: View {
+
+    @Environment(\.auth0Theme) private var theme
+
     let type: AuthMethodType
     let authenticationMethod: AuthenticationMethod
     @Binding var showManageBottomSheet: Bool
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxs) {
                 Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color("000000", bundle: ResourceBundle.default))
+                    .auth0TextStyle(theme.typography.label)
+                    .foregroundStyle(theme.colors.text.bold)
 
                 Text("Created on \(authenticationMethod.formatIsoDate)")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color("828282", bundle: ResourceBundle.default))
+                    .auth0TextStyle(theme.typography.helper)
+                    .foregroundStyle(theme.colors.text.regular)
             }
             Spacer()
             Image("threedots", bundle: ResourceBundle.default)
-                .frame(width: 28, height: 28)
+                .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
                 .onTapGesture {
                     DispatchQueue.main.async {
                         showManageBottomSheet = true
                     }
                 }
-        }.padding()
-            .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color("D9D9D9", bundle: ResourceBundle.default), lineWidth: 1)
-            }
+        }
+        .padding()
+        .overlay {
+            RoundedRectangle(cornerRadius: theme.radius.button)
+                .stroke(theme.colors.border.regular, lineWidth: 1)
+        }
     }
 }

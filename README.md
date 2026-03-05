@@ -12,7 +12,8 @@
 
 Composable UI building blocks for MFA enrollment and verification on iOS, built with SwiftUI Compose. This library provides ready-to-use components that integrate seamlessly with Auth0's authentication flows.
 - [Sample App](https://github.com/atko-cic/ui-components-ios/tree/main/AppUIComponents)
-- [API Documentation](#) <!-- Add link when available -->
+- [API Documentation](https://github.com/auth0/ui-components-ios/blob/main/Documentation.docc/Documentation.md)
+- [Theme System](https://github.com/auth0/ui-components-ios/blob/main/Documentation.docc/ThemeSystem.md) — customise colours, typography, spacing, radii, and component sizes
 
 ## Features
 

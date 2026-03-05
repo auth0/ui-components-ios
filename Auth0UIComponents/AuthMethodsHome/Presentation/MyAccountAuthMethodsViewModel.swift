@@ -126,6 +126,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
                 }
             }
             viewComponents.append(.title(text: "Sign-in methods"))
+            viewComponents.append(.subtitle(text: "Manage how you signed into the account"))
             let viewModel = MyAccountAuthMethodViewModel(authMethods: authMethods.filter { $0.type == AuthMethodType.passkey.rawValue },
                                                          type: .passkey,
                                                          dependencies: dependencies)

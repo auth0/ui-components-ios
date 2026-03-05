@@ -6,6 +6,8 @@ import SwiftUI
 /// or other MFA setup process. Also provides a manual entry code option for
 /// cases where QR code scanning is not possible.
 struct TOTPPushQRCodeView: View {
+
+    @Environment(\.auth0Theme) private var theme
     /// View model managing QR code generation and enrollment state
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
     /// Controls visibility of the "code copied" alert
@@ -38,20 +40,20 @@ struct TOTPPushQRCodeView: View {
                         .padding(.horizontal)
 
                     Text("Use your Authenticator App (like Google Authenticator or Auth0 Guardian) to scan this QR code.")
-                        .font(Font.system(size: 16))
-                        .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
+                        .auth0TextStyle(theme.typography.body)
+                        .foregroundStyle(theme.colors.text.regular)
                         .multilineTextAlignment(.center)
                 }
 
                 if let manualInputCode = viewModel.manualInputCode {
                     Text(manualInputCode)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color("1F1F1F", bundle: ResourceBundle.default))
-                        .padding(EdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12))
+                        .auth0TextStyle(theme.typography.helper)
+                        .foregroundStyle(theme.colors.text.bold)
+                        .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
                         .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color("262420", bundle: ResourceBundle.default), lineWidth: 1)
-                        }.padding(.bottom, 16)
+                            RoundedRectangle(cornerRadius: theme.radius.inputField)
+                                .stroke(theme.colors.background.primary, lineWidth: 1)
+                        }.padding(.bottom, theme.spacing.md)
 
                     Button {
                         #if os(macOS)
@@ -61,20 +63,21 @@ struct TOTPPushQRCodeView: View {
                         #endif
                         viewModel.toast = Toast(style: .notify, message: "Copied")
                     } label: {
-                        HStack(alignment: .center, spacing: 8) {
+                        HStack(alignment: .center, spacing: theme.spacing.xs) {
                             Image("copy", bundle: ResourceBundle.default)
-                                .frame(width: 16, height: 16)
+                                .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
 
                             Text("Copy as Code")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(Color("262420", bundle: ResourceBundle.default))
+                                .auth0TextStyle(theme.typography.label)
+                                .foregroundStyle(theme.colors.background.primary)
                         }.padding().frame(maxWidth: .infinity)
-                    }.frame(height: 48)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24)
-                                .stroke(Color("262420", bundle: ResourceBundle.default), lineWidth: 2)
-                        )
-                        .cornerRadius(24)
+                    }
+                    .frame(height: theme.sizes.buttonHeight)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: theme.radius.pill)
+                            .stroke(theme.colors.background.primary, lineWidth: 2)
+                    )
+                    .cornerRadius(theme.radius.pill)
                 }
 
                 Button {
@@ -85,32 +88,28 @@ struct TOTPPushQRCodeView: View {
                     HStack {
                         Spacer()
                         if viewModel.apiCallInProgress {
-                            Auth0Loader(tintColor: Color("FFFFFF", bundle: ResourceBundle.default))
+                            Auth0Loader(tintColor: theme.colors.text.onPrimary)
                         } else {
                             Text("Continue")
-                                .foregroundStyle(Color("FFFFFF", bundle: ResourceBundle.default))
-                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(theme.colors.text.onPrimary)
+                                .auth0TextStyle(theme.typography.label)
                         }
                         Spacer()
                     }.frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                }.frame(height: 48)
-                    .background(
-                        Color("262420", bundle: ResourceBundle.default)
-                    )
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                Color("262420", bundle: ResourceBundle.default),
-                                lineWidth: 2
-                            )
-                    )
-                    .padding(.bottom, 30)
+                        .padding(.vertical, theme.spacing.sm)
+                }
+                .frame(height: theme.sizes.buttonHeight)
+                .background(theme.colors.background.primary)
+                .cornerRadius(theme.radius.button)
+                .overlay(
+                    RoundedRectangle(cornerRadius: theme.radius.button)
+                        .stroke(theme.colors.background.primary, lineWidth: 2)
+                )
+                .padding(.bottom, 30)
 
-            Text(attributedString())
-                    .foregroundStyle(Color("606060", bundle: ResourceBundle.default))
-                    .font(Font.system(size: 16))
+                Text(attributedString())
+                    .foregroundStyle(theme.colors.text.regular)
+                    .auth0TextStyle(theme.typography.body)
                     .multilineTextAlignment(.center)
                     .onTapGesture {
                         if let url = URL(string: "https://apps.apple.com/us/app/auth0-guardian/id1093447833") {
@@ -122,23 +121,24 @@ struct TOTPPushQRCodeView: View {
                         }
                     }
             }
-        }.padding(.all, 16)
-            .toastView(toast: $viewModel.toast)
-            .navigationTitle(viewModel.navigationTitle())
+        }
+        .padding(.all, theme.spacing.md)
+        .toastView(toast: $viewModel.toast)
+        .navigationTitle(viewModel.navigationTitle())
         #if !os(macOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
-            .onAppear {
-                Task {
-                    await viewModel.fetchEnrollmentChallenge()
-                }
+        .onAppear {
+            Task {
+                await viewModel.fetchEnrollmentChallenge()
             }
+        }
     }
 
     func attributedString() -> AttributedString {
         var attributed = AttributedString("Don't have the Auth0 Guardian App?\nDownload it here")
         if let range = attributed.range(of: "Download it here") {
-            attributed[range].foregroundColor = Color("000000", bundle: ResourceBundle.default)
+            attributed[range].foregroundColor = theme.colors.text.bold
             attributed[range].underlineStyle = .single
         }
         return attributed

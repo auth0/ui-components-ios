@@ -1,51 +1,55 @@
 import SwiftUI
 
-/// Defines the visual style and semantic meaning of a toast notification.
+/// Defines the semantic intent of a toast notification.
 ///
-/// Each style determines the colors used for the toast background and text,
-/// conveying different types of messages to the user.
+/// The visual representation of each case — colours and backgrounds — is
+/// resolved against the active ``Auth0Theme`` at render time, so it
+/// automatically reflects any custom theme injected via
+/// ``SwiftUI/View/auth0Theme(_:)``.
 enum ToastStyle {
-    /// Error messages - displayed in red
+    /// Critical error — rendered in red.
     case error
-    /// Warning messages - displayed in orange
+    /// Non-critical warning — rendered in orange.
     case warning
-    /// Success messages - displayed in green
+    /// Positive confirmation — rendered in green.
     case success
-    /// Informational messages - displayed in blue
+    /// Neutral information — rendered in blue.
     case info
-    /// Neutral notification messages - displayed with dark background and white text
+    /// SDK notification (e.g. "Copied") — rendered using the theme's primary colour.
     case notify
 }
 
 extension ToastStyle {
-    /// The theme color for this toast style
-    var themeColor: Color {
+
+    /// Returns the accent colour for this style, sourced from `theme` for
+    /// semantic cases and from system colours for warning/info.
+    func themeColor(from theme: Auth0Theme) -> Color {
         switch self {
-        case .error: return Color.red
-        case .warning: return Color.orange
-        case .info: return Color.blue
-        case .success: return Color.green
-        case .notify: return Color("262420", bundle: ResourceBundle.default)
+        case .error:   return theme.colors.text.onError
+        case .warning: return .orange
+        case .info:    return .blue
+        case .success: return theme.colors.text.onSuccess
+        case .notify:  return theme.colors.background.primary
         }
     }
 
-    /// The color to use for the toast message text
-    var messageColor: Color {
+    /// Returns the message text colour appropriate for the toast background.
+    func messageColor(from theme: Auth0Theme) -> Color {
         switch self {
-        case .notify:
-            return Color("FFFFFF", bundle: ResourceBundle.default)
-        default:
-            return Color("000000", bundle: ResourceBundle.default)
+        case .error:   return theme.colors.text.onError
+        case .success: return theme.colors.text.onSuccess
+        case .notify:  return theme.colors.text.onPrimary
+        default:       return theme.colors.text.bold
         }
     }
 
-    /// The background color for the toast container
-    var toastBackgroundColor: Color {
+    /// Returns the background colour of the toast container.
+    func toastBackgroundColor(from theme: Auth0Theme) -> Color {
         switch self {
-        case .notify:
-            return Color("262420", bundle: ResourceBundle.default)
-        default:
-            return Color("FFFFFF", bundle: ResourceBundle.default)
+        case .error:   return theme.colors.background.errorSubtle
+        case .success: return theme.colors.background.successSubtle
+        case .notify:  return theme.colors.background.primary
+        default:       return theme.colors.text.onPrimary
         }
     }
 }

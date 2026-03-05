@@ -6,20 +6,23 @@ import SwiftUI
 /// configured any authentication factors on their account, which may be required
 /// for security or access purposes.
 struct EmptyFactorsView: View {
+
+    @Environment(\.auth0Theme) private var theme
+
     var body: some View {
         HStack {
             Image("info.circle.red", bundle: ResourceBundle.default)
-                .frame(width: 16, height: 16)
+                .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
 
             Text("No factors configured")
-                .foregroundStyle(Color("CA3B2B", bundle: ResourceBundle.default))
-                .font(.system(size: 14).weight(.medium))
+                .foregroundStyle(theme.colors.text.onError)
+                .auth0TextStyle(theme.typography.label)
             Spacer()
         }
-        .padding(.all, 12)
+        .padding(.all, theme.spacing.sm)
         .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color("D9D9D9", bundle: ResourceBundle.default), lineWidth: 1)
+            RoundedRectangle(cornerRadius: theme.radius.button)
+                .stroke(theme.colors.border.regular, lineWidth: 1)
         }
     }
 }
