@@ -1,5 +1,5 @@
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 import Auth0
 
 struct ContentView: View {
