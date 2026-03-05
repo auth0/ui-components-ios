@@ -39,7 +39,10 @@ struct TOTPPushQRCodeView: View {
                         .aspectRatio(1.0, contentMode: .fit)
                         .padding(.horizontal)
 
-                    Text("Use your Authenticator App (like Google Authenticator or Auth0 Guardian) to scan this QR code.")
+                    Text(
+                        "Use your Authenticator App (like Google Authenticator or Auth0 Guardian) " +
+                        "to scan this QR code."
+                    )
                         .auth0TextStyle(theme.typography.body)
                         .foregroundStyle(theme.colors.text.regular)
                         .multilineTextAlignment(.center)

@@ -39,7 +39,8 @@ public struct PasskeysConfiguration {
     ///
     /// ## See Also
     ///
-    /// - [Passkeys](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
+    /// - [Passkeys]
+    ///   (https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
     /// - [User Identity](https://auth0.com/docs/manage-users/user-accounts/identify-users)
     /// - [Database Connections](https://auth0.com/docs/authenticate/database-connections)
     public init(userIdentityId: String? = nil,

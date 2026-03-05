@@ -34,26 +34,49 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
         self.dependencies = dependencies
         self.type = type
     }
-    
+
     func startEnrollment() async {
         apiCallInProgress = true
         errorMessage = nil
         do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                audience: dependencies.audience,
+                scope: "openid create:me:authentication_methods"
+            )
             if type == .sms, let phoneNumber = selectedCountry?.code.appending(phoneNumber) {
-                let startPhoneEnrollmentRequest = StartPhoneEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                              domain: dependencies.domain,
-                                                                              phoneNumber: phoneNumber)
-                let phoneEnrollmentChallenge = try await startPhoneEnrollmentUseCase.execute(request: startPhoneEnrollmentRequest)
+                let startPhoneEnrollmentRequest = StartPhoneEnrollmentRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    phoneNumber: phoneNumber
+                )
+                let phoneEnrollmentChallenge = try await startPhoneEnrollmentUseCase.execute(
+                    request: startPhoneEnrollmentRequest
+                )
                 apiCallInProgress = false
-                await NavigationStore.shared.push(.otpScreen(type: .sms, emailOrPhoneNumber: phoneNumber, phoneEnrollmentChallenge: phoneEnrollmentChallenge))
+                await NavigationStore.shared.push(
+                    .otpScreen(
+                        type: .sms,
+                        emailOrPhoneNumber: phoneNumber,
+                        phoneEnrollmentChallenge: phoneEnrollmentChallenge
+                    )
+                )
             } else if type == .email {
-                let startEmailEnrollmentRequest = StartEmailEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                              domain: dependencies.domain,
-                                                                              email: email)
-                let emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(request: startEmailEnrollmentRequest)
+                let startEmailEnrollmentRequest = StartEmailEnrollmentRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    email: email
+                )
+                let emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(
+                    request: startEmailEnrollmentRequest
+                )
                 apiCallInProgress = false
-                await NavigationStore.shared.push(.otpScreen(type: .email, emailOrPhoneNumber: email, emailEnrollmentChallenge: emailEnrollmentChallenge))
+                await NavigationStore.shared.push(
+                    .otpScreen(
+                        type: .email,
+                        emailOrPhoneNumber: email,
+                        emailEnrollmentChallenge: emailEnrollmentChallenge
+                    )
+                )
             }
         } catch {
             apiCallInProgress = false

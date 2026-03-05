@@ -96,8 +96,8 @@ public struct DefaultAuth0ColorTokens: Auth0ColorTokens {
     ///   - border: Border colour tokens. Defaults to ``DefaultAuth0BorderColorTokens``.
     public init(
         background: any Auth0BackgroundColorTokens = DefaultAuth0BackgroundColorTokens(),
-        text:       any Auth0TextColorTokens       = DefaultAuth0TextColorTokens(),
-        border:     any Auth0BorderColorTokens     = DefaultAuth0BorderColorTokens()
+        text: any Auth0TextColorTokens       = DefaultAuth0TextColorTokens(),
+        border: any Auth0BorderColorTokens     = DefaultAuth0BorderColorTokens()
     ) {
         self.background = background
         self.text       = text

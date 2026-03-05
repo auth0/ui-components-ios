@@ -50,7 +50,7 @@ struct PasskeysEnrollmentViewModelTests {
             }
           }
         }
-        """.data(using: .utf8)!
+        Data(""".utf8)!
         return mockJsonData
     }
 
@@ -64,7 +64,7 @@ struct PasskeysEnrollmentViewModelTests {
           "created_at": "2025-11-11T03:42:03.571Z",
           "name": "iPhone"
         }
-        """.data(using: .utf8)!
+        Data(""".utf8)!
         return mockJsonData
     }
 
@@ -98,8 +98,8 @@ struct PasskeysEnrollmentViewModelTests {
         let vm = await PasskeysEnrollmentViewModel(delegate: nil)
 
         await MainActor.run {
-            #expect(vm.showLoader == false)
-            #expect(vm.errorViewModel == nil)
+            #expect(viewModel.showLoader == false)
+            #expect(viewModel.errorViewModel == nil)
         }
     }
 
@@ -123,8 +123,8 @@ struct PasskeysEnrollmentViewModelTests {
         let vm = await PasskeysEnrollmentViewModel(delegate: mockDelegate)
 
         await MainActor.run {
-            #expect(vm.showLoader == false)
-            #expect(vm.errorViewModel == nil)
+            #expect(viewModel.showLoader == false)
+            #expect(viewModel.errorViewModel == nil)
         }
     }
 
@@ -223,7 +223,7 @@ struct PasskeysEnrollmentViewModelTests {
             #expect(viewModel.errorViewModel == nil)
         }
     }
-    
+
     @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
     @Test func testHandle_setsLoaderToFalse() async {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }

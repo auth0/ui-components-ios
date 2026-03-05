@@ -33,7 +33,10 @@ struct RecoveryCodeEnrollmentView: View {
                         .foregroundStyle(theme.colors.text.bold)
                         .padding(.bottom, theme.spacing.sm)
 
-                    Text("Save these codes in a secure location. They are your backup sign-in method if your multifactor device is unavailable. Each code may only be used once")
+                    Text(
+                        "Save these codes in a secure location. They are your backup sign-in " +
+                        "method if your multifactor device is unavailable. Each code may only be used once"
+                    )
                         .multilineTextAlignment(.center)
                         .auth0TextStyle(theme.typography.label)
                         .foregroundStyle(theme.colors.text.regular)

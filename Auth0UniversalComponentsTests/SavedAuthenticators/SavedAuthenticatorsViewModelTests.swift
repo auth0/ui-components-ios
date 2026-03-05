@@ -1,4 +1,5 @@
-// swiftlint:disable type_body_length
+// swiftlint:disable:this type_body_length
+// swiftlint:disable file_length
 
 @testable import Auth0UniversalComponents
 import Auth0
@@ -6,6 +7,7 @@ import Foundation
 import Testing
 
 @Suite(.serialized)
+// swiftlint:disable:next type_body_length
 struct SavedAuthenticatorsViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
@@ -19,9 +21,9 @@ struct SavedAuthenticatorsViewModelTests {
         let decoder = JSONDecoder()
         return try decoder.decode(T.self, from: json)
     }
-    
+
     var authMethodsData: Data {
-        let authMethods = """
+        let authMethods = Data("""
                         {
                           "authentication_methods" : [
                             {
@@ -37,12 +39,12 @@ struct SavedAuthenticatorsViewModelTests {
                               }
             ]
                         }
-            """.data(using: .utf8)!
+            """.utf8)
         return authMethods
     }
 
     var authMethodsNoPhoneMethodsData: Data {
-        let data =  """
+        let data = Data("""
                                 {
                                   "authentication_methods" : [
                                     {
@@ -56,10 +58,10 @@ struct SavedAuthenticatorsViewModelTests {
                                     }
                     ]
                                 }
-                    """.data(using: .utf8)!
+                    """.utf8)
         return data
     }
- 
+
     var authMethods: [AuthenticationMethod] {
         do {
             let authMethods: AuthenticationMethods = try decodeResponse(json: authMethodsData)
@@ -86,12 +88,12 @@ struct SavedAuthenticatorsViewModelTests {
 
         let vm = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: nil)
         await MainActor.run {
-            #expect(vm.showLoader == true)
-            #expect(vm.errorViewModel == nil)
-            #expect(vm.showManageAuthSheet == false)
+            #expect(viewModel.showLoader == true)
+            #expect(viewModel.errorViewModel == nil)
+            #expect(viewModel.showManageAuthSheet == false)
         }
     }
-    
+
     @Test func testLoadDataSuccess() async throws {
         let mockTokenProvider = MockTokenProvider()
         Auth0UniversalComponentsSDKInitializer.reset()
@@ -137,7 +139,7 @@ struct SavedAuthenticatorsViewModelTests {
                 if request.httpMethod == "DELETE" {
                     confirmation()
                     return (response, nil)
-                }  else {
+                } else {
                     confirmation()
                     return (response, authMethodsNoPhoneMethodsData)
                 }
@@ -166,8 +168,8 @@ struct SavedAuthenticatorsViewModelTests {
 
         let vm = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: mockDelegate)
         await MainActor.run {
-            #expect(vm.showLoader == true)
-            #expect(vm.errorViewModel == nil)
+            #expect(viewModel.showLoader == true)
+            #expect(viewModel.errorViewModel == nil)
         }
     }
 
@@ -235,13 +237,13 @@ struct SavedAuthenticatorsViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 500,
                     "error": "Internal Server Error",
                     "message": "Server error occurred"
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -266,7 +268,7 @@ struct SavedAuthenticatorsViewModelTests {
         )
 
         await confirmation(expectedCount: 1) { @MainActor confirmation in
-            MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.requestHandler = { _ in
                 confirmation()
                 throw NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet, userInfo: nil)
             }
@@ -304,13 +306,13 @@ struct SavedAuthenticatorsViewModelTests {
                         headerFields: nil
                     )!
                     confirmation()
-                    let errorData = """
+                    let errorData = Data("""
                     {
                         "statusCode": 400,
                         "error": "Bad Request",
                         "message": "Cannot delete authentication method"
                     }
-                    """.data(using: .utf8)!
+                    """.utf8)
                     return (response, errorData)
                 } else {
                     let response = HTTPURLResponse(
@@ -368,11 +370,11 @@ struct SavedAuthenticatorsViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let emptyData = """
+                let emptyData = Data("""
                 {
                     "authentication_methods": []
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, emptyData)
             }
 
@@ -458,4 +460,3 @@ struct SavedAuthenticatorsViewModelTests {
         }
     }
 }
-

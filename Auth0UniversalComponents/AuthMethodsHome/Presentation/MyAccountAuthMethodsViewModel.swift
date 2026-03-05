@@ -1,4 +1,3 @@
-
 import Combine
 import SwiftUI
 import Auth0
@@ -71,7 +70,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
 
     @Published var viewComponents: [MyAccountAuthViewComponentData] = []
 
-    @Published var errorViewModel: ErrorScreenViewModel? = nil
+    @Published var errorViewModel: ErrorScreenViewModel?
 
     @Published var showLoader: Bool = true
 
@@ -81,7 +80,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
     private var factors: [Factor] = []
     private var authMethods: [AuthenticationMethod] = []
     private let errorHandler = ErrorHandler()
- 
+
     init(factorsUseCase: GetFactorsUseCaseable = GetFactorsUseCase(),
          authMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
          dependencies: Auth0UniversalComponentsSDKInitializer = .shared) {
@@ -90,6 +89,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
         self.dependencies = dependencies
     }
 
+    // swiftlint:disable:next function_body_length
     func loadMyAccountAuthViewComponentData() async {
         errorViewModel = nil
         self.viewComponents = []
@@ -108,7 +108,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
                 async let authMethodsResponse = authMethodsUseCase.execute(
                     request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain)
                 )
-                
+
                 let (authMethods, factors) = try await (authMethodsResponse, factorsResponse)
                 self.factors = factors
                 self.authMethods = authMethods
@@ -135,7 +135,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
             viewComponents.append(.subtitle(text: "Manage your 2FA methods"))
 
             if supportedFactors.isEmpty == false {
-                for factor in supportedFactors  {
+                for factor in supportedFactors {
                     let filteredAuthMethods = self.authMethods.filter { $0.type == factor.rawValue }
                     viewComponents.append(.additionalVerificationMethods(model: MyAccountAuthMethodViewModel(
                         authMethods: filteredAuthMethods,
@@ -148,7 +148,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
             } else {
                 self.viewComponents = [.emptyFactors]
             }
-        } catch  {
+        } catch {
             await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
                 Task {
                     await self?.loadMyAccountAuthViewComponentData()
@@ -163,10 +163,10 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
 
 }
 
-extension MyAccountAuthMethodsViewModel: RefreshAuthDataProtocol  {
-    
+extension MyAccountAuthMethodsViewModel: RefreshAuthDataProtocol {
+
     func refreshAuthData() {
         authMethodsFetched = false
     }
-    
+
 }

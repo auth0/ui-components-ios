@@ -28,10 +28,10 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     private let errorHandler = ErrorHandler()
     @Published var qrCodeImage: Image?
     @Published var showLoader: Bool = true
-    @Published var manualInputCode: String? = nil
-    @Published var errorViewModel: ErrorScreenViewModel? = nil
+    @Published var manualInputCode: String?
+    @Published var errorViewModel: ErrorScreenViewModel?
     @Published var apiCallInProgress: Bool = false
-    @Published var toast: Toast? = nil
+    @Published var toast: Toast?
 
     init(startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable = StartTOTPEnrollmentUseCase(),
          startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
@@ -96,15 +96,24 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     private func confirmEnrollment() async {
         if let pushEnrollmentChallenge {
             do {
-                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                let confirmPushEnrollmentRequest = ConfirmPushEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                                domain: dependencies.domain,
-                                                                                id: pushEnrollmentChallenge.authenticationId,
-                                                                                authSession: pushEnrollmentChallenge.authenticationSession)
-                let _ = try await confirmPushEnrollmentUseCase.execute(request: confirmPushEnrollmentRequest)
+                let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                    audience: dependencies.audience,
+                    scope: "openid create:me:authentication_methods"
+                )
+                let confirmPushEnrollmentRequest = ConfirmPushEnrollmentRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    id: pushEnrollmentChallenge.authenticationId,
+                    authSession: pushEnrollmentChallenge.authenticationSession
+                )
+                _ = try await confirmPushEnrollmentUseCase.execute(
+                    request: confirmPushEnrollmentRequest
+                )
                 delegate?.refreshAuthData()
                 apiCallInProgress = false
-                await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
+                await NavigationStore.shared.push(
+                    .filteredAuthListScreen(type: type, authMethods: [])
+                )
             } catch {
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
@@ -132,14 +141,14 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
         }
     }
 
-    private func setAuthManualSetupCode()  {
+    private func setAuthManualSetupCode() {
         if let totpEnrollmentChallenge {
             manualInputCode = totpEnrollmentChallenge.authenticatorManualInputCode
         }
     }
-    
+
     func navigationTitle() -> String {
-        if type == .pushNotification  {
+        if type == .pushNotification {
             return "Add push notification"
         } else {
             return "Add an Authenticator"

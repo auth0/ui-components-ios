@@ -1,4 +1,5 @@
-// swiftlint:disable type_body_length
+// swiftlint:disable:this type_body_length
+// swiftlint:disable file_length
 
 import Testing
 import Foundation
@@ -6,6 +7,7 @@ import Foundation
 import Auth0
 
 @Suite(.serialized)
+// swiftlint:disable:next type_body_length
 struct OTPViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
@@ -22,36 +24,35 @@ struct OTPViewModelTests {
     }
 
     private var totpEnrollmentChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
                {
                 "id" : "totp|test_nkfnbkfnb",
                 "barcode_uri" : "otpauth://test-tenant-test:auth0%7C6889c0a8a1354b593f53e35f?secret&issuer=test-tenant-test&algorithm=SHA1&digits=6&period=30",
                 "manual_input_code" : "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5",
                 "auth_session" : "jfnfgnbkbnLfiurfg"
                }
-        """.data(using: .utf8)!
+        """.utf8)
         return mockJsonData
     }
 
-    private var pushEnrollmentChallengeData: Data  {
-        let data = """
+    private var pushEnrollmentChallengeData: Data {
+        let data = Data("""
             {
              "id" : "push-notification|test_nkfnbkfnb",
              "auth_session" : "jfnfgnbkbnLfiurfg",
              "barcode_uri" : "otpauth://totp/test-tenant-test:auth0%7C689b3c89a51b6e7534dd0bed?enrollment_tx_id=epz2WsTxWCRBNOGJeZGdDY5Q0X28BpEm&base_url=https%3A%2F%2F\(mockDomain)%2Fappliance-mfa"
             }
-            """
-            .data(using: .utf8)!
+            """.utf8)
         return data
     }
 
     private var phoneEnrollmentChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
         {
             "id": "phone|Ctest_nkfnbkfnb",
             "auth_session": "eS7ZBG9gItW5uA2xk3m8be5DrmbreOT5"
         }
-        """.data(using: .utf8)!
+        """.utf8)
         return mockJsonData
     }
 
@@ -75,7 +76,7 @@ struct OTPViewModelTests {
             return nil
         }
     }
-    
+
     private var phoneEnrollmentChallenge: PhoneEnrollmentChallenge? {
         let mockLocationHeader = "https://\(mockDomain)/me/v1/authentication-methods/totp%7Ctest_gnrnghn"
         do {
@@ -87,8 +88,7 @@ struct OTPViewModelTests {
     }
 
     private var confirmEnrollmentTOTPData: Data {
-       let data =
-        """
+       let data = Data("""
         {
          "id" : "totp|test_nkfnbkfnb",
          "confirmed" : true,
@@ -98,7 +98,7 @@ struct OTPViewModelTests {
          ],
          "created_at" : "2025-07-30T13:08:49.508Z"
         }
-        """.data(using: .utf8)!
+        """.utf8)
         return data
     }
 
@@ -114,13 +114,13 @@ struct OTPViewModelTests {
 
         let vm = await OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallenge, emailEnrollmentChallenge: nil, phoneEnrollmentChallenge: nil, type: .totp, delegate: nil)
         await MainActor.run {
-            #expect(vm.showLoader == false)
-            #expect(vm.errorMessage == nil)
-            #expect(vm.apiCallInProgress == false)
-            #expect(vm.otpText.isEmpty)
+            #expect(viewModel.showLoader == false)
+            #expect(viewModel.errorMessage == nil)
+            #expect(viewModel.apiCallInProgress == false)
+            #expect(viewModel.otpText.isEmpty)
         }
     }
-    
+
     @Test func testConfirmEnrollment_TOTP_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
@@ -131,7 +131,7 @@ struct OTPViewModelTests {
                                            confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
                                            startEmailEnrollmentUseCase: StartEmailEnrollmentUseCase(session: makeMockSession()),
                                            confirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCase(session: makeMockSession()),
-                                           confirmTOTPEnrollmentUSeCase:  ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
+                                           confirmTOTPEnrollmentUSeCase: ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
                                            totpEnrollmentChallenge: totpEnrollmentChallenge,
             emailEnrollmentChallenge: nil,
             phoneEnrollmentChallenge: nil,
@@ -169,8 +169,8 @@ struct OTPViewModelTests {
                                            confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
                                            startEmailEnrollmentUseCase: StartEmailEnrollmentUseCase(session: makeMockSession()),
                                            confirmEmailEnrollmentUseCase: ConfirmEmailEnrollmentUseCase(session: makeMockSession()),
-                                           confirmTOTPEnrollmentUSeCase:  ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
-                                           totpEnrollmentChallenge:  nil,
+                                           confirmTOTPEnrollmentUSeCase: ConfirmTOTPEnrollmentUseCase(session: makeMockSession()),
+                                           totpEnrollmentChallenge: nil,
                                            emailEnrollmentChallenge: emailEnrollmentChallenge,
                                            phoneEnrollmentChallenge: nil,
                                            type: .email, delegate: nil
@@ -204,7 +204,7 @@ struct OTPViewModelTests {
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
-                                           totpEnrollmentChallenge:  nil,
+                                           totpEnrollmentChallenge: nil,
                                            emailEnrollmentChallenge: nil,
                                            phoneEnrollmentChallenge: phoneEnrollmentChallenge,
                                            type: .sms,
@@ -231,7 +231,7 @@ struct OTPViewModelTests {
             #expect(NavigationStore.shared.path.last == Route.filteredAuthListScreen(type: .sms, authMethods: []))
         }
     }
-    
+
     @Test
     func testEmailOrSMS() async {
         let mockTokenProvider = MockTokenProvider()
@@ -243,8 +243,8 @@ struct OTPViewModelTests {
             #expect(viewModel.isEmailOrSMS)
         }
     }
-    
-    @Test func navigationTitle() async  {
+
+    @Test func navigationTitle() async {
         let mockTokenProvider = MockTokenProvider()
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
@@ -274,8 +274,8 @@ struct OTPViewModelTests {
 
         let vm = await OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallenge, emailEnrollmentChallenge: nil, phoneEnrollmentChallenge: nil, type: .totp, delegate: mockDelegate)
         await MainActor.run {
-            #expect(vm.showLoader == false)
-            #expect(vm.errorMessage == nil)
+            #expect(viewModel.showLoader == false)
+            #expect(viewModel.errorMessage == nil)
         }
     }
 
@@ -350,13 +350,13 @@ struct OTPViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 400,
                     "error": "Bad Request",
                     "message": "Invalid OTP code"
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -397,13 +397,13 @@ struct OTPViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 400,
                     "error": "Bad Request",
                     "message": "Invalid email OTP code"
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -444,13 +444,13 @@ struct OTPViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 400,
                     "error": "Bad Request",
                     "message": "Invalid phone OTP code"
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -551,4 +551,3 @@ struct OTPViewModelTests {
         }
     }
 }
-

@@ -96,40 +96,40 @@ public struct DefaultAuth0BackgroundColorTokens: Auth0BackgroundColorTokens {
 
     // MARK: - Primary
 
-    public var primary:       Color
+    public var primary: Color
     public var primarySubtle: Color
-    public var inverse:       Color
-    public var accent:        Color
+    public var inverse: Color
+    public var accent: Color
 
     // MARK: - Layers
 
-    public var layerTop:    Color
+    public var layerTop: Color
     public var layerMedium: Color
-    public var layerBase:   Color
+    public var layerBase: Color
 
     // MARK: - Feedback
 
-    public var error:         Color
-    public var errorSubtle:   Color
-    public var success:       Color
+    public var error: Color
+    public var errorSubtle: Color
+    public var success: Color
     public var successSubtle: Color
 
     // MARK: - Init
 
     public init(
         // Primary
-        primary:       Color = Color("Background/Primary",       bundle: ResourceBundle.default),
+        primary: Color = Color("Background/Primary", bundle: ResourceBundle.default),
         primarySubtle: Color = Color("Background/PrimarySubtle", bundle: ResourceBundle.default),
-        inverse:       Color = Color("Background/Inverse",       bundle: ResourceBundle.default),
-        accent:        Color = Color("Background/Accent",        bundle: ResourceBundle.default),
+        inverse: Color = Color("Background/Inverse", bundle: ResourceBundle.default),
+        accent: Color = Color("Background/Accent", bundle: ResourceBundle.default),
         // Layers
-        layerTop:      Color = Color("Background/LayerTop",      bundle: ResourceBundle.default),
-        layerMedium:   Color = Color("Background/LayerMedium",   bundle: ResourceBundle.default),
-        layerBase:     Color = Color("Background/LayerBase",     bundle: ResourceBundle.default),
+        layerTop: Color = Color("Background/LayerTop", bundle: ResourceBundle.default),
+        layerMedium: Color = Color("Background/LayerMedium", bundle: ResourceBundle.default),
+        layerBase: Color = Color("Background/LayerBase", bundle: ResourceBundle.default),
         // Feedback
-        error:         Color = Color("Background/Error",         bundle: ResourceBundle.default),
-        errorSubtle:   Color = Color("Background/ErrorSubtle",   bundle: ResourceBundle.default),
-        success:       Color = Color("Background/Success",       bundle: ResourceBundle.default),
+        error: Color = Color("Background/Error", bundle: ResourceBundle.default),
+        errorSubtle: Color = Color("Background/ErrorSubtle", bundle: ResourceBundle.default),
+        success: Color = Color("Background/Success", bundle: ResourceBundle.default),
         successSubtle: Color = Color("Background/SuccessSubtle", bundle: ResourceBundle.default)
     ) {
         // Primary

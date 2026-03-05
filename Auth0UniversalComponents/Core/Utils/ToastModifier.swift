@@ -29,7 +29,7 @@ struct ToastModifier: ViewModifier {
                         .offset(y: 20)
                 }.animation(.spring(), value: toast)
             )
-            .onChange(of: toast) { value in
+            .onChange(of: toast) { _ in
                 showToast()
             }
     }

@@ -74,27 +74,27 @@ public struct DefaultAuth0TextColorTokens: Auth0TextColorTokens {
 
     // MARK: - Content
 
-    public var bold:     Color
-    public var regular:  Color
+    public var bold: Color
+    public var regular: Color
     public var disabled: Color
 
     // MARK: - On Color
 
     public var onPrimary: Color
     public var onSuccess: Color
-    public var onError:   Color
+    public var onError: Color
 
     // MARK: - Init
 
     public init(
         // Content
-        bold:      Color = Color("Text/Bold",      bundle: ResourceBundle.default),
-        regular:   Color = Color("Text/Default",   bundle: ResourceBundle.default),
-        disabled:  Color = Color("Text/Disabled",  bundle: ResourceBundle.default),
+        bold: Color = Color("Text/Bold", bundle: ResourceBundle.default),
+        regular: Color = Color("Text/Default", bundle: ResourceBundle.default),
+        disabled: Color = Color("Text/Disabled", bundle: ResourceBundle.default),
         // On Color
         onPrimary: Color = Color("Text/OnPrimary", bundle: ResourceBundle.default),
         onSuccess: Color = Color("Text/OnSuccess", bundle: ResourceBundle.default),
-        onError:   Color = Color("Text/OnError",   bundle: ResourceBundle.default)
+        onError: Color = Color("Text/OnError", bundle: ResourceBundle.default)
     ) {
         // Content
         self.bold     = bold

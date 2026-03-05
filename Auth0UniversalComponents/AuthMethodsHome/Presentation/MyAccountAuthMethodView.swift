@@ -17,7 +17,7 @@ struct MyAccountAuthMethodView: View {
     }
 
     var body: some View {
-        HStack() {
+        HStack {
             Image(viewModel.image(), bundle: ResourceBundle.default)
                 .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
                 .padding(.trailing, theme.spacing.md)
@@ -34,7 +34,7 @@ struct MyAccountAuthMethodView: View {
                     .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
                     .padding(.trailing, theme.spacing.md)
             }
-            
+
             Image("chevron", bundle: ResourceBundle.default)
                 .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
         }

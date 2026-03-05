@@ -40,7 +40,7 @@ struct EmailPhoneEnrollmentView: View {
                 HStack(spacing: theme.spacing.xs) {
                     Button(action: {
                         viewModel.isPickerVisible.toggle()
-                    }) {
+                    }, label: {
                         HStack {
                             Text(viewModel.selectedCountry?.flag ?? "")
                                 .frame(height: 20)
@@ -49,7 +49,7 @@ struct EmailPhoneEnrollmentView: View {
                                 .foregroundStyle(theme.colors.text.bold)
                                 .auth0TextStyle(theme.typography.titleLarge)
                         }.padding(5)
-                    }
+                    })
 
                     Image("chevrondown", bundle: ResourceBundle.default)
                         .frame(width: 10, height: 5.5)

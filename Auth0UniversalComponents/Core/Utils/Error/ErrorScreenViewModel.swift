@@ -46,4 +46,3 @@ struct ErrorScreenViewModel {
         buttonClick()
     }
 }
-

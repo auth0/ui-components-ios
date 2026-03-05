@@ -5,6 +5,6 @@ struct MockUserAgent: WebAuthUserAgent {
     }
 
     func finish(with result: Auth0.WebAuthResult<Void>) {
-        
+
     }
 }

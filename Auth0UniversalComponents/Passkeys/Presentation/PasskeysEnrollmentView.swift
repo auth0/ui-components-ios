@@ -92,7 +92,7 @@ struct PasskeysEnrollmentView: View {
                             LinearGradient(
                                 stops: [
                                     Gradient.Stop(color: Color.white.opacity(0.15), location: 0.00),
-                                    Gradient.Stop(color: Color.white.opacity(0.00), location: 1.00),
+                                    Gradient.Stop(color: Color.white.opacity(0.00), location: 1.00)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom

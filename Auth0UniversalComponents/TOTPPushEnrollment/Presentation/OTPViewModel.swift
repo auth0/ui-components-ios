@@ -64,34 +64,51 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
         apiCallInProgress = true
         errorMessage = nil
         do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                audience: dependencies.audience,
+                scope: "openid create:me:authentication_methods"
+            )
             if type == .totp, let totpEnrollmentChallenge {
-                let confirmTOTPEnrollmentRequest = ConfirmTOTPEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                                domain: dependencies.domain,
-                                                                                id: totpEnrollmentChallenge.authenticationId,
-                                                                                authSession: totpEnrollmentChallenge.authenticationSession,
-                                                                                otpCode: otpText)
-                _ = try await confirmTOTPEnrollmentUseCase.execute(request: confirmTOTPEnrollmentRequest)
+                let confirmTOTPEnrollmentRequest = ConfirmTOTPEnrollmentRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    id: totpEnrollmentChallenge.authenticationId,
+                    authSession: totpEnrollmentChallenge.authenticationSession,
+                    otpCode: otpText
+                )
+                _ = try await confirmTOTPEnrollmentUseCase.execute(
+                    request: confirmTOTPEnrollmentRequest
+                )
             }
             if type == .email, let emailEnrollmentChallenge {
-                let confirmEmailEnrollmentRequest = ConfirmEmailEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                                  domain: dependencies.domain,
-                                                                                  id: emailEnrollmentChallenge.authenticationId,
-                                                                                  authSession: emailEnrollmentChallenge.authenticationSession,
-                                                                                  otpCode: otpText)
-                _ = try await confirmEmailEnrollmentUseCase.execute(request: confirmEmailEnrollmentRequest)
+                let confirmEmailEnrollmentRequest = ConfirmEmailEnrollmentRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    id: emailEnrollmentChallenge.authenticationId,
+                    authSession: emailEnrollmentChallenge.authenticationSession,
+                    otpCode: otpText
+                )
+                _ = try await confirmEmailEnrollmentUseCase.execute(
+                    request: confirmEmailEnrollmentRequest
+                )
             }
             if type == .sms, let phoneEnrollmentChallenge {
-                let confirmPhoneEnrollmentRequest = ConfirmPhoneEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                                  domain: dependencies.domain,
-                                                                                  id: phoneEnrollmentChallenge.authenticationId,
-                                                                                  authSession: phoneEnrollmentChallenge.authenticationSession,
-                                                                                  otpCode: otpText)
-                _ = try await confirmPhoneEnrollmentUseCase.execute(request: confirmPhoneEnrollmentRequest)
+                let confirmPhoneEnrollmentRequest = ConfirmPhoneEnrollmentRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    id: phoneEnrollmentChallenge.authenticationId,
+                    authSession: phoneEnrollmentChallenge.authenticationSession,
+                    otpCode: otpText
+                )
+                _ = try await confirmPhoneEnrollmentUseCase.execute(
+                    request: confirmPhoneEnrollmentRequest
+                )
             }
             apiCallInProgress = false
             delegate?.refreshAuthData()
-            await NavigationStore.shared.push(.filteredAuthListScreen(type: type, authMethods: []))
+            await NavigationStore.shared.push(
+                .filteredAuthListScreen(type: type, authMethods: [])
+            )
         } catch {
             apiCallInProgress = false
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
@@ -129,14 +146,14 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
     var isEmailOrSMS: Bool {
         type == .sms || type == .email
     }
-    
+
     var formattedEmailOrPhoneNumber: String {
         if let emailOrPhoneNumber {
             return emailOrPhoneNumber
         }
         return ""
     }
-    
+
     var navigationTitle: String {
         switch type {
         case .totp:
@@ -149,7 +166,7 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
             "Verify it's you"
         }
     }
-    
+
     func handle(error: Error, scope: String, retryCallback: @escaping () -> Void) async {
         await errorHandler.handle(error: error, scope: scope, handler: self, retryCallback: retryCallback)
     }

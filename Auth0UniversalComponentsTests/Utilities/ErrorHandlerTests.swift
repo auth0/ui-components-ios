@@ -13,12 +13,12 @@ struct ErrorHandlerTests {
     @MainActor
     class MockErrorViewModelHandler: ErrorViewModelHandler {
         var showLoader: Bool = false
-        var errorViewModel: Auth0UniversalComponents.ErrorScreenViewModel? = nil
+        var errorViewModel: Auth0UniversalComponents.ErrorScreenViewModel?
     }
 
     @MainActor
     class MockErrorMessageHandler: ErrorMessageHandler {
-        var errorMessage: String? = nil
+        var errorMessage: String?
     }
 
     private func makeMockSession() -> URLSession {
@@ -85,6 +85,7 @@ struct ErrorHandlerTests {
 
     @MainActor
     @Test("ErrorHandler integration with OTPViewModel - API error handling")
+    // swiftlint:disable:next function_body_length
     func testErrorHandlerIntegration_OTPViewModel_APIError() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
@@ -106,7 +107,7 @@ struct ErrorHandlerTests {
          "manual_input_code" : "CODE123",
          "auth_session" : "session123"
         }
-        """.data(using: .utf8)!
+        Data(""".utf8)!
 
         let mockLocationHeader = "https://\(mockDomain)/me/v1/authentication-methods/totp%7Ctest_nkfnbkfnb"
         let decoder = JSONDecoder()
@@ -140,7 +141,7 @@ struct ErrorHandlerTests {
                     "error": "invalid_grant",
                     "error_description": "Invalid code"
                 }
-                """.data(using: .utf8)!
+                Data(""".utf8)!
                 return (response, errorData)
             }
 
@@ -176,7 +177,7 @@ struct ErrorHandlerTests {
         )
 
         await confirmation(expectedCount: 1) { @MainActor confirmation in
-            MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.requestHandler = { _ in
                 confirmation()
                 throw NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet, userInfo: nil)
             }
@@ -227,7 +228,7 @@ struct ErrorHandlerTests {
                     "error": "Internal Server Error",
                     "message": "Server error occurred"
                 }
-                """.data(using: .utf8)!
+                Data(""".utf8)!
                 return (response, errorData)
             }
 

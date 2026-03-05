@@ -3,7 +3,6 @@ import Foundation
 import Auth0
 import Testing
 
-
 @Suite(.serialized)
 struct EmailPhoneViewModelTests {
     private let mockToken = "mock_access_token_123"
@@ -19,7 +18,7 @@ struct EmailPhoneViewModelTests {
         decoder.userInfo[CodingUserInfoKey(rawValue: "locationHeader")!] = locationHeader
         return try decoder.decode(T.self, from: json)
     }
-    
+
     private var phoneEnrollmentChallenge: PhoneEnrollmentChallenge? {
         let mockLocationHeader = "https://\(mockDomain)/me/v1/authentication-methods/totp%7Ctest_gnrnghn"
         do {
@@ -46,7 +45,7 @@ struct EmailPhoneViewModelTests {
             "id": "phone|test_nkfnbkfnb",
             "auth_session": "eS7ZBG9gItW5uA2xk3m8be5DrmbreOT5"
         }
-        """.data(using: .utf8)!
+        Data(""".utf8)!
         return mockJsonData
     }
 
@@ -58,10 +57,10 @@ struct EmailPhoneViewModelTests {
 
         let vm = await EmailPhoneEnrollmentViewModel(type: .email)
         await MainActor.run {
-            #expect(vm.apiCallInProgress == false)
-            #expect(vm.errorMessage == nil)
-            #expect(vm.phoneNumber.isEmpty)
-            #expect(vm.email.isEmpty)
+            #expect(viewModel.apiCallInProgress == false)
+            #expect(viewModel.errorMessage == nil)
+            #expect(viewModel.phoneNumber.isEmpty)
+            #expect(viewModel.email.isEmpty)
         }
     }
 
@@ -89,7 +88,7 @@ struct EmailPhoneViewModelTests {
             #expect(NavigationStore.shared.path.last == Route.otpScreen(type: .sms, emailOrPhoneNumber: "+11111000222", phoneEnrollmentChallenge: phoneEnrollmentChallenge))
         }
     }
-    
+
     @Test func testStartEnrollment_Email_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
@@ -115,7 +114,7 @@ struct EmailPhoneViewModelTests {
         }
     }
 
-    @Test func navigationTitle() async  {
+    @Test func navigationTitle() async {
         let mockTokenProvider = MockTokenProvider()
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
@@ -125,8 +124,8 @@ struct EmailPhoneViewModelTests {
             #expect(viewModel.navigationTitle == "Add Phone for SMS OTP")
         }
     }
-    
-    @Test func title() async  {
+
+    @Test func title() async {
         let mockTokenProvider = MockTokenProvider()
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
@@ -136,5 +135,5 @@ struct EmailPhoneViewModelTests {
             #expect(viewModel.title == "Enter your phone number")
         }
     }
-    
+
 }

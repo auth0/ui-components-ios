@@ -26,7 +26,7 @@ struct CountryPickerView: View {
             $0.code.contains(searchText)
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             List(filteredCountries) { country in
@@ -37,12 +37,12 @@ struct CountryPickerView: View {
                     HStack {
                         Text(country.flag)
                             .font(.system(size: 28))
-                        
+
                         Text(country.name)
                             .font(.body)
-                        
+
                         Spacer()
-                        
+
                         Text(country.code)
                             .foregroundColor(.secondary)
                     }

@@ -8,8 +8,10 @@ import Combine
 ///
 /// ## See Also
 ///
-/// - [Passkeys](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
-/// - [WebAuthn Credentials](https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn)
+/// - [Passkeys]
+///   (https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn/configure-webauthn-with-device-biometrics-for-mfa)
+/// - [WebAuthn Credentials]
+///   (https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn)
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 struct ConfirmPasskeyEnrollmentRequest {
     /// The newly created passkey from the credential provider. This contains the public key credential

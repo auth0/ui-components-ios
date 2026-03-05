@@ -21,7 +21,8 @@ protocol ConfirmRecoveryCodeEnrollmentUseCaseable {
 ///
 /// ## See Also
 ///
-/// - [Recovery Codes](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#recovery-codes)
+/// - [Recovery Codes]
+///   (https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#recovery-codes)
 /// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct ConfirmRecoveryCodeEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API

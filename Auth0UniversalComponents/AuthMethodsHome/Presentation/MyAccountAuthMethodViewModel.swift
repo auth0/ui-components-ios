@@ -124,7 +124,7 @@ extension AuthMethodType {
         }
     }
 
-    var savedAuthenticatorsTitle: String  {
+    var savedAuthenticatorsTitle: String {
         switch self {
         case .email:
             "Saved Emails for OTP"
@@ -141,7 +141,7 @@ extension AuthMethodType {
         }
     }
 
-    var savedAuthenticatorsNavigationTitle : String {
+    var savedAuthenticatorsNavigationTitle: String {
         switch self {
         case .pushNotification:
             "Push Notification"

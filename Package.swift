@@ -11,11 +11,11 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
-        .package(url: "https://github.com/auth0/Auth0.swift.git", exact:"2.16.1")
+        .package(url: "https://github.com/auth0/Auth0.swift.git", exact: "2.16.1")
     ],
     targets: [
         .target(
-            name: "Auth0UniversalComponents", 
+            name: "Auth0UniversalComponents",
             dependencies: [
                 .product(name: "Auth0", package: "Auth0.swift")
             ],

@@ -68,7 +68,7 @@ struct EnrollPasskeyView: View {
                 LinearGradient(
                     stops: [
                         Gradient.Stop(color: theme.colors.background.primary.opacity(0), location: 0.00),
-                        Gradient.Stop(color: theme.colors.background.primary.opacity(0.05), location: 1.00),
+                        Gradient.Stop(color: theme.colors.background.primary.opacity(0.05), location: 1.00)
                     ],
                     startPoint: UnitPoint(x: 0.5, y: 0),
                     endPoint: UnitPoint(x: 0.5, y: 1)

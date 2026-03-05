@@ -69,12 +69,10 @@ public struct MyAccountAuthMethodsView: View {
             ZStack {
                 if viewModel.showLoader {
                     Auth0Loader()
-                }
-                else if let errorViewModel = viewModel.errorViewModel {
+                } else if let errorViewModel = viewModel.errorViewModel {
                     ErrorScreen(viewModel: errorViewModel)
                         .padding()
-                }
-                else {
+                } else {
                     ScrollView(showsIndicators: false) {
                         LazyVStack(alignment: .leading, spacing: theme.spacing.xs) {
                             ForEach(viewModel.viewComponents, id: \.self) { component in

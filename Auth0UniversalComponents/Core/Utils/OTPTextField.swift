@@ -20,7 +20,7 @@ import AppKit
 /// - Enter key detection
 /// - Backspace from empty field detection
 struct OTPTextField: UIViewRepresentable {
-    
+
     /// The complete OTP code being entered
     @Binding var fullText: String
     /// Position of this field in the OTP code (0-based index)
@@ -50,16 +50,16 @@ struct OTPTextField: UIViewRepresentable {
         textField.textContentType = .oneTimeCode
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
-        
+
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        
+
         let doneButton = UIBarButtonItem(
             title: "Done",
             style: .plain,
             target: textField,
             action: #selector(UIResponder.resignFirstResponder)
         )
-    
+
         toolbar.items = [flex, doneButton]
         #if !os(visionOS)
         textField.inputAccessoryView = toolbar
@@ -79,8 +79,11 @@ struct OTPTextField: UIViewRepresentable {
 
     /// Selects all text in the field.
     func setSelection(_ textField: UITextField) {
-        guard let text = textField.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        textField.selectedTextRange = textField.textRange(from: textField.beginningOfDocument, to: textField.endOfDocument)
+        guard let text = textField.text,
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let begin = textField.beginningOfDocument
+        let end = textField.endOfDocument
+        textField.selectedTextRange = textField.textRange(from: begin, to: end)
     }
 
     /// Extracts the digit at this field's index from the full OTP text.
@@ -128,7 +131,11 @@ extension OTPTextField {
         }
 
         /// Handles character input, delegates to parent's setText callback.
-        func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        func textField(
+            _ textField: UITextField,
+            shouldChangeCharactersIn range: NSRange,
+            replacementString string: String
+        ) -> Bool {
             self.parent.setText(string)
             return false
         }
@@ -204,7 +211,7 @@ struct OTPTextField: NSViewRepresentable {
     func setSelection(_ textField: NSTextField) {
         guard !textField.stringValue.isEmpty else { return }
         if let editor = textField.currentEditor() {
-            editor.selectedRange = NSMakeRange(0, textField.stringValue.count)
+            editor.selectedRange = NSRange(location: 0, length: textField.stringValue.count)
         }
     }
 
@@ -263,7 +270,6 @@ struct OTPTextField: NSViewRepresentable {
         }
     }
 }
-
 
 /// Custom NSTextField that detects backspace presses on empty fields.
 class BackspaceAwareTextField: NSTextField {

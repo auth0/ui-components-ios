@@ -66,9 +66,9 @@ public struct DefaultAuth0BorderColorTokens: Auth0BorderColorTokens {
 
     // MARK: - Emphasis
 
-    public var bold:    Color
+    public var bold: Color
     public var regular: Color
-    public var subtle:  Color
+    public var subtle: Color
 
     // MARK: - Elevation
 
@@ -78,11 +78,11 @@ public struct DefaultAuth0BorderColorTokens: Auth0BorderColorTokens {
 
     public init(
         // Emphasis
-        bold:    Color = Color("Border/Bold",    bundle: ResourceBundle.default),
+        bold: Color = Color("Border/Bold", bundle: ResourceBundle.default),
         regular: Color = Color("Border/Default", bundle: ResourceBundle.default),
-        subtle:  Color = Color("Border/Subtle",  bundle: ResourceBundle.default),
+        subtle: Color = Color("Border/Subtle", bundle: ResourceBundle.default),
         // Elevation
-        shadow:  Color = Color("Border/Shadow",  bundle: ResourceBundle.default)
+        shadow: Color = Color("Border/Shadow", bundle: ResourceBundle.default)
     ) {
         // Emphasis
         self.bold    = bold

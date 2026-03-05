@@ -69,12 +69,13 @@ extension Auth0UIComponentError {
     ///
     /// - Parameter completion: Callback to execute when the user taps the "Try again" button
     /// - Returns: An ErrorScreenViewModel configured for this error, or nil if no error screen should be shown
+    // swiftlint:disable:next function_body_length
     func errorViewModel(completion: @escaping () -> Void) -> ErrorScreenViewModel? {
         switch self {
         case .networkError:
             var subTitleText = AttributedString("Please check your internet connection")
             subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
-            
+
             return ErrorScreenViewModel(
                 title: "Connection problem",
                 subTitle: subTitleText,
@@ -87,7 +88,7 @@ extension Auth0UIComponentError {
         case .invalidMfaCode:
             var subTitleText = AttributedString("The code you entered is incorrect or has expired. Please try again.")
             subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
-            
+
             return ErrorScreenViewModel(
                 title: "Invalid verification code",
                 subTitle: subTitleText,
@@ -100,7 +101,7 @@ extension Auth0UIComponentError {
         case .sessionExpired:
             var subTitleText = AttributedString("Your session has expired. Please login again to continue.")
             subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
-            
+
             return ErrorScreenViewModel(
                 title: "Session expired",
                 subTitle: subTitleText,
@@ -111,12 +112,14 @@ extension Auth0UIComponentError {
                 }
             )
         case .tooManyAttempts:
-            var subTitleText = AttributedString("Your account has been temporarily blocked due to too many failed attempts. Please try again later.")
+            let errorMsg = "Your account has been temporarily blocked due to too many failed attempts. " +
+                           "Please try again later."
+            var subTitleText = AttributedString(errorMsg)
             subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
-            
+
             return ErrorScreenViewModel(
                 title: "Too many attempts",
-                subTitle: "Your account has been temporarily blocked due to too many failed attempts. Please try again later.",
+                subTitle: subTitleText,
                 buttonTitle: "Try again",
                 textTap: {},
                 buttonClick: {
@@ -141,13 +144,15 @@ extension Auth0UIComponentError {
              .transactionActiveAlready(let message, _),
              .idTokenValidationFailed(let message, _),
              .userCancelled(let message, _):
-            var full = AttributedString("We are unable to process your request. Please try again in a few minutes. If this problem persists, please contact us.")
+            let generalErrorMsg = "We are unable to process your request. Please try again in a few " +
+                                 "minutes. If this problem persists, please contact us."
+            var full = AttributedString(generalErrorMsg)
             full.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
-            
+
             if let range = full.range(of: "contact us.") {
                 full[range].underlineStyle = .single
             }
-            
+
             return ErrorScreenViewModel(
                 title: message,
                 subTitle: full,
@@ -187,24 +192,24 @@ extension Auth0UIComponentError {
     ///
     /// - Parameter error: The CredentialsManagerError from Auth0 SDK
     /// - Returns: An Auth0UIComponentError representing the CredentialsManagerError
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     static func handleCredentialsManagerError(error: CredentialsManagerError) -> Auth0UIComponentError {
         if let authenticationError = error.cause as? AuthenticationError {
-            
+
             if authenticationError.isMultifactorRequired {
                 return .mfaRequired(
                     message: "Multi-factor authentication is required",
                     cause: authenticationError.cause
                 )
             }
-                        
+
             if authenticationError.isNetworkError {
                 return .networkError(
                     message: "Network connection failed",
                     cause: authenticationError
                 )
             }
-            
-            
+
             if authenticationError.isMultifactorEnrollRequired {
                 return .mfaEnrollRequired(
                     message: "MFA enrollment is required to continue",

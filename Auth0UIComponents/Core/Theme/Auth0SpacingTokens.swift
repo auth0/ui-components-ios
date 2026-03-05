@@ -54,13 +54,13 @@ public protocol Auth0SpacingTokens: Sendable {
 /// Pass a value to the initialiser to override individual steps.
 public struct DefaultAuth0SpacingTokens: Auth0SpacingTokens {
 
-    public var xxs:  CGFloat
-    public var xs:   CGFloat
-    public var sm:   CGFloat
-    public var md:   CGFloat
-    public var lg:   CGFloat
-    public var xl:   CGFloat
-    public var xxl:  CGFloat
+    public var xxs: CGFloat
+    public var xs: CGFloat
+    public var sm: CGFloat
+    public var md: CGFloat
+    public var lg: CGFloat
+    public var xl: CGFloat
+    public var xxl: CGFloat
     public var xxxl: CGFloat
 
     /// Creates the default Auth0 spacing scale with optional per-token overrides.
@@ -75,13 +75,13 @@ public struct DefaultAuth0SpacingTokens: Auth0SpacingTokens {
     ///   - xxl:  Default `48`.
     ///   - xxxl: Default `56`.
     public init(
-        xxs:  CGFloat = 4,
-        xs:   CGFloat = 8,
-        sm:   CGFloat = 12,
-        md:   CGFloat = 16,
-        lg:   CGFloat = 24,
-        xl:   CGFloat = 32,
-        xxl:  CGFloat = 48,
+        xxs: CGFloat = 4,
+        xs: CGFloat = 8,
+        sm: CGFloat = 12,
+        md: CGFloat = 16,
+        lg: CGFloat = 24,
+        xl: CGFloat = 32,
+        xxl: CGFloat = 48,
         xxxl: CGFloat = 56
     ) {
         self.xxs  = xxs

@@ -18,7 +18,7 @@ struct MyAccountAuthMethodsViewModelTests {
         decoder.userInfo[CodingUserInfoKey(rawValue: "locationHeader")!] = locationHeader
         return try decoder.decode(T.self, from: json)
     }
-   
+
     var authMethodsData: Data {
         let authMethods = """
                   {
@@ -72,11 +72,11 @@ struct MyAccountAuthMethodsViewModelTests {
                      "created_at" : "2025-07-30T13:08:49.508Z"
                     }
                    ]
-                  }      
-            """.data(using: .utf8)!
+                  }
+            Data(""".utf8)!
         return authMethods
     }
-    
+
     var factorsData: Data {
         let factors = """
             {
@@ -112,10 +112,10 @@ struct MyAccountAuthMethodsViewModelTests {
              ]
             }
             ]}
-            """.data(using: .utf8)!
+            Data(""".utf8)!
         return factors
     }
-    
+
     var authMethods: [AuthenticationMethod] {
         do {
             let authMethods: AuthenticationMethods = try decodeResponse(json: authMethodsData)
@@ -134,23 +134,36 @@ struct MyAccountAuthMethodsViewModelTests {
         }
     }
 
-
     @Test
     func testInitialState() async {
         Auth0UniversalComponentsSDKInitializer.reset()
-        Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: MockTokenProvider())
+        Auth0UniversalComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: MockTokenProvider()
+        )
         let viewModel = await MyAccountAuthMethodsViewModel()
         await MainActor.run {
             #expect(viewModel.errorViewModel == nil)
             #expect(viewModel.viewComponents.isEmpty)
         }
     }
-    
+
     @Test
     func testFetchingOfAuthMethodsSuccess() async {
         let mockTokenProvider = MockTokenProvider()
         Auth0UniversalComponentsSDKInitializer.reset()
-        Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+        Auth0UniversalComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: .main,
+            domain: mockDomain,
+            clientId: "",
+            audience: "\(mockDomain)/me/",
+            tokenProvider: mockTokenProvider
+        )
 
         let viewModel = await MyAccountAuthMethodsViewModel(factorsUseCase: GetFactorsUseCase(session: makeMockSession()), authMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()))
         await confirmation(expectedCount: 2) { @MainActor confirmation in

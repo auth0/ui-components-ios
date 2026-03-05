@@ -9,7 +9,8 @@ import Combine
 ///
 /// ## See Also
 ///
-/// - [TOTP MFA](https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#one-time-password-otp)
+/// - [TOTP MFA]
+///   (https://auth0.com/docs/secure/multi-factor-authentication/multi-factor-authentication-factors#one-time-password-otp)
 /// - [My Account API](https://auth0.com/docs/manage-users/my-account-api)
 struct ConfirmTOTPEnrollmentRequest {
     /// Access token for authenticating with Auth0's My Account API

@@ -18,7 +18,7 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
     private let errorHandler = ErrorHandler()
     @Published var showManageAuthSheet: Bool = false
     @Published var showLoader: Bool = true
-    @Published var errorViewModel: ErrorScreenViewModel? = nil
+    @Published var errorViewModel: ErrorScreenViewModel?
     @Published var viewAuthenticationMethods: [AuthenticationMethod] = []
     init(dependencies: Auth0UniversalComponentsSDKInitializer = .shared,
          getAuthMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
@@ -36,8 +36,17 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
 
     func deleteAuthMethod(authMethod: AuthenticationMethod) async {
         do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid delete:me:authentication_methods")
-            try await deleteAuthMethodUseCase.execute(request: DeleteAuthMethodRequest(token: apiCredentials.accessToken, domain: dependencies.domain, id: authMethod.id))
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                audience: dependencies.audience,
+                scope: "openid delete:me:authentication_methods"
+            )
+            try await deleteAuthMethodUseCase.execute(
+                request: DeleteAuthMethodRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain,
+                    id: authMethod.id
+                )
+            )
             delegate?.refreshAuthData()
             await loadData(true)
         } catch {
@@ -65,8 +74,16 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
             return
         }
         do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid read:me:authentication_methods")
-            let apiAuthMethods = try await getAuthMethodsUseCase.execute(request: GetAuthMethodsRequest(token: apiCredentials.accessToken, domain: dependencies.domain))
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                audience: dependencies.audience,
+                scope: "openid read:me:authentication_methods"
+            )
+            let apiAuthMethods = try await getAuthMethodsUseCase.execute(
+                request: GetAuthMethodsRequest(
+                    token: apiCredentials.accessToken,
+                    domain: dependencies.domain
+                )
+            )
             self.showLoader = false
             let filteredAuthMethods = apiAuthMethods
                 .filter {

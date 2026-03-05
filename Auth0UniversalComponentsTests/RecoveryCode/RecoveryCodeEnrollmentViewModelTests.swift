@@ -1,4 +1,5 @@
-// swiftlint:disable type_body_length
+// swiftlint:disable:this type_body_length
+// swiftlint:disable file_length
 
 @testable import Auth0UniversalComponents
 import Foundation
@@ -6,6 +7,7 @@ import Auth0
 import Testing
 
 @Suite(.serialized)
+// swiftlint:disable:next type_body_length
 struct RecoveryCodeEnrollmentViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
@@ -20,20 +22,20 @@ struct RecoveryCodeEnrollmentViewModelTests {
         decoder.userInfo[CodingUserInfoKey(rawValue: "locationHeader")!] = locationHeader
         return try decoder.decode(T.self, from: json)
     }
-   
+
     private var enrollmentChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
         {
           "id" : "recovery-code|test_hHm0dHPGxyF2RsKj",
           "auth_session" : "3iMRnuk6WJVwjSElegkHmpy3OxjsiW55",
           "recovery_code" : "VHDGEJQRKWM3UVJ6BML4ST95"
         }
-        """.data(using: .utf8)!
+        """.utf8)
         return mockJsonData
     }
 
     private var confirmRecoveryChallengeData: Data {
-        let mockJsonData = """
+        let mockJsonData = Data("""
             {
              "id" : "recovery-code|test_hHm0dHPGxyF2RsKj",
              "confirmed" : true,
@@ -43,7 +45,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
              ],
              "created_at" : "2025-11-11T03:42:03.571Z"
             }
-            """.data(using: .utf8)!
+            """.utf8)
         return mockJsonData
     }
 
@@ -56,7 +58,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
             return nil
         }
     }
-    
+
     private var authenticationMethod: AuthenticationMethod? {
         do {
             let response: AuthenticationMethod = try decodeResponse(json: confirmRecoveryChallengeData)
@@ -74,12 +76,12 @@ struct RecoveryCodeEnrollmentViewModelTests {
 
         let vm = await RecoveryCodeEnrollmentViewModel(delegate: nil)
         await MainActor.run {
-            #expect(vm.showLoader == true)
-            #expect(vm.errorViewModel == nil)
-            #expect(vm.recoveryCodeChallenge == nil)
+            #expect(viewModel.showLoader == true)
+            #expect(viewModel.errorViewModel == nil)
+            #expect(viewModel.recoveryCodeChallenge == nil)
         }
     }
-    
+
     @Test func testLoadData() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
@@ -102,8 +104,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
             #expect(viewModel.recoveryCodeChallenge != nil)
         }
     }
-    
-    
+
     @Test func testConfirmEnrollment_success() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
@@ -161,9 +162,9 @@ struct RecoveryCodeEnrollmentViewModelTests {
 
         let vm = await RecoveryCodeEnrollmentViewModel(delegate: mockDelegate)
         await MainActor.run {
-            #expect(vm.showLoader == true)
-            #expect(vm.errorViewModel == nil)
-            #expect(vm.recoveryCodeChallenge == nil)
+            #expect(viewModel.showLoader == true)
+            #expect(viewModel.errorViewModel == nil)
+            #expect(viewModel.recoveryCodeChallenge == nil)
         }
     }
 
@@ -238,13 +239,13 @@ struct RecoveryCodeEnrollmentViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 500,
                     "error": "Internal Server Error",
                     "message": "Server error occurred"
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -269,7 +270,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
         )
 
         await confirmation(expectedCount: 1) { @MainActor confirmation in
-            MockURLProtocol.requestHandler = { request in
+            MockURLProtocol.requestHandler = { _ in
                 confirmation()
                 throw NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet, userInfo: nil)
             }
@@ -320,13 +321,13 @@ struct RecoveryCodeEnrollmentViewModelTests {
                     headerFields: nil
                 )!
                 confirmation()
-                let errorData = """
+                let errorData = Data("""
                 {
                     "statusCode": 400,
                     "error": "Bad Request",
                     "message": "Invalid recovery code"
                 }
-                """.data(using: .utf8)!
+                """.utf8)
                 return (response, errorData)
             }
 
@@ -503,4 +504,3 @@ struct RecoveryCodeEnrollmentViewModelTests {
         }
     }
 }
-

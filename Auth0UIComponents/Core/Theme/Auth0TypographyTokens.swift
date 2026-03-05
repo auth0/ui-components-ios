@@ -130,16 +130,16 @@ public struct DefaultAuth0TypographyTokens: Auth0TypographyTokens {
     public var overline: Auth0TextStyle
 
     public init(
-        displayLarge:  Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 34, relativeTo: .largeTitle),  tracking: -0.2,  lineSpacing: 7),
-        displayMedium: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 28, relativeTo: .title),       tracking: -0.1,  lineSpacing: 6),
-        display:       Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 22, relativeTo: .title2),      tracking: -0.05, lineSpacing: 6),
-        titleLarge:    Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 20, relativeTo: .title3),      tracking:  0,    lineSpacing: 5),
-        title:         Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 17, relativeTo: .headline),    tracking:  0,    lineSpacing: 7),
-        body:          Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular",  size: 17, relativeTo: .body),        tracking:  0,    lineSpacing: 7),
-        bodySmall:     Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular",  size: 15, relativeTo: .subheadline), tracking:  0.1,  lineSpacing: 5),
-        label:         Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Medium",   size: 16, relativeTo: .callout),     tracking:  0.1,  lineSpacing: 5),
-        helper:        Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular",  size: 13, relativeTo: .footnote),    tracking:  0.2,  lineSpacing: 5),
-        overline:      Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular",  size: 11, relativeTo: .caption2),    tracking:  0.77, lineSpacing: 5)
+        displayLarge: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 34, relativeTo: .largeTitle), tracking: -0.2, lineSpacing: 7),
+        displayMedium: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 28, relativeTo: .title), tracking: -0.1, lineSpacing: 6),
+        display: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 22, relativeTo: .title2), tracking: -0.05, lineSpacing: 6),
+        titleLarge: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 20, relativeTo: .title3), tracking: 0, lineSpacing: 5),
+        title: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-SemiBold", size: 17, relativeTo: .headline), tracking: 0, lineSpacing: 7),
+        body: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular", size: 17, relativeTo: .body), tracking: 0, lineSpacing: 7),
+        bodySmall: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular", size: 15, relativeTo: .subheadline), tracking: 0.1, lineSpacing: 5),
+        label: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Medium", size: 16, relativeTo: .callout), tracking: 0.1, lineSpacing: 5),
+        helper: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular", size: 13, relativeTo: .footnote), tracking: 0.2, lineSpacing: 5),
+        overline: Auth0TextStyle = Auth0TextStyle(font: .custom("Inter-Regular", size: 11, relativeTo: .caption2), tracking: 0.77, lineSpacing: 5)
     ) {
         Auth0FontRegistration.registerIfNeeded()
         self.displayLarge  = displayLarge

@@ -12,16 +12,19 @@ import AuthenticationServices
 /// Availability: Requires iOS 16.6, macOS 13.5, or visionOS 1.0+
 @available(iOS 16.6, macOS 13.5, visionOS 1.0, *)
 @MainActor
-final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthorizationControllerDelegate, ErrorViewModelHandler {
+final class PasskeysEnrollmentViewModel: NSObject,
+                                        ObservableObject,
+                                        ASAuthorizationControllerDelegate,
+                                        ErrorViewModelHandler {
 
     private let startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable
     private let confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable
     private let dependencies: Auth0UniversalComponentsSDKInitializer
-    private var passkeyChallenge: PasskeyEnrollmentChallenge? = nil
+    private var passkeyChallenge: PasskeyEnrollmentChallenge?
     private var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
     @Published var showLoader: Bool = false
-    @Published var errorViewModel: ErrorScreenViewModel? = nil
+    @Published var errorViewModel: ErrorScreenViewModel?
 
     init(startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable = StartPasskeyEnrollmentUseCase(),
          confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable = ConfirmPasskeyEnrollmentUseCase(),
@@ -43,7 +46,7 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
                 name: passkeyChallenge.userName,
                 userID: passkeyChallenge.userId
             )
-            
+
             let authController = ASAuthorizationController(authorizationRequests: [request])
             authController.delegate = self
             authController.performRequests()
@@ -52,12 +55,19 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
 
     func startEnrollment() async {
         do {
-            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "create:me:authentication_methods")
-            let startPasskeysEnrollmentRequest = await StartPasskeyEnrollmentRequest(token: apiCredentials.accessToken,
-                                                                                     domain: dependencies.domain,
-                                                                                     userIdentityId: dependencies.passkeyConfiguration.userIdentityId,
-                                                                                     connection: dependencies.passkeyConfiguration.connection)
-            passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(request: startPasskeysEnrollmentRequest)
+            let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                audience: dependencies.audience,
+                scope: "create:me:authentication_methods"
+            )
+            let startPasskeysEnrollmentRequest = await StartPasskeyEnrollmentRequest(
+                token: apiCredentials.accessToken,
+                domain: dependencies.domain,
+                userIdentityId: dependencies.passkeyConfiguration.userIdentityId,
+                connection: dependencies.passkeyConfiguration.connection
+            )
+            passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(
+                request: startPasskeysEnrollmentRequest
+            )
             enrollPasskey()
         } catch {
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
@@ -67,19 +77,27 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
             }
         }
     }
-    
-    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
         Task {
             switch authorization.credential {
             case let newPasskey as ASAuthorizationPlatformPublicKeyCredentialRegistration:
                 if let passkeyChallenge {
                     do {
                         showLoader = true
-                        let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(audience: dependencies.audience, scope: "openid create:me:authentication_methods")
-                        let confirmPasskeyEnrollmentRequest = ConfirmPasskeyEnrollmentRequest(passkey: newPasskey,
-                                                            token: apiCredentials.accessToken,
-                                                            domain: dependencies.domain,
-                                                            challenge: passkeyChallenge)
+                        let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
+                            audience: dependencies.audience,
+                            scope: "openid create:me:authentication_methods"
+                        )
+                        let confirmPasskeyEnrollmentRequest = ConfirmPasskeyEnrollmentRequest(
+                            passkey: newPasskey,
+                            token: apiCredentials.accessToken,
+                            domain: dependencies.domain,
+                            challenge: passkeyChallenge
+                        )
                         _ = try await confirmPasskeyEnrollmentUseCase.execute(request: confirmPasskeyEnrollmentRequest)
                         delegate?.refreshAuthData()
                         await NavigationStore.shared.push(.filteredAuthListScreen(type: .passkey, authMethods: []))
@@ -100,7 +118,7 @@ final class PasskeysEnrollmentViewModel: NSObject, ObservableObject, ASAuthoriza
             }
         }
     }
-    
+
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
         showLoader = false
 

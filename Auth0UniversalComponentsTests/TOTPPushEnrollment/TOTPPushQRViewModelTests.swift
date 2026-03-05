@@ -12,7 +12,7 @@ struct TOTPPushQRCodeViewModelTests {
         config.protocolClasses = [MockURLProtocol.self]
         return URLSession(configuration: config)
     }
-    
+
     func decodeResponse<T: Decodable>(json: Data, locationHeader: String) throws -> T {
         let decoder = JSONDecoder()
         decoder.userInfo[CodingUserInfoKey(rawValue: "locationHeader")!] = locationHeader
@@ -27,7 +27,7 @@ struct TOTPPushQRCodeViewModelTests {
                 "manual_input_code" : "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5",
                 "auth_session" : "jfnfgnbkbnLfiurfg"
                }
-        """.data(using: .utf8)!
+        Data(""".utf8)!
         return mockJsonData
     }
 
@@ -42,7 +42,7 @@ struct TOTPPushQRCodeViewModelTests {
         }
     }
 
-    private var pushEnrollmentChallengeData: Data  {
+    private var pushEnrollmentChallengeData: Data {
         let data = """
             {
              "id" : "push-notification|test_nkfnbkfnb",
@@ -50,11 +50,10 @@ struct TOTPPushQRCodeViewModelTests {
              "barcode_uri" : "otpauth://totp/test-tenant-test:auth0%7C689b3c89a51b6e7534dd0bed?enrollment_tx_id=epz2WsTxWCRBNOGJeZGdDY5Q0X28BpEm&base_url=https%3A%2F%2F\(mockDomain)%2Fappliance-mfa"
             }
             """
-            .data(using: .utf8)!
+ ).data(using: .utf8)!
         return data
     }
-    
-    
+
     private var confirmEnrollmentTOTPData: Data {
        let data =
         """
@@ -67,7 +66,7 @@ struct TOTPPushQRCodeViewModelTests {
          ],
          "created_at" : "2025-07-30T13:08:49.508Z"
         }
-        """.data(using: .utf8)!
+        Data(""".utf8)!
         return data
     }
 
@@ -83,15 +82,15 @@ struct TOTPPushQRCodeViewModelTests {
             dependencies: Auth0UniversalComponentsSDKInitializer.shared
         )
         await MainActor.run {
-            #expect(vm.showLoader == true)
-            #expect(vm.qrCodeImage == nil)
-            #expect(vm.manualInputCode == nil)
-            #expect(vm.errorViewModel == nil)
-            #expect(vm.apiCallInProgress == false)
-            
+            #expect(viewModel.showLoader == true)
+            #expect(viewModel.qrCodeImage == nil)
+            #expect(viewModel.manualInputCode == nil)
+            #expect(viewModel.errorViewModel == nil)
+            #expect(viewModel.apiCallInProgress == false)
+
         }
     }
-    
+
     @Test func testFetchEnrollmentChallenge_TOTP_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
 
@@ -119,7 +118,7 @@ struct TOTPPushQRCodeViewModelTests {
             #expect(viewModel.manualInputCode == "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5")
         }
     }
-    
+
     @Test func testFetchEnrollmentChallenge_Push_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
 
@@ -192,7 +191,7 @@ struct TOTPPushQRCodeViewModelTests {
             }
         }
     }
-    
+
     @Test func testConfirmEnrollmentChallenge_Push_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()

@@ -1,3 +1,5 @@
+// swiftlint:disable file_length
+
 import Foundation
 import Testing
 
@@ -14,22 +16,22 @@ typealias ResourceBundle = MockResourceBundle
 struct MockAttributedString: Equatable {
     var string: String
     var isUnderlined: Bool = false
-    
+
     init(_ string: String) { self.string = string }
-    
+
     static func == (lhs: MockAttributedString, rhs: MockAttributedString) -> Bool {
         return lhs.string == rhs.string && lhs.isUnderlined == rhs.isUnderlined
     }
-    
+
     subscript(range: Range<String.Index>) -> MockAttributedString {
         get { return self }
-        set { /* No-op for testing */ }
+        set { _ in /* No-op for testing */ }
     }
-    
+
     func range(of string: String) -> Range<String.Index>? {
         return self.string.range(of: string)
     }
-    
+
     struct MockUnderlineStyle {}
     var underlineStyle: MockUnderlineStyle? {
         didSet { if underlineStyle != nil { isUnderlined = true } }
@@ -99,7 +101,7 @@ struct MockAuthenticationError: Error {
     let statusCode: Int
     let cause: Error?
     let code: String
-    
+
     var isMultifactorRequired: Bool { code == "mfa_required" }
     var isNetworkError: Bool { statusCode == -1009 || code == "network_error" }
     var isMultifactorEnrollRequired: Bool { code == "mfa_enroll_required" }
@@ -176,6 +178,7 @@ enum Auth0UIComponentError {
 }
 
 extension Auth0UIComponentError {
+    // swiftlint:disable:next function_body_length
     func errorViewModel(completion: @escaping () -> Void) -> ErrorScreenViewModel? {
         switch self {
         case  .networkError:
@@ -201,7 +204,7 @@ extension Auth0UIComponentError {
             var subTitleText = AttributedString(subTitleString)
             subTitleText.setForegroundColor(Color("737373", bundle: ResourceBundle.default))
             return ErrorScreenViewModel(title: "Too many attempts", subTitle: AttributedString(subTitleString), buttonTitle: "Try again", textTap: {
-                
+
             }, buttonClick: {
                 completion()
             })
@@ -223,14 +226,14 @@ extension Auth0UIComponentError {
              .transactionActiveAlready(let message, _),
              .idTokenValidationFailed(let message, _),
              .userCancelled(let message, _):
-            
+
             let genericSubTitle = "We are unable to process your request. Please try again in a few minutes. If this problem persists, please contact us."
             var full = AttributedString(genericSubTitle)
             full.setForegroundColor(Color("737373", bundle: ResourceBundle.default))
             if let range = full.range(of: "contact us.") {
                 full[range].underlineStyle = MockAttributedString.MockUnderlineStyle()
             }
-            
+
             return ErrorScreenViewModel(title: message, subTitle: full, buttonTitle: "Try again", textTap: {
                 if let url = URL(string: "https://auth0.com/contact-us") {
                     #if os(macOS)
@@ -244,52 +247,53 @@ extension Auth0UIComponentError {
             })
         }
     }
-    
+
     static func handleWebAuthError(error: WebAuthError) -> Auth0UIComponentError {
         if error == WebAuthError.userCancelled {
             return .userCancelled()
         }
-        
+
         return .unknown(message: error.message, cause: error.cause)
     }
 
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     static func handleCredentialsManagerError(error: CredentialsManagerError) -> Auth0UIComponentError {
         if let authenticationError = error.cause as? AuthenticationError {
             if authenticationError.isMultifactorRequired {
                 return .mfaRequired(message: "Multi-factor authentication is required", cause: authenticationError.cause)
             }
-            
+
             if authenticationError.isNetworkError {
                 return .networkError(message: "Network connection failed", cause: authenticationError)
             }
-            
+
             if authenticationError.isMultifactorEnrollRequired {
                 return .mfaEnrollRequired(message: "MFA enrollment is required to continue", cause: authenticationError)
             }
-            
+
             if authenticationError.isMultifactorTokenInvalid {
                 return .invalidMfaToken(message: "The MFA token is invalid or has expired", cause: authenticationError)
             }
-            
+
             if authenticationError.isMultifactorCodeInvalid {
                 return .invalidMfaCode(message: "The MFA code is invalid or has expired", cause: authenticationError)
             }
-            
+
             if authenticationError.isAccessDenied {
                 return .accessDenied(message: "Access denied by authorization server", cause: authenticationError)
             }
-            
+
             if authenticationError.isLoginRequired {
                 return .sessionExpired(message: "Session expired, please login again", cause: authenticationError)
             }
             if authenticationError.isInvalidRefreshToken {
                 return .refreshTokenInvalid(message: "Refresh token is invalid or expired", cause: authenticationError)
             }
-            
+
             if authenticationError.isRefreshTokenDeleted {
                 return .refreshTokenDeleted(message: "User account no longer exists", cause: authenticationError)
             }
-            
+
             if authenticationError.isTooManyAttempts {
                 return .tooManyAttempts(message: "Too many failed attempts, please try again later", cause: authenticationError)
             }
@@ -298,7 +302,7 @@ extension Auth0UIComponentError {
             return .unknown(message: error.localizedDescription, cause: error.cause)
         }
     }
-    
+
     static func handleMyAccountAuthError(error: MyAccountError) -> Auth0UIComponentError {
         if error.isNetworkError {
             return .networkError(message: "Network connection failed", cause: error)
@@ -321,26 +325,25 @@ extension Auth0UIComponentError {
     }
 }
 
-
 // MARK: - Swift Testing Implementation
 
 struct Auth0UIComponentErrorTests {
-    
+
     // MARK: - View Model Generation Tests
-    
+
     @Test func testNetworkErrorViewModel() {
         let error = Auth0UIComponentError.networkError()
         var completionCalled = false
-        
+
         guard let viewModel = error.errorViewModel(completion: { completionCalled = true }) else {
             Issue.record("ViewModel should not be nil for networkError")
             return
         }
-        
+
         #expect(viewModel.title == "Connection problem")
         #expect(viewModel.subTitle.string == "Please check your internet connection")
         #expect(viewModel.buttonTitle == "Try again")
-        
+
         viewModel.buttonClick()
         #expect(completionCalled, "Button click should call the completion handler.")
     }
@@ -353,10 +356,10 @@ struct Auth0UIComponentErrorTests {
             Issue.record("ViewModel should not be nil for invalidMfaCode")
             return
         }
-        
+
         #expect(viewModel.title == "Invalid verification code")
         #expect(viewModel.subTitle.string == "The code you entered is incorrect or has expired. Please try again.")
-        
+
         viewModel.buttonClick()
         #expect(completionCalled, "Button click should call the completion handler.")
     }
@@ -364,14 +367,14 @@ struct Auth0UIComponentErrorTests {
     @Test func testMfaRequiredReturnsNilViewModel() {
         let error = Auth0UIComponentError.mfaRequired()
         let viewModel = error.errorViewModel(completion: {})
-        
+
         #expect(viewModel == nil, "mfaRequired should return nil ViewModel")
     }
-    
+
     @Test func testGenericErrorViewModel_textTapOpensURL() {
         let testMessage = "Unknown Server Error"
         let error = Auth0UIComponentError.unknown(message: testMessage)
-        
+
         guard let viewModel = error.errorViewModel(completion: {}) else {
             Issue.record("Generic error should not be nil")
             return
@@ -379,7 +382,7 @@ struct Auth0UIComponentErrorTests {
 
         openedContactUsLink = false
         viewModel.textTap()
-        
+
         #expect(openedContactUsLink, "Text tap should attempt to open the contact us URL.")
     }
 
@@ -388,7 +391,7 @@ struct Auth0UIComponentErrorTests {
     @Test func testHandleWebAuthError_userCancelled() {
         let error = WebAuthError.userCancelled
         let convertedError = Auth0UIComponentError.handleWebAuthError(error: error)
-        
+
         if case .userCancelled(let message, _) = convertedError {
             #expect(message == "Something went wrong", "User cancelled should use the default message.")
         } else {
@@ -400,7 +403,7 @@ struct Auth0UIComponentErrorTests {
         let customError = NSError(domain: "TestDomain", code: 123, userInfo: nil)
         let error = WebAuthError.other(message: "Custom web auth error", cause: customError)
         let convertedError = Auth0UIComponentError.handleWebAuthError(error: error)
-        
+
         if case .unknown(let message, _) = convertedError {
             #expect(message == "Custom web auth error")
         } else {
@@ -414,7 +417,7 @@ struct Auth0UIComponentErrorTests {
         let authError = AuthenticationError(message: "MFA needed", statusCode: 401, cause: nil, code: "mfa_required")
         let error = CredentialsManagerError(cause: authError, localizedDescription: "CM failure")
         let convertedError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-        
+
         if case .mfaRequired(let message, _) = convertedError {
             #expect(message == "Multi-factor authentication is required")
         } else {
@@ -426,19 +429,19 @@ struct Auth0UIComponentErrorTests {
         let authError = AuthenticationError(message: "Network failure", statusCode: -1009, cause: nil, code: "timeout")
         let error = CredentialsManagerError(cause: authError, localizedDescription: "CM failure")
         let convertedError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-        
+
         if case .networkError(let message, _) = convertedError {
             #expect(message == "Network connection failed")
         } else {
             Issue.record("#expected .networkError, got \(convertedError)")
         }
     }
-    
+
     @Test func testHandleCredentialsManagerError_sessionExpired() {
         let authError = AuthenticationError(message: "Login required", statusCode: 401, cause: nil, code: "login_required")
         let error = CredentialsManagerError(cause: authError, localizedDescription: "CM failure")
         let convertedError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-        
+
         if case .sessionExpired(let message, _) = convertedError {
             #expect(message == "Session expired, please login again")
         } else {
@@ -450,7 +453,7 @@ struct Auth0UIComponentErrorTests {
         let authError = AuthenticationError(message: "A bad server error", statusCode: 500, cause: nil, code: "server_error")
         let error = CredentialsManagerError(cause: authError, localizedDescription: "CM failure")
         let convertedError = Auth0UIComponentError.handleCredentialsManagerError(error: error)
-        
+
         if case .serverError(let message, let statusCode, _) = convertedError {
             #expect(message == "A bad server error")
             #expect(statusCode == 500)
@@ -460,11 +463,11 @@ struct Auth0UIComponentErrorTests {
     }
 
     // MARK: - MyAccountAuth Handling Tests
-    
+
     @Test func testHandleMyAccountAuthError_networkError() {
         let error = MyAccountError(detail: "Network timed out", statusCode: -1009, validationErrors: nil)
         let convertedError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-        
+
         if case .networkError(let message, _) = convertedError {
             #expect(message == "Network connection failed")
         } else {
@@ -476,7 +479,7 @@ struct Auth0UIComponentErrorTests {
         let fieldErrors = [FieldError(field: "email", detail: "Invalid format", pointer: nil, source: nil)]
         let error = MyAccountError(detail: "Validation failed", statusCode: 400, validationErrors: fieldErrors)
         let convertedError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-        
+
         if case .validationError(let message, _, let errors) = convertedError {
             #expect(message == "Validation failed")
             #expect(errors.count == 1)
@@ -489,7 +492,7 @@ struct Auth0UIComponentErrorTests {
     @Test func testHandleMyAccountAuthError_serverError() {
         let error = MyAccountError(detail: "Database offline", statusCode: 503, validationErrors: nil)
         let convertedError = Auth0UIComponentError.handleMyAccountAuthError(error: error)
-        
+
         if case .serverError(let message, let statusCode, _) = convertedError {
             #expect(message == "Server error, please try again")
             #expect(statusCode == 503)

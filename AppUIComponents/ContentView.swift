@@ -34,26 +34,24 @@ struct ContentView: View {
                         Auth0.webAuth()
                             .clearSession(federated: false) { result in
                                 switch result {
-                                case .success(_):
+                                case .success:
                                     viewModel.clearCredentials()
-                                    break
                                 case .failure:
                                     break
                                 }
                             }
                     }.frame(height: 50)
-    
+
                     Button("Manage Authenticators") {
                         viewAuthMethods.toggle()
                     }
-                    
-                    
+
                     Text(viewModel.loginStatusMessage)
                         .foregroundStyle(Color.black)
                         .font(.system(size: 16, weight: .semibold))
                         .redacted(reason: .placeholder)
                         .padding()
-                    
+
                     Spacer()
                 }
             }
