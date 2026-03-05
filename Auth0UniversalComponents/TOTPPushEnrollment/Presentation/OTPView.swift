@@ -133,7 +133,7 @@ struct OTPView: View {
                         self.emptyBackspaceKeyPressed()
                     }
                 )
-                .frame(width: theme.sizes.size4xlDimen, height: theme.sizes.size5xlDimen, alignment: .center)
+                .frame(width: theme.sizes.size2xlDimen, height: theme.sizes.size3xlDimen, alignment: .center)
                 .background(
                     RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
                         .stroke(Color.gray, lineWidth: 2)

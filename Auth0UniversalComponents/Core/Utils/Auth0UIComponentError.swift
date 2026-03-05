@@ -70,11 +70,11 @@ extension Auth0UIComponentError {
     /// - Parameter completion: Callback to execute when the user taps the "Try again" button
     /// - Returns: An ErrorScreenViewModel configured for this error, or nil if no error screen should be shown
     // swiftlint:disable:next function_body_length
-    func errorViewModel(completion: @escaping () -> Void) -> ErrorScreenViewModel? {
+    func errorViewModel(theme: Auth0Theme = Auth0Theme(), completion: @escaping () -> Void) -> ErrorScreenViewModel? {
         switch self {
         case .networkError:
             var subTitleText = AttributedString("Please check your internet connection")
-            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = theme.colors.text.onPrimary
 
             return ErrorScreenViewModel(
                 title: "Connection problem",
@@ -87,7 +87,7 @@ extension Auth0UIComponentError {
             )
         case .invalidMfaCode:
             var subTitleText = AttributedString("The code you entered is incorrect or has expired. Please try again.")
-            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = theme.colors.text.onPrimary
 
             return ErrorScreenViewModel(
                 title: "Invalid verification code",
@@ -100,7 +100,7 @@ extension Auth0UIComponentError {
             )
         case .sessionExpired:
             var subTitleText = AttributedString("Your session has expired. Please login again to continue.")
-            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = theme.colors.text.onPrimary
 
             return ErrorScreenViewModel(
                 title: "Session expired",
@@ -115,7 +115,7 @@ extension Auth0UIComponentError {
             let errorMsg = "Your account has been temporarily blocked due to too many failed attempts. " +
                            "Please try again later."
             var subTitleText = AttributedString(errorMsg)
-            subTitleText.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
+            subTitleText.foregroundColor = theme.colors.text.onPrimary
 
             return ErrorScreenViewModel(
                 title: "Too many attempts",
@@ -147,7 +147,7 @@ extension Auth0UIComponentError {
             let generalErrorMsg = "We are unable to process your request. Please try again in a few " +
                                  "minutes. If this problem persists, please contact us."
             var full = AttributedString(generalErrorMsg)
-            full.foregroundColor = Color("textSecondary", bundle: ResourceBundle.default)
+            full.foregroundColor = theme.colors.text.onPrimary
 
             if let range = full.range(of: "contact us.") {
                 full[range].underlineStyle = .single

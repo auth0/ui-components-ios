@@ -11,8 +11,8 @@ import CoreGraphics
 /// struct LargeSizes: Auth0SizeTokens {
 ///     var buttonHeight: CGFloat { 56 }
 ///     var inputHeight: CGFloat { 68 }
-///     var size4xlDimen: CGFloat { 52 }
-///     var size5xlDimen: CGFloat { 60 }
+///     var size2xlDimen: CGFloat { 52 }
+///     var size3xlDimen: CGFloat { 60 }
 ///     var containerSizeLargeDimen: CGFloat { 56 }
 ///     var iconSmall: CGFloat { 20 }
 ///     var iconMedium: CGFloat { 28 }
@@ -27,11 +27,11 @@ public protocol Auth0SizeTokens: Sendable {
     /// Height of text and phone-number input fields.
     var inputHeight: CGFloat { get }
 
-    /// 4XL dimension — width of a single character-input cell (OTP, PIN, or any digit-by-digit entry).
-    var size4xlDimen: CGFloat { get }
+    /// 2XL dimension — width of a single character-input cell (OTP, PIN, or any digit-by-digit entry).
+    var size2xlDimen: CGFloat { get }
 
-    /// 5XL dimension — height of a single character-input cell (OTP, PIN, or any digit-by-digit entry).
-    var size5xlDimen: CGFloat { get }
+    /// 3XL dimension — height of a single character-input cell (OTP, PIN, or any digit-by-digit entry).
+    var size3xlDimen: CGFloat { get }
 
     /// Large container height — height of a read-only code display container (recovery codes, TOTP secrets, etc.).
     var containerSizeLargeDimen: CGFloat { get }
@@ -56,8 +56,8 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
 
     public var buttonHeight: CGFloat
     public var inputHeight: CGFloat
-    public var size4xlDimen: CGFloat
-    public var size5xlDimen: CGFloat
+    public var size2xlDimen: CGFloat
+    public var size3xlDimen: CGFloat
     public var containerSizeLargeDimen: CGFloat
     public var iconSmall: CGFloat
     public var iconMedium: CGFloat
@@ -68,8 +68,8 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     /// - Parameters:
     ///   - buttonHeight: Default `48`.
     ///   - inputHeight: Default `60`.
-    ///   - size4xlDimen: Default `48`. Width of a single character-input cell.
-    ///   - size5xlDimen: Default `56`. Height of a single character-input cell.
+    ///   - size2xlDimen: Default `48`. Width of a single character-input cell.
+    ///   - size3xlDimen: Default `56`. Height of a single character-input cell.
     ///   - containerSizeLargeDimen: Default `52`. Height of a read-only code display container.
     ///   - iconSmall: Default `16`.
     ///   - iconMedium: Default `24`.
@@ -77,8 +77,8 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     public init(
         buttonHeight: CGFloat = 48,
         inputHeight: CGFloat = 60,
-        size4xlDimen: CGFloat = 48,
-        size5xlDimen: CGFloat = 56,
+        size2xlDimen: CGFloat = 48,
+        size3xlDimen: CGFloat = 56,
         containerSizeLargeDimen: CGFloat = 52,
         iconSmall: CGFloat = 16,
         iconMedium: CGFloat = 24,
@@ -86,8 +86,8 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     ) {
         self.buttonHeight = buttonHeight
         self.inputHeight = inputHeight
-        self.size4xlDimen = size4xlDimen
-        self.size5xlDimen = size5xlDimen
+        self.size2xlDimen = size2xlDimen
+        self.size3xlDimen = size3xlDimen
         self.containerSizeLargeDimen = containerSizeLargeDimen
         self.iconSmall = iconSmall
         self.iconMedium = iconMedium
