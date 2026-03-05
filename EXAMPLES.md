@@ -15,12 +15,12 @@ The simplest way to initialize the SDK is using the `Auth0.plist` configuration 
 
 ```swift
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 @main
 struct MyApp: App {
     init() {
-        Auth0UIComponentsSDKInitializer.initialize(tokenProvider: YourTokenProvider())
+        Auth0UniversalComponentsSDKInitializer.initialize(tokenProvider: YourTokenProvider())
     }
     
     var body: some Scene {
@@ -37,12 +37,12 @@ You can also initialize the SDK programmatically by providing required keys and 
 
 ```swift
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 @main
 struct MyApp: App {
     init() {
-        Auth0UIComponentsSDKInitializer.initialize(session: URLSession = .shared,
+        Auth0UniversalComponentsSDKInitializer.initialize(session: URLSession = .shared,
                                                    bundle: Bundle = .main,
                                                    domain: "your-auth0-domain",
                                                    clientId: "your_client_id",
@@ -64,7 +64,7 @@ If initializing programmatically, you need to implement a token provider:
 
 ```swift
 import Auth0
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 struct YourTokenProvider: TokenProvider {
     func fetchCredentials() async throws -> Credentials {
@@ -93,7 +93,7 @@ Once initialized, you can present the authentication methods management view to 
 
 ```swift
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 struct SettingsView: View {
     var body: some View {

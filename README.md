@@ -49,7 +49,7 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 Add the following to your `Podfile`:
 
 ```ruby
-pod 'Auth0UIComponents'
+pod 'Auth0UniversalComponents'
 ```
 
 Then run `pod install`.
@@ -107,7 +107,7 @@ Initialize `Auth0Dependencies` in your app's entry point. This **must be done be
 
 ```swift
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 // Custom token provider
 struct YourTokenProvider: TokenProvider {
@@ -120,9 +120,9 @@ struct YourTokenProvider: TokenProvider {
 struct MyApp: App {
     init() {
         // Initialize with Auth0.plist
-        Auth0UIComponentsSDKInitializer.initialize(tokenProvider: YourTokenProvider())
+        Auth0UniversalComponentsSDKInitializer.initialize(tokenProvider: YourTokenProvider())
         // OR initialize programmatically
-        //Auth0UIComponentsSDKInitializer.initialize(session: URLSession = .shared,
+        //Auth0UniversalComponentsSDKInitializer.initialize(session: URLSession = .shared,
         //                                           bundle: Bundle = .main,
         //                                           domain: "your-auth0-domain",
         //                                           clientId: "your_client_id",
@@ -144,7 +144,7 @@ Once initialized, you can use any of the provided UI components in your views:
 
 ```swift
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 struct ContentView: View {
     var body: some View {
@@ -243,7 +243,7 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
 
 4. **Open the project in Xcode:**
    ```bash
-   open Auth0UIComponents.xcodeproj
+   open Auth0UniversalComponents.xcodeproj
    ```
 
 5. **Select the `AppUIComponents` target** from the scheme dropdown

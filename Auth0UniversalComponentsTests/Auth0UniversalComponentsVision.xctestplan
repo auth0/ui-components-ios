@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "61726BB0-7086-449C-B779-A3BAA9A2766D",
+      "name" : "Configuration",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Auth0UniversalComponents.xcodeproj",
+        "identifier" : "D4C3F0652E9683F100D5A06D",
+        "name" : "Auth0UniversalComponentsTests.visionOS"
+      }
+    }
+  ],
+  "version" : 1
+}
