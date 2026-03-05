@@ -74,7 +74,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await RecoveryCodeEnrollmentViewModel(delegate: nil)
+        let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
         await MainActor.run {
             #expect(viewModel.showLoader == true)
             #expect(viewModel.errorViewModel == nil)
@@ -160,7 +160,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await RecoveryCodeEnrollmentViewModel(delegate: mockDelegate)
+        let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: mockDelegate)
         await MainActor.run {
             #expect(viewModel.showLoader == true)
             #expect(viewModel.errorViewModel == nil)

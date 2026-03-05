@@ -86,7 +86,7 @@ struct SavedAuthenticatorsViewModelTests {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: nil)
+        let viewModel = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: nil)
         await MainActor.run {
             #expect(viewModel.showLoader == true)
             #expect(viewModel.errorViewModel == nil)
@@ -166,7 +166,7 @@ struct SavedAuthenticatorsViewModelTests {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
-        let vm = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: mockDelegate)
+        let viewModel = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: mockDelegate)
         await MainActor.run {
             #expect(viewModel.showLoader == true)
             #expect(viewModel.errorViewModel == nil)
