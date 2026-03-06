@@ -8,7 +8,7 @@ SDK for Apple platforms.
 
 - ``Auth0UniversalComponents/Auth0UniversalComponentsSDKInitializer``: Actor to store dependencies required for SDK.
 
-- ``Auth0UIComponents/MyAccountAuthMethodsView``: A SwiftUI view to view the available MFA auth methods for enrollment. Tapping on each MFA factor will either start enrollment flow or view the enolled auth methods
+- ``Auth0UniversalComponents/MyAccountAuthMethodsView``: A SwiftUI view to view the available MFA auth methods for enrollment. Tapping on each MFA factor will either start enrollment flow or view the enolled auth methods
 
 ## Customisation
 
