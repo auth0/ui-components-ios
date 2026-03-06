@@ -1,5 +1,5 @@
 
-The following 3rd-party software packages may be used by or distributed with Auth0 UI components
+The following 3rd-party software packages may be used by or distributed with Auth0 Universal components
 package:
 
 #### Date generated: 2025-11-18
