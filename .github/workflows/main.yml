@@ -19,14 +19,14 @@ jobs:
         runs-on: macos-15
 
         env:
-            xcodeproj: Auth0UIComponents.xcodeproj
+            xcodeproj: Auth0UniversalComponents.xcodeproj
 
         strategy:
           matrix:
             platform: 
-              - { os: iOS, scheme: Auth0UIComponents.iOS }
-              - { os: macOS, scheme: Auth0UIComponents.macOS }
-              - { os: visionOS, scheme: Auth0UIComponents.visionOS }
+              - { os: iOS, scheme: Auth0UniversalComponents.iOS }
+              - { os: macOS, scheme: Auth0UniversalComponents.macOS }
+              - { os: visionOS, scheme: Auth0UniversalComponents.visionOS }
             xcode:
               - '26.2'
 

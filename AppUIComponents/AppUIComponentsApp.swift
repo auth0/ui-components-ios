@@ -1,5 +1,5 @@
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 import Auth0
 
 @main
@@ -9,7 +9,7 @@ struct AppUIComponentsApp: App {
             ContentView(viewModel: ContentViewModel())
                 .auth0Theme(Auth0Theme())
                 .onAppear {
-                    Auth0UIComponentsSDKInitializer.initialize(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
+                    Auth0UniversalComponentsSDKInitializer.initialize(tokenProvider: CredentialsManager(authentication: Auth0.authentication()))
                 }
         }
     }

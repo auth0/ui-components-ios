@@ -3,13 +3,13 @@ default_platform :ios
 platform :ios do
   desc "Tags the release and pushes the Podspec to CocoaPods"
   lane :release do
-    perform_release target: 'Auth0UIComponents.iOS'
+    perform_release target: 'Auth0UniversalComponents.iOS'
     publish_release repository: 'ui-components-ios'
   end
 
   desc 'Generate API documentation'
   lane :build_docs do
-    target = 'Auth0UIComponents'
+    target = 'Auth0UniversalComponents'
     docs_dir = 'docs'
     docs_archive = 'docs.archive'
     redirect_file = <<~HEREDOC

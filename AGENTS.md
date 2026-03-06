@@ -1,10 +1,10 @@
-# AI Agent Guidelines for Auth0 UI Components iOS SDK
+# AI Agent Guidelines for Auth0 Universal Components iOS SDK
 
-This document provides context and guidelines for AI coding assistants working with the Auth0 UI Components iOS SDK codebase.
+This document provides context and guidelines for AI coding assistants working with the Auth0 Universal Components iOS SDK codebase.
 
 ## Project Overview
 
-**Auth0 UI Components iOS SDK** provides pre-built, customizable SwiftUI components for managing Multi-Factor Authentication (MFA) enrollment and verification. Built on top of [Auth0.swift](https://github.com/auth0/Auth0.swift) and Auth0's My Account APIs, this SDK simplifies implementing MFA flows across iOS 16+, macOS 14+, and visionOS 1.0+.
+**Auth0 Universal Components iOS SDK** provides pre-built, customizable SwiftUI components for managing Multi-Factor Authentication (MFA) enrollment and verification. Built on top of [Auth0.swift](https://github.com/auth0/Auth0.swift) and Auth0's My Account APIs, this SDK simplifies implementing MFA flows across iOS 16+, macOS 14+, and visionOS 1.0+.
 
 > ⚠️ **BETA RELEASE** - This SDK is currently in beta. APIs may change before the stable release.
 
@@ -20,7 +20,7 @@ This document provides context and guidelines for AI coding assistants working w
 
 ```text
 ui-components-ios/
-├── Auth0UIComponents/                  # Main SDK Target
+├── Auth0UniversalComponents/                  # Main SDK Target
 │   ├── AuthMethodsHome/                # List & manage MFA factors
 │   │   ├── Domain/                     # GetAuthMethodsUseCase, GetFactorsUseCase
 │   │   └── Presentation/               # MyAccountAuthMethodsView(Model)
@@ -42,11 +42,11 @@ ui-components-ios/
 │   │   ├── Error/                      # ErrorScreen & ViewModel
 │   │   └── Toast*.swift                # Toast notifications
 │   ├── TokenProvider.swift             # Token management protocol
-│   └── Auth0UIComponentsSDKInitializer.swift  # SDK setup
-├── Auth0UIComponentsTests/             # Unit Tests
+│   └── Auth0UniversalComponentsSDKInitializer.swift  # SDK setup
+├── Auth0UniversalComponentsTests/             # Unit Tests
 ├── AppUIComponents/                    # Sample App
 ├── Package.swift                       # Swift Package Manager
-├── Auth0UIComponents.xcodeproj         # Xcode Project
+├── Auth0UniversalComponents.xcodeproj         # Xcode Project
 ├── Cartfile                            # Carthage dependencies
 └── README.md                           # Public documentation
 ```
@@ -107,16 +107,16 @@ This abstraction allows you to manage token retrieval (from CredentialsManager, 
 **Required** before using any UI components:
 
 ```swift
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 @main
 struct MyApp: App {
     init() {
-        Auth0UIComponentsSDKInitializer.initialize(
+        Auth0UniversalComponentsSDKInitializer.initialize(
             tokenProvider: YourTokenProvider()
         )
         // OR with explicit configuration:
-        // Auth0UIComponentsSDKInitializer.initialize(
+        // Auth0UniversalComponentsSDKInitializer.initialize(
         //     domain: "your-tenant.auth0.com",
         //     clientId: "your-client-id",
         //     audience: "https://your-tenant.auth0.com/me/",
@@ -411,10 +411,10 @@ final class EmailPhoneEnrollmentViewModelTests: XCTestCase {
 carthage bootstrap --use-xcframeworks
 
 # Build with Xcode
-xcodebuild -project Auth0UIComponents.xcodeproj -scheme Auth0UIComponents build
+xcodebuild -project Auth0UniversalComponents.xcodeproj -scheme Auth0UniversalComponents build
 
 # Run Tests
-xcodebuild test -project Auth0UIComponents.xcodeproj -scheme Auth0UIComponents
+xcodebuild test -project Auth0UniversalComponents.xcodeproj -scheme Auth0UniversalComponents
 
 # Or use Swift Package Manager
 swift build
@@ -832,7 +832,7 @@ final class MockStartWebAuthnEnrollmentUseCase: StartWebAuthnEnrollmentUseCase {
 
 ```swift
 import SwiftUI
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 struct AccountSettingsView: View {
     var body: some View {
@@ -867,7 +867,7 @@ The `MyAccountAuthMethodsView` provides the complete MFA management experience:
 
 ```swift
 import Auth0
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 final class MyTokenProvider: TokenProvider {
     private let credentialsManager: CredentialsManager
@@ -904,7 +904,7 @@ struct MyApp: App {
 
     init() {
         let tokenProvider = MyTokenProvider(credentialsManager: credentialsManager)
-        Auth0UIComponentsSDKInitializer.initialize(tokenProvider: tokenProvider)
+        Auth0UniversalComponentsSDKInitializer.initialize(tokenProvider: tokenProvider)
     }
 
     var body: some Scene {

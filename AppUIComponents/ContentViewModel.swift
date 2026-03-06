@@ -10,10 +10,10 @@ public enum Route: Hashable {
 final class ContentViewModel: ObservableObject {
     private let credentialsManager = CredentialsManager(authentication: Auth0.authentication())
     private var cancellables: Set<AnyCancellable> = []
-    @Published var route: Route? = nil
+    @Published var route: Route?
     @Published var loginStatusMessage: String = ""
     func storeCredentials(_ credentials: Credentials) {
-        let _ = credentialsManager.store(credentials: credentials)
+        _ = credentialsManager.store(credentials: credentials)
     }
 
     func clearCredentials() {
@@ -31,7 +31,6 @@ final class ContentViewModel: ObservableObject {
                     break
                 case .failure(let error):
                     loginStatusMessage = "Not logged in \(error.debugDescription)"
-                    break
                 }
             } receiveValue: { [weak self] credentials in
                 guard let self else { return }

@@ -5,7 +5,7 @@
 
 ## Prerequisites
 
-We use [Carthage](https://github.com/Carthage/Carthage) to manage Auth0UIComponents.swift's dependencies. You can install it using Homebrew:
+We use [Carthage](https://github.com/Carthage/Carthage) to manage Auth0UniversalComponents.swift's dependencies. You can install it using Homebrew:
 
 ```bash
 brew install carthage
@@ -21,4 +21,4 @@ See [Adding additional simulators](https://developer.apple.com/documentation/saf
 
 1. Clone this repository and enter its root directory.
 2. Run `carthage bootstrap --use-xcframeworks` to fetch and build the dependencies.
-3. Open `Auth0UIComponents.xcodeproj` in Xcode.
+3. Open `Auth0UniversalComponents.xcodeproj` in Xcode.
