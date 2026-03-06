@@ -107,13 +107,13 @@ export function validateIOSProject() {
   }).start()
 
   const projectRoot = path.resolve(process.cwd(), "..")
-  const xcodeProjectPath = path.join(projectRoot, "Auth0UIComponents.xcodeproj")
+  const xcodeProjectPath = path.join(projectRoot, "Auth0UniversalComponents.xcodeproj")
   const pbxprojPath = path.join(xcodeProjectPath, "project.pbxproj")
-  const auth0PlistPath = path.join(projectRoot, "AppUIComponents", "Auth0.plist")
+  const auth0PlistPath = path.join(projectRoot, "Auth0UniversalComponents", "Auth0.plist")
 
   // Check Xcode project exists
   if (!fs.existsSync(xcodeProjectPath)) {
-    spinner.fail("Could not find Auth0UIComponents.xcodeproj")
+    spinner.fail("Could not find Auth0UniversalComponents.xcodeproj")
     console.error(
       "\n❌ This script must be run from the scripts/ directory inside the iOS project."
     )
