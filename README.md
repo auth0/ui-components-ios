@@ -236,7 +236,7 @@ Use the bootstrap script to automatically create all required Auth0 resources an
 
 2. **Run the bootstrap script:**
    ```bash
-   cd app/scripts
+   cd scripts
    npm install
    npm run auth0:bootstrap <your-tenant-domain>
    ```

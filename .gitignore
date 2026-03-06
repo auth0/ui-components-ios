@@ -95,7 +95,7 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 
-scripts/node_modules/
+/scripts/node_modules/
 
 # AppCode
 #
