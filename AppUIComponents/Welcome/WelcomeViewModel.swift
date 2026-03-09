@@ -32,20 +32,5 @@ class WelcomeViewModel: ObservableObject {
         _ = credentialsManager.clear()
         
         completion()
-        
-        // TODO: - Fix the pop-up appearing issue
-//        Auth0.webAuth()
-//            .clearSession(federated: false) { [weak self] result in
-//                switch result {
-//                case .success(_):
-//                    _ = self?.credentialsManager.clear()
-//                    completion()
-//                    break
-//                case .failure(let error):
-//                    debugPrint("Error: \(error.debugDescription)")
-//                    completion()
-//                    break
-//                }
-//            }
     }
 }

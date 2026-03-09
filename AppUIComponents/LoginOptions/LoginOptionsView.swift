@@ -14,6 +14,7 @@ struct LoginOptionsView: View {
     @StateObject private var viewModel: LoginOptionsViewModel
     @State private var selectedOption: LoginOption?
     @State private var showAlert: Bool = false
+    @State private var showComingSoonDialog: Bool = false
 
     // MARK: - Router
     @EnvironmentObject var router: Router<SampleAppRoute>
@@ -74,6 +75,11 @@ struct LoginOptionsView: View {
                 router.navigate(to: route)
             }
         }
+        .alert("Coming Soon", isPresented: $showComingSoonDialog) {
+            Button("Got it", role: .cancel) { selectedOption = nil; showComingSoonDialog = false }
+        } message: {
+            Text("Embedded login is currently under development. Stay tuned for updates!")
+        }
         .alert("", isPresented: $showAlert) {
             Button("OK", role: .cancel) { selectedOption = nil; showAlert = false }
         } message: {
@@ -87,6 +93,10 @@ struct LoginOptionsView: View {
         .onChange(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
+        }
+        .onAppear {
+            // Reset the selected option when the LoginOptionsView reappears for state reset
+            selectedOption = nil
         }
     }
 
@@ -137,8 +147,8 @@ struct LoginOptionsView: View {
                     .frame(height: geo.size.height/4)
                     .blur(radius: 155.91499)
                 }
-                .ignoresSafeArea()
             }
+            .ignoresSafeArea()
         }
     }
 
@@ -187,7 +197,7 @@ struct LoginOptionsView: View {
 
                 switch option.type {
                 case .embeddedLogin:
-                    debugPrint("Embeded Login!")
+                    showComingSoonDialog = true
                 case .hostedLogin:
                     viewModel.performUniversalLogin()
                 }

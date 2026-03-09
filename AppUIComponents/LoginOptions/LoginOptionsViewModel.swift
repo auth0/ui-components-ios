@@ -18,11 +18,11 @@ class LoginOptionsViewModel: ObservableObject {
     @Published var loginOptionModels: [LoginOptionModel] = [.init(type: .hostedLogin,
                                                                    icon: "ic_hosted_login",
                                                                    title: "Hosted Login",
-                                                                   description: "Quick setup with secure web authentication"),
+                                                                   description: "Easy to setup, works instantly"),
                                                             .init(type: .embeddedLogin,
                                                                    icon: "ic_embedded_login",
                                                                    title: "Embedded Login",
-                                                                   description: "Stay in the app with seamless authentication")]
+                                                                   description: "Total brand control and low user frictions")]
     @Published var navigationRoute: SampleAppRoute? = nil
     @Published var error: LoginError? = nil
     @Published var isLoading: Bool = false
