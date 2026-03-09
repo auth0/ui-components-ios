@@ -20,6 +20,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
     @Published var email: String = ""
     @Published var isPickerVisible = false
     @Published var apiCallInProgress = false
+    @Published var navigationRoute: Route?
     var isButtonEnabled: Bool {
         type == .email ? !email.isEmpty : !phoneNumber.isEmpty
     }
@@ -53,12 +54,10 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                     request: startPhoneEnrollmentRequest
                 )
                 apiCallInProgress = false
-                await NavigationStore.shared.push(
-                    .otpScreen(
-                        type: .sms,
-                        emailOrPhoneNumber: phoneNumber,
-                        phoneEnrollmentChallenge: phoneEnrollmentChallenge
-                    )
+                navigationRoute = .otpScreen(
+                    type: .sms,
+                    emailOrPhoneNumber: phoneNumber,
+                    phoneEnrollmentChallenge: phoneEnrollmentChallenge
                 )
             } else if type == .email {
                 let startEmailEnrollmentRequest = StartEmailEnrollmentRequest(
@@ -70,12 +69,10 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                     request: startEmailEnrollmentRequest
                 )
                 apiCallInProgress = false
-                await NavigationStore.shared.push(
-                    .otpScreen(
-                        type: .email,
-                        emailOrPhoneNumber: email,
-                        emailEnrollmentChallenge: emailEnrollmentChallenge
-                    )
+                navigationRoute = .otpScreen(
+                    type: .email,
+                    emailOrPhoneNumber: email,
+                    emailEnrollmentChallenge: emailEnrollmentChallenge
                 )
             }
         } catch {

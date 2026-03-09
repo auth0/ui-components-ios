@@ -97,6 +97,7 @@ public struct MyAccountAuthMethodsView: View {
                 }
                 .navigationDestination(for: Route.self) { route in
                     ViewFactory.view(for: route, delegate: viewModel)
+                        .environmentObject(router)
                 }
                 .environmentObject(router)
                 .onAppear {
@@ -112,6 +113,7 @@ public struct MyAccountAuthMethodsView: View {
                     #endif
                     .navigationDestination(for: Route.self) { route in
                         ViewFactory.view(for: route, delegate: viewModel)
+                            .environmentObject(router)
                     }
             }
             .environmentObject(router)

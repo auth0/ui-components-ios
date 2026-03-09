@@ -8,6 +8,7 @@ import Auth0
 struct SavedAuthenticatorsView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model managing saved authenticators and deletion logic
     @StateObject private var viewModel: SavedAuthenticatorsViewModel
 
@@ -69,14 +70,14 @@ struct SavedAuthenticatorsView: View {
             ToolbarItem(placement: trailingPlacement) {
                 Image("plus", bundle: ResourceBundle.default)
                     .onTapGesture {
-                        NavigationStore.shared.push(viewModel.type.navigationDestination([]))
+                        router.navigate(to: viewModel.type.navigationDestination([]))
                     }
             }
 
             ToolbarItem(placement: leadingPlacement) {
                 Image("back", bundle: ResourceBundle.default)
                     .onTapGesture {
-                        NavigationStore.shared.popToRoot()
+                        router.pop()
                     }
             }
         }

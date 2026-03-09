@@ -8,6 +8,7 @@ import SwiftUI
 struct TOTPPushQRCodeView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model managing QR code generation and enrollment state
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
     /// Controls visibility of the "code copied" alert
@@ -135,6 +136,10 @@ struct TOTPPushQRCodeView: View {
             Task {
                 await viewModel.fetchEnrollmentChallenge()
             }
+        }
+        .onChange(of: viewModel.navigationRoute) { _ in
+            guard let route = viewModel.navigationRoute else { return }
+            router.navigate(to: route)
         }
     }
 

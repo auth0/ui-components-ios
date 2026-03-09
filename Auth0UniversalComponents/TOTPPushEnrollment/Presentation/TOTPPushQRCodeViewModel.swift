@@ -32,6 +32,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var apiCallInProgress: Bool = false
     @Published var toast: Toast?
+    @Published var navigationRoute: Route?
 
     init(startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable = StartTOTPEnrollmentUseCase(),
          startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
@@ -86,7 +87,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
 
     func handleContinueButtonTap() async {
         if let totpEnrollmentChallenge {
-            await NavigationStore.shared.push(.otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge))
+            navigationRoute = .otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge)
         } else {
             apiCallInProgress = true
             await confirmEnrollment()
@@ -111,9 +112,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
                 )
                 delegate?.refreshAuthData()
                 apiCallInProgress = false
-                await NavigationStore.shared.push(
-                    .filteredAuthListScreen(type: type, authMethods: [])
-                )
+                navigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
             } catch {
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in

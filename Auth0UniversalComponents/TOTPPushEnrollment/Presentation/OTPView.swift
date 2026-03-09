@@ -12,6 +12,7 @@ import Auth0
 struct OTPView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model managing OTP verification state and logic
     @StateObject private var viewModel: OTPViewModel
     /// Tracks which OTP field currently has focus
@@ -113,6 +114,10 @@ struct OTPView: View {
         .navigationTitle(viewModel.navigationTitle)
         .onAppear {
             focusedField = 0
+        }
+        .onChange(of: viewModel.navigationRoute) { _ in
+            guard let route = viewModel.navigationRoute else { return }
+            router.navigate(to: route)
         }
     }
 

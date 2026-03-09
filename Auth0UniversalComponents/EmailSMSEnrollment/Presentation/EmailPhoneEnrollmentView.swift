@@ -7,6 +7,7 @@ import SwiftUI
 struct EmailPhoneEnrollmentView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model managing email/phone enrollment state and validation
     @StateObject private var viewModel: EmailPhoneEnrollmentViewModel
     /// Manages focus state of the text input field
@@ -152,6 +153,10 @@ struct EmailPhoneEnrollmentView: View {
         }
         .onDisappear {
             textFieldFocused = false
+        }
+        .onChange(of: viewModel.navigationRoute) { _ in
+            guard let route = viewModel.navigationRoute else { return }
+            router.navigate(to: route)
         }
     }
 }
