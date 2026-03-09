@@ -1,10 +1,3 @@
-//
-//  NavigationEnvironment.swift
-//  Auth0UniversalComponents
-//
-//  Created by Sudhanshu Vohra on 09/03/26.
-//
-
 import SwiftUI
 
 // MARK: - Environment Keys

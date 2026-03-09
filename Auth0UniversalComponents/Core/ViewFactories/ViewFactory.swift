@@ -1,10 +1,3 @@
-//
-//  ViewFactory.swift
-//  Auth0UIComponents
-//
-//  Created by Sudhanshu Vohra on 18/02/26.
-//
-
 import SwiftUI
 
 struct ViewFactory {

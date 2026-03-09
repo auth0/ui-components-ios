@@ -1,10 +1,3 @@
-//
-//  ThemeOption.swift
-//  AppUIComponents
-//
-//  Created by Sudhanshu Vohra on 09/03/26.
-//
-
 import SwiftUI
 import Auth0UniversalComponents
 

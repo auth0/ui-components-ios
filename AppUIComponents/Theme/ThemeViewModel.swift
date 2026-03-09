@@ -1,10 +1,3 @@
-//
-//  ThemeViewModel.swift
-//  AppUIComponents
-//
-//  Created by Sudhanshu Vohra on 06/03/26.
-//
-
 import SwiftUI
 import Combine
 

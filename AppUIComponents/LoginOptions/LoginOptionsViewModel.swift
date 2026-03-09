@@ -1,10 +1,3 @@
-//
-//  LoginOptionsViewModel.swift
-//  Auth0UIComponents
-//
-//  Created by Sudhanshu Vohra on 09/02/26.
-//
-
 import SwiftUI
 import Combine
 import Auth0
