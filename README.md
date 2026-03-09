@@ -220,6 +220,45 @@ This repository includes a sample app (`AppUIComponents` target) that demonstrat
    carthage bootstrap --use-xcframeworks
    ```
 
+#### Option 1: Automated Setup (Recommended)
+
+Use the bootstrap script to automatically create all required Auth0 resources and configure the sample app.
+
+**Prerequisites:**
+- [Node.js 20+](https://nodejs.org/)
+- [Auth0 CLI](https://github.com/auth0/auth0-cli)
+
+1. **Login to Auth0 CLI** with the required scopes:
+   ```bash
+   auth0 login --scopes "create:client_grants,update:client_grants,delete:client_grants,create:connections,create:resource_servers,create:roles,create:users,read:client_keys,read:client_grants,read:clients,read:connections,read:resource_servers,read:roles,update:clients,update:connections,read:connection_profiles,create:connection_profiles,update:connection_profiles,create:user_attribute_profiles,update:user_attribute_profiles,read:user_attribute_profiles,update:resource_servers,update:roles,update:tenant_settings,update:prompts"
+   auth0 tenants list  # verify your tenant shows Active
+   ```
+
+2. **Run the bootstrap script:**
+   ```bash
+   cd scripts
+   npm install
+   npm run auth0:bootstrap <your-tenant-domain>
+   ```
+
+   This will:
+   - Create a Native application configured for the iOS sample app
+   - Enable the My Account API and create a Client Grant with MFA scopes
+   - Create a database connection and admin role
+   - Configure tenant settings for MFA
+   - Update `Auth0.plist` with the generated credentials
+
+#### Option 2: Manual Setup
+
+1. **Create a Native application** in your Auth0 tenant and note the Client ID and Domain.
+
+2. **Configure Allowed Callback URLs** in your Auth0 Dashboard. Add:
+   ```
+  https://YOUR_AUTH0_DOMAIN/ios/YOUR_BUNDLE_IDENTIFIER/callback,
+  YOUR_BUNDLE_IDENTIFIER://YOUR_AUTH0_DOMAIN/ios/YOUR_BUNDLE_IDENTIFIER/callback
+   ```
+   Replace `{scheme}` and `{domain}` with your values.
+
 3. **Configure Auth0 credentials:**
 
    **Important:** The `Auth0.plist` file is required for the sample app to build and run. You need to create this file.

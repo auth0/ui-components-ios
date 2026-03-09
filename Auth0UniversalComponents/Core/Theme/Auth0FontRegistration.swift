@@ -1,7 +1,7 @@
 import CoreText
 import Foundation
 
-/// Registers the Inter static font files bundled with Auth0UIComponents.
+/// Registers the Inter static font files bundled with Auth0UniversalComponents.
 ///
 /// **Why this exists:**
 /// SPM resource bundles do not auto-register fonts — `CTFontManagerRegisterFontsForURL`
