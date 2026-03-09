@@ -1,0 +1,105 @@
+//
+//  LoginOptionsViewModel.swift
+//  Auth0UIComponents
+//
+//  Created by Sudhanshu Vohra on 09/02/26.
+//
+
+import SwiftUI
+import Combine
+import Auth0
+
+@MainActor
+class LoginOptionsViewModel: ObservableObject {
+    
+    typealias LoginOptionModel = LoginOptionsView.LoginOptionsModel
+    
+    // MARK: - Published Properties
+    @Published var loginOptionModels: [LoginOptionModel] = [.init(type: .hostedLogin,
+                                                                   icon: "ic_hosted_login",
+                                                                   title: "Hosted Login",
+                                                                   description: "Quick setup with secure web authentication"),
+                                                            .init(type: .embeddedLogin,
+                                                                   icon: "ic_embedded_login",
+                                                                   title: "Embedded Login",
+                                                                   description: "Stay in the app with seamless authentication")]
+    @Published var navigationRoute: SampleAppRoute? = nil
+    @Published var error: LoginError? = nil
+    @Published var isLoading: Bool = false
+    
+    // MARK: - Properties
+    private let credentialsManager: CredentialsManager
+    private var cancellables: Set<AnyCancellable> = []
+    
+    init(authentication: Authentication = Auth0.authentication()) {
+        self.credentialsManager = CredentialsManager(authentication: authentication)
+    }
+    
+    // MARK: - Methods
+    func checkAuthentication() async -> SampleAppRoute? {
+        do {
+            let isAuthenticated = try await credentialsManager.credentials()
+                .values
+                .first { _ in true }
+            
+            return (isAuthenticated != nil) ? .welcome : nil
+        } catch {
+            debugPrint("Check authentication failed!!!")
+            return nil
+        }
+    }
+    
+    private func storeCredentials(_ credentials: Credentials) {
+        let _ = credentialsManager.store(credentials: credentials)
+    }
+    
+    func performUniversalLogin() {
+        isLoading = true
+        Auth0.webAuth()
+            .scope("openid profile email offline_access")
+            .start { [weak self] result in
+                switch result {
+                case .success(let credentials):
+                    self?.storeCredentials(credentials)
+                    self?.getCredentials()
+                case .failure(let error):
+                    self?.isLoading = false
+                    self?.error = .init(webAuthError: error)
+                }
+            }
+    }
+
+    private func getCredentials() {
+        credentialsManager.credentials()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure:
+                    self?.isLoading = false
+                }
+            } receiveValue: { [weak self] credentials in
+                self?.isLoading = false
+                self?.navigationRoute = .welcome
+            }.store(in: &cancellables)
+    }
+}
+
+struct LoginError: Error, Equatable {
+    var message: String
+    var failureReason: String?
+    
+    init(message: String, failureReason: String? = nil) {
+        self.message = message
+        self.failureReason = failureReason
+    }
+    
+    init(error: Error) {
+        self.init(message: error.localizedDescription, failureReason: nil)
+    }
+    
+    init (webAuthError: WebAuthError) {
+        self.init(message: webAuthError.message, failureReason: webAuthError.failureReason)
+    }
+}
