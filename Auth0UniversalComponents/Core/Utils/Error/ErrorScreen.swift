@@ -13,35 +13,54 @@ struct ErrorScreen: View {
     let viewModel: ErrorScreenViewModel
 
     var body: some View {
-        VStack {
-            Spacer()
-            VStack(spacing: theme.spacing.sm) {
-                Text(viewModel.title)
-                    .auth0TextStyle(theme.typography.displayMedium)
-                    .foregroundStyle(theme.colors.text.bold)
+        ZStack(alignment: .topLeading) {
+            VStack {
+                Spacer()
+                VStack(spacing: theme.spacing.sm) {
+                    Text(viewModel.title)
+                        .multilineTextAlignment(.center)
+                        .auth0TextStyle(theme.typography.displayMedium)
+                        .foregroundStyle(theme.colors.text.bold)
 
-                Text(viewModel.subTitle)
-                    .onTapGesture {
-                        viewModel.handleTextTap()
-                    }
-
-                Button {
-                    viewModel.handleButtonClick()
-                } label: {
-                    Text(viewModel.buttonTitle)
-                        .foregroundStyle(theme.colors.text.onPrimary)
+                    Text(viewModel.subTitle)
                         .auth0TextStyle(theme.typography.label)
-                        .frame(maxWidth: .infinity)
+                        .onTapGesture {
+                            viewModel.handleTextTap()
+                        }
+
+                    Button {
+                        viewModel.handleButtonClick()
+                    } label: {
+                        Text(viewModel.buttonTitle)
+                            .foregroundStyle(theme.colors.text.onPrimary)
+                            .auth0TextStyle(theme.typography.label)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .frame(height: theme.sizes.buttonHeight)
+                    .background(theme.colors.background.primary)
+                    .cornerRadius(theme.radius.button)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: theme.radius.button)
+                            .stroke(theme.colors.background.primary, lineWidth: 2)
+                    )
                 }
-                .frame(height: theme.sizes.buttonHeight)
-                .background(theme.colors.background.primary)
-                .cornerRadius(theme.radius.button)
-                .overlay(
-                    RoundedRectangle(cornerRadius: theme.radius.button)
-                        .stroke(theme.colors.background.primary, lineWidth: 2)
-                )
+                Spacer()
+            }.padding()
+
+            if viewModel.onDismiss != nil {
+                Button {
+                    viewModel.handleDismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(theme.colors.text.bold)
+                        .frame(width: 30, height: 30)
+                        .background(theme.colors.background.layerTop)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.12), radius: 4, x: 0, y: 2)
+                }
+                .padding(theme.spacing.md)
             }
-            Spacer()
-        }.padding()
+        }
     }
 }

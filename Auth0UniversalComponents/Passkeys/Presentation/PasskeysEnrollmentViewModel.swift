@@ -59,6 +59,8 @@ final class PasskeysEnrollmentViewModel: NSObject,
     }
 
     func startEnrollment() async {
+        showLoader = true
+        errorViewModel = nil
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -73,12 +75,12 @@ final class PasskeysEnrollmentViewModel: NSObject,
             passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(
                 request: startPasskeysEnrollmentRequest
             )
+            showLoader = false
             enrollPasskey()
         } catch {
-            await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                Task {
-                    await self?.startEnrollment()
-                }
+            showLoader = false
+            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
+                Task { await self?.startEnrollment() }
             }
         }
     }

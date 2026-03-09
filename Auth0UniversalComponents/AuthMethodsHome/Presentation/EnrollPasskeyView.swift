@@ -14,7 +14,7 @@ struct EnrollPasskeyView: View {
     /// Controls whether the passkey enrollment banner is displayed
     @Binding var collapsePasskeyBanner: Bool
     /// View model handling passkey enrollment logic
-    var viewModel: PasskeysEnrollmentViewModel
+    @ObservedObject var viewModel: PasskeysEnrollmentViewModel
 
     var body: some View {
         VStack {
@@ -63,6 +63,7 @@ struct EnrollPasskeyView: View {
                         .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
                 }.frame(maxWidth: .infinity)
             }
+            .disabled(viewModel.showLoader)
             .frame(height: theme.sizes.buttonHeight)
             .background(
                 LinearGradient(
@@ -101,5 +102,21 @@ struct EnrollPasskeyView: View {
         .padding(.all, theme.spacing.lg)
         .background(Color("Muted", bundle: ResourceBundle.default))
         .clipShape(RoundedRectangle(cornerRadius: theme.radius.medium))
+        .fullScreenCover(isPresented: $viewModel.showLoader) {
+            Auth0Loader()
+                .interactiveDismissDisabled(true)
+        }
+        .fullScreenCover(
+            isPresented: Binding(
+                get: { viewModel.errorViewModel != nil },
+                set: { if !$0 { viewModel.errorViewModel = nil } }
+            )
+        ) {
+            if let errorViewModel = viewModel.errorViewModel {
+                ErrorScreen(viewModel: errorViewModel.dismissable {
+                    viewModel.errorViewModel = nil
+                })
+            }
+        }
     }
 }

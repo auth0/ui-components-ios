@@ -125,9 +125,7 @@ public struct MyAccountAuthMethodsView: View {
     @ViewBuilder
     private var sdkRootContent: some View {
         ZStack {
-            if viewModel.showLoader {
-                Auth0Loader()
-            } else if let errorViewModel = viewModel.errorViewModel {
+            if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
                     .padding()
             } else {
@@ -138,6 +136,11 @@ public struct MyAccountAuthMethodsView: View {
                         }
                     }.padding(.all, theme.spacing.md)
                 }
+                .disabled(viewModel.showLoader)
+            }
+
+            if viewModel.showLoader {
+                loadingOverlay
             }
         }
         .onAppear {
@@ -145,6 +148,30 @@ public struct MyAccountAuthMethodsView: View {
                 await viewModel.loadMyAccountAuthViewComponentData()
             }
         }
+    }
+
+    // MARK: - Loading Overlay
+
+    private var loadingOverlay: some View {
+        Color.black.opacity(0.25)
+            .ignoresSafeArea()
+            .overlay {
+                VStack(spacing: theme.spacing.md) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .tint(theme.colors.background.primary)
+                        .scaleEffect(1.4)
+
+                    Text("Loading…")
+                        .auth0TextStyle(theme.typography.label)
+                        .foregroundStyle(theme.colors.text.bold)
+                }
+                .padding(.horizontal, 36)
+                .padding(.vertical, 28)
+                .background(theme.colors.background.layerTop)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .shadow(color: Color.black.opacity(0.18), radius: 24, x: 0, y: 8)
+            }
     }
 
     // MARK: - Component Builder

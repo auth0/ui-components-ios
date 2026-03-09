@@ -24,9 +24,7 @@ struct PasskeysEnrollmentView: View {
 
     var body: some View {
         ZStack {
-            if viewModel.showLoader {
-                Auth0Loader()
-            } else if let errorViewModel = viewModel.errorViewModel {
+            if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
                 ScrollView(showsIndicators: false) {
@@ -112,11 +110,15 @@ struct PasskeysEnrollmentView: View {
                             }
                             .padding(.top, theme.spacing.lg)
                     }
+                    .padding(theme.spacing.xl)
+                    .padding(.top, theme.spacing.xxl)
                 }
             }
+
+            if viewModel.showLoader {
+                Auth0Loader()
+            }
         }
-        .padding(theme.spacing.xl)
-        .padding(.top, theme.spacing.xxl)
         .background(theme.colors.background.layerBase)
         .ignoresSafeArea()
         .onChange(of: viewModel.navigationRoute) { _ in
