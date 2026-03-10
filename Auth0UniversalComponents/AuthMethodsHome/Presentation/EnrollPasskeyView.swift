@@ -102,11 +102,11 @@ struct EnrollPasskeyView: View {
         .padding(.all, theme.spacing.lg)
         .background(Color("Muted", bundle: ResourceBundle.default))
         .clipShape(RoundedRectangle(cornerRadius: theme.radius.medium))
-        .fullScreenCover(isPresented: $viewModel.showLoader) {
+        .fullScreenCoverOrSheet(isPresented: $viewModel.showLoader) {
             Auth0Loader()
                 .interactiveDismissDisabled(true)
         }
-        .fullScreenCover(
+        .fullScreenCoverOrSheet(
             isPresented: Binding(
                 get: { viewModel.errorViewModel != nil },
                 set: { if !$0 { viewModel.errorViewModel = nil } }

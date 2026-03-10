@@ -84,9 +84,11 @@ public struct MyAccountAuthMethodsView: View {
                 #if !os(macOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
+                #if !os(macOS)
                 .navigationBarBackButtonHidden(true)
+                #endif
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarItem(placement: .platformLeading) {
                         Button {
                             hostDismiss()
                         } label: {

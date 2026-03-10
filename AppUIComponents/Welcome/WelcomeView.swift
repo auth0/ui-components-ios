@@ -34,7 +34,9 @@ struct WelcomeView: View {
             logoutButton()
         }
         .padding(24)
+        #if !os(macOS)
         .navigationBarBackButtonHidden()
+        #endif
         .background(Color("FAF9F9", bundle: .main))
     }
     

@@ -44,9 +44,11 @@ struct ThemeView: View {
         .onAppear {
             viewModel.selectedOption = themeManager.activeOption
         }
+        #if !os(macOS)
         .navigationBarBackButtonHidden(true)
+        #endif
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .platformLeading) {
                 Button {
                     dismiss()
                 } label: {

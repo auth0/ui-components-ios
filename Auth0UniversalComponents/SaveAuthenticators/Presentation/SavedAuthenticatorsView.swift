@@ -65,7 +65,9 @@ struct SavedAuthenticatorsView: View {
             }
         }
         .navigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle)
+        #if !os(macOS)
         .navigationBarBackButtonHidden(true)
+        #endif
         .toolbar {
             ToolbarItem(placement: trailingPlacement) {
                 Image("plus", bundle: ResourceBundle.default)

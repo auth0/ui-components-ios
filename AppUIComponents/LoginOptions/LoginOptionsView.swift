@@ -60,7 +60,9 @@ struct LoginOptionsView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if !os(macOS)
         .navigationBarBackButtonHidden()
+        #endif
         .task {
             let route = await viewModel.checkAuthentication()
 
