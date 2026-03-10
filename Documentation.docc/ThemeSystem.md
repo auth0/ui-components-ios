@@ -95,7 +95,7 @@ struct ContentView: View {
 Pass a custom `Default*` sub-struct for the colour category you want to change. All other tokens in that category keep the built-in Auth0 values:
 
 ```swift
-import Auth0UIComponents
+import Auth0UniversalComponents
 
 struct MyApp: App {
     var body: some Scene {
