@@ -15,11 +15,7 @@ import SwiftUI
 /// Auth0 UI Components work out of the box without any theme setup:
 ///
 /// ```swift
-/// struct ContentView: View {
-///     var body: some View {
-///         MyAccountAuthMethodsView()   // uses Auth0's default palette
-///     }
-/// }
+/// MyAccountAuthMethodsView()  // uses Auth0's default palette
 /// ```
 ///
 /// ## Partial colour override

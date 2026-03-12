@@ -29,6 +29,7 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
     @Published var errorMessage: String?
     @Published var otpText: String = ""
     @Published var apiCallInProgress: Bool = false
+    @Published var navigationRoute: Route?
     var buttonEnabled: Bool {
         otpText.count == 6
     }
@@ -106,9 +107,7 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
             }
             apiCallInProgress = false
             delegate?.refreshAuthData()
-            await NavigationStore.shared.push(
-                .filteredAuthListScreen(type: type, authMethods: [])
-            )
+            navigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
         } catch {
             apiCallInProgress = false
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in

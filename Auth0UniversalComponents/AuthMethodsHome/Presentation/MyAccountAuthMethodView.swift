@@ -9,6 +9,8 @@ import Auth0
 struct MyAccountAuthMethodView: View {
 
     @Environment(\.auth0Theme) private var theme
+    /// SDK router injected by `MyAccountAuthMethodsView` via environmentObject.
+    @EnvironmentObject private var router: Router<Route>
     /// View model providing authentication method details and actions
     @StateObject var viewModel: MyAccountAuthMethodViewModel
 
@@ -45,7 +47,7 @@ struct MyAccountAuthMethodView: View {
                 .stroke(theme.colors.border.regular, lineWidth: 1)
         }
         .onTapGesture {
-            viewModel.handleNavigation()
+            router.navigate(to: viewModel.navigationRoute())
         }
     }
 }

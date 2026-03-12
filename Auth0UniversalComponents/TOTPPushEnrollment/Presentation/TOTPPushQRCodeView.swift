@@ -8,6 +8,7 @@ import SwiftUI
 struct TOTPPushQRCodeView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model managing QR code generation and enrollment state
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
     /// Controls visibility of the "code copied" alert
@@ -26,106 +27,110 @@ struct TOTPPushQRCodeView: View {
     private let filter = CIFilter.qrCodeGenerator()
 
     var body: some View {
-        VStack {
-            if viewModel.showLoader {
-                Auth0Loader()
-            } else if let errorViewModel = viewModel.errorViewModel {
+        ZStack {
+            if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
-                if let qrCodeImage = viewModel.qrCodeImage {
-                    qrCodeImage
-                        .resizable()
-                        .interpolation(.none)
-                        .aspectRatio(1.0, contentMode: .fit)
-                        .padding(.horizontal)
+                VStack {
+                    if let qrCodeImage = viewModel.qrCodeImage {
+                        qrCodeImage
+                            .resizable()
+                            .interpolation(.none)
+                            .aspectRatio(1.0, contentMode: .fit)
+                            .padding(.horizontal)
 
-                    Text(
-                        "Use your Authenticator App (like Google Authenticator or Auth0 Guardian) " +
-                        "to scan this QR code."
-                    )
-                        .auth0TextStyle(theme.typography.body)
-                        .foregroundStyle(theme.colors.text.regular)
-                        .multilineTextAlignment(.center)
-                }
+                        Text(
+                            "Use your Authenticator App (like Google Authenticator or Auth0 Guardian) " +
+                            "to scan this QR code."
+                        )
+                            .auth0TextStyle(theme.typography.body)
+                            .foregroundStyle(theme.colors.text.regular)
+                            .multilineTextAlignment(.center)
+                    }
 
-                if let manualInputCode = viewModel.manualInputCode {
-                    Text(manualInputCode)
-                        .auth0TextStyle(theme.typography.helper)
-                        .foregroundStyle(theme.colors.text.bold)
-                        .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: theme.radius.inputField)
-                                .stroke(theme.colors.background.primary, lineWidth: 1)
-                        }.padding(.bottom, theme.spacing.md)
+                    if let manualInputCode = viewModel.manualInputCode {
+                        Text(manualInputCode)
+                            .auth0TextStyle(theme.typography.helper)
+                            .foregroundStyle(theme.colors.text.bold)
+                            .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: theme.radius.inputField)
+                                    .stroke(theme.colors.background.primary, lineWidth: 1)
+                            }.padding(.bottom, theme.spacing.md)
+
+                        Button {
+                            #if os(macOS)
+                            NSPasteboard.general.setString(manualInputCode, forType: .string)
+                            #else
+                            UIPasteboard.general.string = manualInputCode
+                            #endif
+                            viewModel.toast = Toast(style: .notify, message: "Copied")
+                        } label: {
+                            HStack(alignment: .center, spacing: theme.spacing.xs) {
+                                Image("copy", bundle: ResourceBundle.default)
+                                    .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
+
+                                Text("Copy as Code")
+                                    .auth0TextStyle(theme.typography.label)
+                                    .foregroundStyle(theme.colors.background.primary)
+                            }.padding().frame(maxWidth: .infinity)
+                        }
+                        .frame(height: theme.sizes.buttonHeight)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: theme.radius.pill)
+                                .stroke(theme.colors.background.primary, lineWidth: 2)
+                        )
+                        .cornerRadius(theme.radius.pill)
+                    }
 
                     Button {
-                        #if os(macOS)
-                        NSPasteboard.general.setString(manualInputCode, forType: .string)
-                        #else
-                        UIPasteboard.general.string = manualInputCode
-                        #endif
-                        viewModel.toast = Toast(style: .notify, message: "Copied")
+                        Task {
+                            await viewModel.handleContinueButtonTap()
+                        }
                     } label: {
-                        HStack(alignment: .center, spacing: theme.spacing.xs) {
-                            Image("copy", bundle: ResourceBundle.default)
-                                .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
-
-                            Text("Copy as Code")
-                                .auth0TextStyle(theme.typography.label)
-                                .foregroundStyle(theme.colors.background.primary)
-                        }.padding().frame(maxWidth: .infinity)
+                        HStack {
+                            Spacer()
+                            if viewModel.apiCallInProgress {
+                                Auth0Loader(tintColor: theme.colors.text.onPrimary)
+                            } else {
+                                Text("Continue")
+                                    .foregroundStyle(theme.colors.text.onPrimary)
+                                    .auth0TextStyle(theme.typography.label)
+                            }
+                            Spacer()
+                        }.frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacing.sm)
                     }
                     .frame(height: theme.sizes.buttonHeight)
+                    .background(theme.colors.background.primary)
+                    .cornerRadius(theme.radius.button)
                     .overlay(
-                        RoundedRectangle(cornerRadius: theme.radius.pill)
+                        RoundedRectangle(cornerRadius: theme.radius.button)
                             .stroke(theme.colors.background.primary, lineWidth: 2)
                     )
-                    .cornerRadius(theme.radius.pill)
-                }
+                    .padding(.bottom, 30)
 
-                Button {
-                    Task {
-                        await viewModel.handleContinueButtonTap()
-                    }
-                } label: {
-                    HStack {
-                        Spacer()
-                        if viewModel.apiCallInProgress {
-                            Auth0Loader(tintColor: theme.colors.text.onPrimary)
-                        } else {
-                            Text("Continue")
-                                .foregroundStyle(theme.colors.text.onPrimary)
-                                .auth0TextStyle(theme.typography.label)
+                    Text(attributedString())
+                        .foregroundStyle(theme.colors.text.regular)
+                        .auth0TextStyle(theme.typography.body)
+                        .multilineTextAlignment(.center)
+                        .onTapGesture {
+                            if let url = URL(string: "https://apps.apple.com/us/app/auth0-guardian/id1093447833") {
+                                #if os(macOS)
+                                    NSWorkspace.shared.open(url)
+                                #else
+                                    UIApplication.shared.open(url)
+                                #endif
+                            }
                         }
-                        Spacer()
-                    }.frame(maxWidth: .infinity)
-                        .padding(.vertical, theme.spacing.sm)
                 }
-                .frame(height: theme.sizes.buttonHeight)
-                .background(theme.colors.background.primary)
-                .cornerRadius(theme.radius.button)
-                .overlay(
-                    RoundedRectangle(cornerRadius: theme.radius.button)
-                        .stroke(theme.colors.background.primary, lineWidth: 2)
-                )
-                .padding(.bottom, 30)
+                .padding(.all, theme.spacing.md)
+            }
 
-                Text(attributedString())
-                    .foregroundStyle(theme.colors.text.regular)
-                    .auth0TextStyle(theme.typography.body)
-                    .multilineTextAlignment(.center)
-                    .onTapGesture {
-                        if let url = URL(string: "https://apps.apple.com/us/app/auth0-guardian/id1093447833") {
-                            #if os(macOS)
-                                NSWorkspace.shared.open(url)
-                            #else
-                                UIApplication.shared.open(url)
-                            #endif
-                        }
-                    }
+            if viewModel.showLoader {
+                Auth0Loader()
             }
         }
-        .padding(.all, theme.spacing.md)
         .toastView(toast: $viewModel.toast)
         .navigationTitle(viewModel.navigationTitle())
         #if !os(macOS)
@@ -135,6 +140,10 @@ struct TOTPPushQRCodeView: View {
             Task {
                 await viewModel.fetchEnrollmentChallenge()
             }
+        }
+        .onChange(of: viewModel.navigationRoute) { _ in
+            guard let route = viewModel.navigationRoute else { return }
+            router.navigate(to: route)
         }
     }
 

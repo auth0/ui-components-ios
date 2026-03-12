@@ -180,12 +180,12 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.handleContinueButtonTap()
-            if case let .otpScreen(type, _, challenge, _, _) = NavigationStore.shared.path.last {
+            if case let .otpScreen(type, _, challenge, _, _) = viewModel.navigationRoute {
                 #expect(type == .totp)
                 #expect(challenge?.authenticationId == totpEnrollmentChallenge?.authenticationId)
                 #expect(challenge?.authenticationSession == totpEnrollmentChallenge?.authenticationSession)
             } else {
-                Issue.record("Navigation path was not .otpScreen, was \(String(describing: NavigationStore.shared.path.last))")
+                Issue.record("Navigation path was not .otpScreen, was \(String(describing: viewModel.navigationRoute))")
             }
         }
     }
@@ -226,7 +226,7 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.handleContinueButtonTap()
-            #expect(NavigationStore.shared.path.last == Route.filteredAuthListScreen(type: .pushNotification, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .pushNotification, authMethods: []))
         }
     }
 

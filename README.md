@@ -132,7 +132,12 @@ struct MyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack {
+                MyRootView()
+                    .navigationDestination(for: AppRoute.self) { route in
+                        // Your app's route handler
+                    }
+            }
         }
     }
 }
@@ -140,21 +145,30 @@ struct MyApp: App {
 
 ### Step 3: Use UI Components
 
-Once initialized, you can use any of the provided UI components in your views:
+Once initialized, embed `MyAccountAuthMethodsView` inside your app's `NavigationStack`. Use `.embeddedInNavigationStack()` and inject your navigation path so the SDK can push its internal screens onto your stack:
 
 ```swift
 import SwiftUI
 import Auth0UniversalComponents
 
-struct ContentView: View {
-    var body: some View {
-        NavigationView {
-            List {
-                NavigationLink(destination: MyAccountAuthMethodsView()) {
-                    Text("Authentication Methods")
-                }
+@main
+struct MyApp: App {
+    @StateObject private var router = Router<AppRoute>()
+
+    var body: some Scene {
+        WindowGroup {
+            NavigationStack(path: $router.path) {
+                MyRootView()
+                    .navigationDestination(for: AppRoute.self) { route in
+                        switch route {
+                        case .authMethods:
+                            MyAccountAuthMethodsView()
+                                .embeddedInNavigationStack()
+                        }
+                    }
             }
-            .navigationTitle("Account Settings")
+            .environment(\.hostNavigationPath, $router.path)
+            .environmentObject(router)
         }
     }
 }

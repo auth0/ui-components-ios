@@ -17,15 +17,20 @@ final class PasskeysEnrollmentViewModel: NSObject,
                                         ASAuthorizationControllerDelegate,
                                         ErrorViewModelHandler {
 
+    // MARK: - Properties
     private let startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable
     private let confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable
     private let dependencies: Auth0UniversalComponentsSDKInitializer
     private var passkeyChallenge: PasskeyEnrollmentChallenge?
     private var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
+    
+    // MARK: - Published properties
     @Published var showLoader: Bool = false
     @Published var errorViewModel: ErrorScreenViewModel?
+    @Published var navigationRoute: Route?
 
+    // MARK: - Init
     init(startPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable = StartPasskeyEnrollmentUseCase(),
          confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable = ConfirmPasskeyEnrollmentUseCase(),
          dependencies: Auth0UniversalComponentsSDKInitializer = .shared,
@@ -54,6 +59,8 @@ final class PasskeysEnrollmentViewModel: NSObject,
     }
 
     func startEnrollment() async {
+        showLoader = true
+        errorViewModel = nil
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -68,12 +75,12 @@ final class PasskeysEnrollmentViewModel: NSObject,
             passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(
                 request: startPasskeysEnrollmentRequest
             )
+            showLoader = false
             enrollPasskey()
         } catch {
-            await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
-                Task {
-                    await self?.startEnrollment()
-                }
+            showLoader = false
+            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
+                Task { await self?.startEnrollment() }
             }
         }
     }
@@ -100,7 +107,7 @@ final class PasskeysEnrollmentViewModel: NSObject,
                         )
                         _ = try await confirmPasskeyEnrollmentUseCase.execute(request: confirmPasskeyEnrollmentRequest)
                         delegate?.refreshAuthData()
-                        await NavigationStore.shared.push(.filteredAuthListScreen(type: .passkey, authMethods: []))
+                        navigationRoute = .filteredAuthListScreen(type: .passkey, authMethods: [])
                     } catch {
                         await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                             Task {

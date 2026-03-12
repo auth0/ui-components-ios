@@ -85,7 +85,7 @@ struct EmailPhoneViewModelTests {
             }
             viewModel.phoneNumber = "1111000222"
             await viewModel.startEnrollment()
-            #expect(NavigationStore.shared.path.last == Route.otpScreen(type: .sms, emailOrPhoneNumber: "+11111000222", phoneEnrollmentChallenge: phoneEnrollmentChallenge))
+            #expect(viewModel.navigationRoute == Route.otpScreen(type: .sms, emailOrPhoneNumber: "+11111000222", phoneEnrollmentChallenge: phoneEnrollmentChallenge))
         }
     }
 
@@ -110,7 +110,7 @@ struct EmailPhoneViewModelTests {
             }
             viewModel.email = "example@auth0.com"
             await viewModel.startEnrollment()
-            #expect(NavigationStore.shared.path.last == Route.otpScreen(type: .email, emailOrPhoneNumber: "example@auth0.com", emailEnrollmentChallenge: emailEnrollmentChallenge))
+            #expect(viewModel.navigationRoute == Route.otpScreen(type: .email, emailOrPhoneNumber: "example@auth0.com", emailEnrollmentChallenge: emailEnrollmentChallenge))
         }
     }
 

@@ -20,6 +20,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
     @Published var apiCallInProgress: Bool = false
     @Published var toast: Toast?
+    @Published var navigationRoute: Route?
 
     init(
         startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCaseable = StartRecoveryCodeEnrollmentUseCase(),
@@ -75,9 +76,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
                     request: confirmRecoveryCodeEnrollmentRequest
                 )
                 apiCallInProgress = false
-                await NavigationStore.shared.push(
-                    .filteredAuthListScreen(type: .recoveryCode, authMethods: [])
-                )
+                navigationRoute = .filteredAuthListScreen(type: .recoveryCode, authMethods: [])
                 delegate?.refreshAuthData()
             } catch {
                 apiCallInProgress = false

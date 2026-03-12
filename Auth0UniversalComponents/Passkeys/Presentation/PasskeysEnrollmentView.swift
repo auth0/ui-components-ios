@@ -11,6 +11,7 @@ import SwiftUI
 struct PasskeysEnrollmentView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model handling passkey enrollment state and logic
     @StateObject private var viewModel: PasskeysEnrollmentViewModel
 
@@ -23,9 +24,7 @@ struct PasskeysEnrollmentView: View {
 
     var body: some View {
         ZStack {
-            if viewModel.showLoader {
-                Auth0Loader()
-            } else if let errorViewModel = viewModel.errorViewModel {
+            if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
                 ScrollView(showsIndicators: false) {
@@ -107,16 +106,24 @@ struct PasskeysEnrollmentView: View {
                             .auth0TextStyle(theme.typography.label)
                             .foregroundStyle(theme.colors.text.bold)
                             .onTapGesture {
-                                NavigationStore.shared.pop()
+                                router.pop()
                             }
                             .padding(.top, theme.spacing.lg)
                     }
+                    .padding(theme.spacing.xl)
+                    .padding(.top, theme.spacing.xxl)
                 }
             }
+
+            if viewModel.showLoader {
+                Auth0Loader()
+            }
         }
-        .padding(theme.spacing.xl)
-        .padding(.top, theme.spacing.xxl)
         .background(theme.colors.background.layerBase)
         .ignoresSafeArea()
+        .onChange(of: viewModel.navigationRoute) { _ in
+            guard let route = viewModel.navigationRoute else { return }
+            router.navigate(to: route)
+        }
     }
 }

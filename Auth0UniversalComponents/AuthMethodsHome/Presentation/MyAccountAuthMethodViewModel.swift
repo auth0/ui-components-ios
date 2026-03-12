@@ -35,10 +35,12 @@ final class MyAccountAuthMethodViewModel: ObservableObject {
         type.image
     }
 
-    func handleNavigation() {
-        Task {
-            await NavigationStore.shared.push(type.navigationDestination(authMethods))
-        }
+    /// Returns the `Route` to navigate to when the user taps this auth method card.
+    ///
+    /// Navigation is driven by `MyAccountAuthMethodView` via the `Router<Route>`
+    /// environment object, keeping the view model free of navigation concerns.
+    func navigationRoute() -> Route {
+        type.navigationDestination(authMethods)
     }
 }
 

@@ -137,11 +137,9 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
             if supportedFactors.isEmpty == false {
                 for factor in supportedFactors {
                     let filteredAuthMethods = self.authMethods.filter { $0.type == factor.rawValue }
-                    viewComponents.append(.additionalVerificationMethods(model: MyAccountAuthMethodViewModel(
-                        authMethods: filteredAuthMethods,
-                        type: factor,
-                        dependencies: dependencies
-                    )))
+                    viewComponents.append(.additionalVerificationMethods(model: MyAccountAuthMethodViewModel(authMethods: filteredAuthMethods,
+                                                                                                             type: factor,
+                                                                                                             dependencies: dependencies)))
                 }
 
                 self.viewComponents = viewComponents

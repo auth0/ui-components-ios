@@ -9,6 +9,7 @@ import Auth0
 struct RecoveryCodeEnrollmentView: View {
 
     @Environment(\.auth0Theme) private var theme
+    @EnvironmentObject private var router: Router<Route>
     /// View model managing recovery code state and enrollment logic
     @StateObject private var viewModel: RecoveryCodeEnrollmentViewModel
 
@@ -131,5 +132,9 @@ struct RecoveryCodeEnrollmentView: View {
         #if os(iOS) || os(watchOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .onChange(of: viewModel.navigationRoute) { _ in
+            guard let route = viewModel.navigationRoute else { return }
+            router.navigate(to: route)
+        }
     }
 }

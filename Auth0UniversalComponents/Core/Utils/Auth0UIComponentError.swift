@@ -74,7 +74,7 @@ extension Auth0UIComponentError {
         switch self {
         case .networkError:
             var subTitleText = AttributedString("Please check your internet connection")
-            subTitleText.foregroundColor = theme.colors.text.onPrimary
+            subTitleText.foregroundColor = theme.colors.text.regular
 
             return ErrorScreenViewModel(
                 title: "Connection problem",
@@ -87,7 +87,7 @@ extension Auth0UIComponentError {
             )
         case .invalidMfaCode:
             var subTitleText = AttributedString("The code you entered is incorrect or has expired. Please try again.")
-            subTitleText.foregroundColor = theme.colors.text.onPrimary
+            subTitleText.foregroundColor = theme.colors.text.regular
 
             return ErrorScreenViewModel(
                 title: "Invalid verification code",
@@ -100,7 +100,7 @@ extension Auth0UIComponentError {
             )
         case .sessionExpired:
             var subTitleText = AttributedString("Your session has expired. Please login again to continue.")
-            subTitleText.foregroundColor = theme.colors.text.onPrimary
+            subTitleText.foregroundColor = theme.colors.text.regular
 
             return ErrorScreenViewModel(
                 title: "Session expired",
@@ -115,7 +115,7 @@ extension Auth0UIComponentError {
             let errorMsg = "Your account has been temporarily blocked due to too many failed attempts. " +
                            "Please try again later."
             var subTitleText = AttributedString(errorMsg)
-            subTitleText.foregroundColor = theme.colors.text.onPrimary
+            subTitleText.foregroundColor = theme.colors.text.regular
 
             return ErrorScreenViewModel(
                 title: "Too many attempts",
@@ -147,7 +147,7 @@ extension Auth0UIComponentError {
             let generalErrorMsg = "We are unable to process your request. Please try again in a few " +
                                  "minutes. If this problem persists, please contact us."
             var full = AttributedString(generalErrorMsg)
-            full.foregroundColor = theme.colors.text.onPrimary
+            full.foregroundColor = theme.colors.text.regular
 
             if let range = full.range(of: "contact us.") {
                 full[range].underlineStyle = .single
