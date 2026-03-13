@@ -3,16 +3,8 @@ import Auth0UniversalComponents
 
 struct SplashView: View {
     
-    // MARK: - View Model
-    @StateObject private var viewModel: SplashViewModel
-    
     // MARK: - Router
     @EnvironmentObject var router: Router<SampleAppRoute>
-    
-    // MARK: - Init
-    init(viewModel: SplashViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
     
     // MARK: - Main body
     var body: some View {

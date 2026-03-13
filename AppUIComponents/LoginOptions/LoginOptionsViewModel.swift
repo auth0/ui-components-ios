@@ -3,7 +3,7 @@ import Combine
 import Auth0
 
 @MainActor
-class LoginOptionsViewModel: ObservableObject {
+final class LoginOptionsViewModel: ObservableObject {
     
     typealias LoginOptionModel = LoginOptionsView.LoginOptionsModel
     
@@ -76,23 +76,5 @@ class LoginOptionsViewModel: ObservableObject {
                 self?.isLoading = false
                 self?.navigationRoute = .welcome
             }.store(in: &cancellables)
-    }
-}
-
-struct LoginError: Error, Equatable {
-    var message: String
-    var failureReason: String?
-    
-    init(message: String, failureReason: String? = nil) {
-        self.message = message
-        self.failureReason = failureReason
-    }
-    
-    init(error: Error) {
-        self.init(message: error.localizedDescription, failureReason: nil)
-    }
-    
-    init (webAuthError: WebAuthError) {
-        self.init(message: webAuthError.message, failureReason: webAuthError.failureReason)
     }
 }
