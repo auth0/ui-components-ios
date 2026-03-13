@@ -6,8 +6,7 @@ struct ViewFactory {
     static func view(for route: SampleAppRoute) -> some View {
         switch route {
         case .splash:
-            let viewModel = SplashViewModel()
-            SplashView(viewModel: viewModel)
+            SplashView()
         case .loginOptions:
             let viewModel = LoginOptionsViewModel()
             LoginOptionsView(viewModel: viewModel)
