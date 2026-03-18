@@ -15,24 +15,24 @@ final class ProfileViewModel: ObservableObject {
     // Shared instances avoid re-allocation on every call. POSIX locale locks month names to
     // English to match the hardcoded ordinal suffixes ("st", "nd", "rd", "th").
     private static let monthFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "MMMM"
-        return f
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMMM"
+        return formatter
     }()
 
     private static let yearFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "yyyy"
-        return f
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy"
+        return formatter
     }()
 
     private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "H:mm:ss"
-        return f
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "H:mm:ss"
+        return formatter
     }()
 
     // MARK: - Init
@@ -126,9 +126,9 @@ final class ProfileViewModel: ObservableObject {
         let suffix: String
         switch day {
         case 11, 12, 13: suffix = "th"
-        case let d where d % 10 == 1: suffix = "st"
-        case let d where d % 10 == 2: suffix = "nd"
-        case let d where d % 10 == 3: suffix = "rd"
+        case let day where day % 10 == 1: suffix = "st"
+        case let day where day % 10 == 2: suffix = "nd"
+        case let day where day % 10 == 3: suffix = "rd"
         default: suffix = "th"
         }
 
