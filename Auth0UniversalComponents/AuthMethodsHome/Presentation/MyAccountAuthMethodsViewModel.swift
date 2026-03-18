@@ -120,11 +120,15 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
             let supportedFactors = self.factors.compactMap { AuthMethodType(rawValue: $0.type) }
 
             var viewComponents: [MyAccountAuthViewComponentData] = []
-            if authMethods.filter({ $0.type == "passkey" }).isEmpty == true {
-                if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
-                    viewComponents.append(.createPasskey(model: PasskeysEnrollmentViewModel(delegate: self)))
-                }
-            }
+            
+            // Uncomment the following code to display a banner prompting the user to add a Passkey
+            // every time they land on the Login & Security screen — even if they've previously dismissed it.
+//            if authMethods.filter({ $0.type == "passkey" }).isEmpty == true {
+//                if #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) {
+//                    viewComponents.append(.createPasskey(model: PasskeysEnrollmentViewModel(delegate: self)))
+//                }
+//            }
+            
             viewComponents.append(.title(text: "Sign-in methods"))
             viewComponents.append(.subtitle(text: "Manage how you signed into the account"))
             let viewModel = MyAccountAuthMethodViewModel(authMethods: authMethods.filter { $0.type == AuthMethodType.passkey.rawValue },
