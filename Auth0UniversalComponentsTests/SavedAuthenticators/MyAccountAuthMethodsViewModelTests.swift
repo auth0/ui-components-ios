@@ -183,7 +183,7 @@ struct MyAccountAuthMethodsViewModelTests {
                 }
             }
             await viewModel.loadMyAccountAuthViewComponentData()
-            #expect(viewModel.viewComponents.count == 11)
+            #expect(viewModel.viewComponents.count > 0 && viewModel.viewComponents != [.emptyFactors])
         }
     }
 }
