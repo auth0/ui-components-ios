@@ -53,7 +53,7 @@ struct PasskeysEnrollmentView: View {
                                     .multilineTextAlignment(.leading)
                                     .auth0TextStyle(theme.typography.body)
                                     .foregroundStyle(theme.colors.text.regular)
-                                    .padding(.bottom, 30)
+                                    .padding(.bottom, theme.spacing.lg)
 
                                 Text("• Where are passkeys saved?")
                                     .auth0TextStyle(theme.typography.title)
@@ -64,7 +64,7 @@ struct PasskeysEnrollmentView: View {
                                 Text("Passkeys are saved in your credential manager, so you can sign in on other devices.")
                                     .auth0TextStyle(theme.typography.body)
                                     .foregroundStyle(theme.colors.text.regular)
-                                    .padding(.bottom, 30)
+                                    .padding(.bottom, theme.spacing.lg)
                             }
                         }
 
@@ -77,7 +77,7 @@ struct PasskeysEnrollmentView: View {
                                 Text("Create a Passkey")
                                     .auth0TextStyle(theme.typography.label)
                                     .foregroundStyle(theme.colors.text.onPrimary)
-                                    .padding(.vertical, 10)
+                                    .padding(.vertical, theme.spacing.sm)
                             } icon: {
                                 Image("passkey", bundle: ResourceBundle.default)
                                     .resizable()
@@ -100,7 +100,7 @@ struct PasskeysEnrollmentView: View {
                         .background(theme.colors.background.primary)
                         .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
                         .shadow(color: Color.black.opacity(0.20), radius: 2, x: 0, y: 1)
-                        .padding(.top, theme.spacing.xxl)
+                        .padding(.top, theme.spacing.xl)
 
                         Text("Skip")
                             .auth0TextStyle(theme.typography.label)

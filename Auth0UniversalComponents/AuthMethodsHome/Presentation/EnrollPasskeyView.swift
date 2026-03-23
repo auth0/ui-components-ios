@@ -17,7 +17,7 @@ struct EnrollPasskeyView: View {
     @ObservedObject var viewModel: PasskeysEnrollmentViewModel
 
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             Text("With Passkey, you don't have to remember complex passwords.")
                 .auth0TextStyle(theme.typography.label)
                 .foregroundStyle(theme.colors.text.bold)
@@ -95,6 +95,7 @@ struct EnrollPasskeyView: View {
                     .foregroundStyle(theme.colors.background.primary)
             }
             .frame(height: theme.sizes.buttonHeight)
+            .frame(maxWidth: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
             .padding(.top, theme.spacing.xs)
 
