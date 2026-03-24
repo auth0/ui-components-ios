@@ -52,9 +52,8 @@ struct ErrorScreen: View {
                     viewModel.handleDismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(theme.colors.text.bold)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 44, height: 44)
                         .background(theme.colors.background.layerTop)
                         .clipShape(Circle())
                         .shadow(color: Color.black.opacity(0.12), radius: 4, x: 0, y: 2)
@@ -62,5 +61,6 @@ struct ErrorScreen: View {
                 .padding(theme.spacing.md)
             }
         }
+        .background(theme.colors.background.layerBase)
     }
 }

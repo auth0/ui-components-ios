@@ -54,13 +54,20 @@ struct EnrollPasskeyView: View {
                 }
             } label: {
                 Label {
-                    Text("Add a Passkey")
-                        .auth0TextStyle(theme.typography.label)
-                        .foregroundStyle(theme.colors.background.primary)
+                    if viewModel.showLoader {
+                        Auth0Loader(tintColor: theme.colors.background.primary)
+                            .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
+                    } else {
+                        Text("Add a Passkey")
+                            .auth0TextStyle(theme.typography.label)
+                            .foregroundStyle(theme.colors.background.primary)
+                    }
                 } icon: {
-                    Image("passkey", bundle: ResourceBundle.default)
-                        .resizable()
-                        .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
+                    if viewModel.showLoader == false {
+                        Image("passkey", bundle: ResourceBundle.default)
+                            .resizable()
+                            .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
+                    }
                 }.frame(maxWidth: .infinity)
             }
             .disabled(viewModel.showLoader)
@@ -102,12 +109,7 @@ struct EnrollPasskeyView: View {
         .padding(.all, theme.spacing.lg)
         .background(Color("Muted", bundle: ResourceBundle.default))
         .clipShape(RoundedRectangle(cornerRadius: theme.radius.medium))
-        .fullScreenCoverOrSheet(isPresented: $viewModel.showLoader) {
-            Auth0Loader()
-                .interactiveDismissDisabled(true)
-        }
-        .fullScreenCoverOrSheet(
-            isPresented: Binding(
+        .sheet(isPresented: Binding(
                 get: { viewModel.errorViewModel != nil },
                 set: { if !$0 { viewModel.errorViewModel = nil } }
             )

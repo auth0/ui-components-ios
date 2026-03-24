@@ -85,7 +85,10 @@ struct EmailPhoneViewModelTests {
             }
             viewModel.phoneNumber = "1111000222"
             await viewModel.startEnrollment()
-            #expect(viewModel.navigationRoute == Route.otpScreen(type: .sms, emailOrPhoneNumber: "+11111000222", phoneEnrollmentChallenge: phoneEnrollmentChallenge))
+            let config = viewModel.otpSheetConfig
+            #expect(config?.type == .sms)
+            #expect(config?.emailOrPhoneNumber == "+11111000222")
+            #expect(config?.phoneEnrollmentChallenge?.authenticationId == phoneEnrollmentChallenge?.authenticationId)
         }
     }
 
@@ -110,7 +113,10 @@ struct EmailPhoneViewModelTests {
             }
             viewModel.email = "example@auth0.com"
             await viewModel.startEnrollment()
-            #expect(viewModel.navigationRoute == Route.otpScreen(type: .email, emailOrPhoneNumber: "example@auth0.com", emailEnrollmentChallenge: emailEnrollmentChallenge))
+            let config = viewModel.otpSheetConfig
+            #expect(config?.type == .email)
+            #expect(config?.emailOrPhoneNumber == "example@auth0.com")
+            #expect(config?.emailEnrollmentChallenge?.authenticationId == emailEnrollmentChallenge?.authenticationId)
         }
     }
 

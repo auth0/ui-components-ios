@@ -8,17 +8,6 @@ struct ViewFactory {
         case let .totpPushQRScreen(type):
             TOTPPushQRCodeView(viewModel: TOTPPushQRCodeViewModel(type: type,
                                                                   delegate: delegate))
-        case let .otpScreen(type,
-                            emailOrPhoneNumber,
-                            totpEnrollmentChallege,
-                            phoneEnrollmentChallenge,
-                            emailEnrollmentChallenge):
-            OTPView(viewModel: OTPViewModel(totpEnrollmentChallenge: totpEnrollmentChallege,
-                                            emailEnrollmentChallenge: emailEnrollmentChallenge,
-                                            phoneEnrollmentChallenge: phoneEnrollmentChallenge,
-                                            type: type,
-                                            emailOrPhoneNumber: emailOrPhoneNumber,
-                                            delegate: delegate))
         case let .filteredAuthListScreen(type, authMethods):
             SavedAuthenticatorsView(viewModel: SavedAuthenticatorsViewModel(type: type,
                                                                             authenticationMethods: authMethods,
