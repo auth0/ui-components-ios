@@ -15,18 +15,10 @@ struct TOTPPushQRCodeView: View {
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
 
     // MARK: - State properties
-    /// Controls visibility of the "code copied" alert
-    @State private var showCopiedAlert = false
     /// Drives the OTP sheet — non-nil presents the sheet, nil dismisses it
     @State private var otpSheetItem: OTPSheetItem?
     /// Pending navigation route to push after the OTP sheet dismisses
     @State private var pendingNavigationRoute: Route?
-
-    // MARK: - Properties
-    /// Core Image context for QR code generation
-    private let context = CIContext()
-    /// QR code filter for generating QR codes
-    private let filter = CIFilter.qrCodeGenerator()
 
     // MARK: - Init
     /// Initializes the TOTP/Push QR code view.

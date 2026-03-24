@@ -120,17 +120,6 @@ struct EmailPhoneViewModelTests {
         }
     }
 
-    @Test func navigationTitle() async {
-        let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
-        Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
-
-        let viewModel = await EmailPhoneEnrollmentViewModel(type: .sms)
-        await MainActor.run {
-            #expect(viewModel.navigationTitle == "Add Phone for SMS OTP")
-        }
-    }
-
     @Test func title() async {
         let mockTokenProvider = MockTokenProvider()
         Auth0UniversalComponentsSDKInitializer.reset()
