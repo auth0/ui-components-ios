@@ -72,6 +72,7 @@ struct OTPView: View {
 
             continueButton()
                 .padding(.horizontal, theme.spacing.lg)
+                .padding(.bottom, theme.spacing.xl)
         }
         .background(theme.colors.background.layerBase.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
@@ -85,7 +86,7 @@ struct OTPView: View {
             focusedField = 0
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, theme.spacing.xl)
+        .ignoresSafeArea()
         .background(theme.colors.background.layerBase)
         #if os(iOS)
         .presentationDetents([.fraction(0.65), .large])
