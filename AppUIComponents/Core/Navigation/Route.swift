@@ -4,4 +4,5 @@ public enum SampleAppRoute: Hashable {
     case welcome
     case landing
     case appearance
+    case profile(model: ProfileModel)
 }

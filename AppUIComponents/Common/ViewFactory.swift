@@ -19,6 +19,9 @@ struct ViewFactory {
         case .appearance:
             let viewModel = ThemeViewModel()
             ThemeView(viewModel: viewModel)
+        case .profile(let model):
+            let viewModel = ProfileViewModel(profile: model)
+            ProfileView(viewModel: viewModel)
         }
     }
 }
