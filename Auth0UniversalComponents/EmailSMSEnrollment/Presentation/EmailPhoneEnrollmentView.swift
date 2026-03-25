@@ -63,7 +63,7 @@ struct EmailPhoneEnrollmentView: View {
                 Text("We will text you a verification code.")
                     .auth0TextStyle(theme.typography.body)
                     .foregroundStyle(theme.colors.text.regular)
-                    .padding(.bottom, 25)
+                    .padding(.bottom, theme.spacing.lg)
 
                 Text(viewModel.isPhoneAuthMethod ? "Phone number" : "Email")
                     .auth0TextStyle(theme.typography.label)
@@ -82,6 +82,7 @@ struct EmailPhoneEnrollmentView: View {
             
             continueButton()
                 .padding(.horizontal, theme.spacing.lg)
+                .padding(.bottom, theme.spacing.xl)
         }
         .frame(maxWidth: .infinity)
         .ignoresSafeArea(.keyboard)
@@ -93,7 +94,9 @@ struct EmailPhoneEnrollmentView: View {
         }
         // Legacy OTP sheet — only active in nav-push mode (onOTPReady == nil)
         .background(
-         theme.colors.background.layerBase.sheet(isPresented: $showOTPSheet, onDismiss: {
+         theme.colors.background.layerBase
+            .ignoresSafeArea(edges: .bottom)
+            .sheet(isPresented: $showOTPSheet, onDismiss: {
                 if let route = pendingNavigationRoute {
                     router.navigate(to: route)
                     pendingNavigationRoute = nil
@@ -131,7 +134,6 @@ struct EmailPhoneEnrollmentView: View {
                 showOTPSheet = true
             }
         }
-        .padding(.bottom, theme.spacing.xl)
         #if os(iOS)
         .presentationDetents([.fraction(0.65), .large])
         .presentationDragIndicator(.visible)
