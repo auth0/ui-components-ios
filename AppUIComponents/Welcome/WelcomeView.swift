@@ -2,73 +2,94 @@ import SwiftUI
 import Auth0UniversalComponents
 
 struct WelcomeView: View {
-    
+
     // MARK: - Properties
     @StateObject private var viewModel: WelcomeViewModel
-    
+    @State private var tileHeight: CGFloat = 0
+
     // MARK: - Router
     @EnvironmentObject var router: Router<SampleAppRoute>
-    
+
+    // MARK: - Theme
+    @Environment(\.auth0Theme) private var theme
+
     // MARK: - Init
     init(viewModel: WelcomeViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
-    
+
     // MARK: - Main body
     var body: some View {
-        VStack(alignment: .center, spacing: 24) {
-            VStack(spacing: 8) {
-                Text("Hi,")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(Color.black)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                
-                Text("Discover how to utilize auth0’s powerful native SDK and account API in this app.")
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(Color("606060", bundle: .main))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-            }
-            
+        VStack(alignment: .center, spacing: theme.spacing.lg) {
+
+            headerView()
+
             makeAvailableOptionsList()
-            
+
             logoutButton()
         }
-        .padding(24)
+        .padding(theme.spacing.lg)
+        .padding(.top, theme.spacing.xxl)
         #if !os(macOS)
         .navigationBarBackButtonHidden()
         #endif
-        .background(Color("FAF9F9", bundle: .main))
+        .background(theme.colors.background.layerBase)
     }
-    
+
+    // MARK: - Header View
+    @ViewBuilder
+    private func headerView() -> some View {
+        VStack(spacing: theme.spacing.xs) {
+            Text("Hi, \(viewModel.userName)")
+                .auth0TextStyle(theme.typography.displayMedium)
+                .foregroundStyle(theme.colors.text.bold)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+
+            Text("Discover how to utilize auth0's powerful native SDK and account API in this app.")
+                .auth0TextStyle(theme.typography.body)
+                .foregroundStyle(theme.colors.text.regular)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .padding(.top, theme.spacing.xxl)
+    }
+
     @ViewBuilder
     private func makeAvailableOptionsList() -> some View {
-        // 1. Define two flexible columns
         let columns = [
             GridItem(.flexible()),
             GridItem(.flexible())
         ]
-        
+
         ScrollView {
-            // 2. Pass columns to the LazyVGrid
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: theme.spacing.md) {
                 ForEach($viewModel.options) { item in
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Image(item.icon.wrappedValue, bundle: .main)
-                            .frame(width: 24, height: 24)
-                        
+                            .padding(theme.spacing.xxs)
+                            .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
+
+                        // Flexible gap: collapses to minLength on natural height,
+                        // expands to push the title to the bottom when a uniform
+                        // height is enforced across all tiles.
+                        Spacer(minLength: theme.spacing.lg)
+
                         Text(item.title.wrappedValue)
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Color("191919", bundle: .main))
-                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                            .auth0TextStyle(theme.typography.title)
+                            .foregroundStyle(theme.colors.text.bold)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .padding(.all, 20)
+                    .padding(theme.spacing.lg)
+                    // On the first pass tileHeight is 0 so tiles render at their natural
+                    // height. Once the PreferenceKey reports the maximum, all tiles are
+                    // given that fixed height so the Spacer can push the title to the bottom.
+                    .frame(maxWidth: .infinity, minHeight: tileHeight > 0 ? tileHeight : nil)
                     .contentShape(Rectangle())
-                    .background(Color.white)
+                    .background(theme.colors.background.layerBase)
                     .cornerRadius(20)
                     .overlay {
                         RoundedRectangle(cornerRadius: 20)
                             .inset(by: 0.5)
-                            .stroke(Color("E8E8E8", bundle: .main), lineWidth: 1)
+                            .stroke(theme.colors.border.regular, lineWidth: 1)
                     }
                     .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
                     .onTapGesture {
@@ -77,12 +98,17 @@ struct WelcomeView: View {
                         }
                         router.navigate(to: route)
                     }
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear.preference(key: TileHeightKey.self, value: geo.size.height)
+                        }
+                    )
                 }
             }
-            .padding()
         }
+        .onPreferenceChange(TileHeightKey.self) { tileHeight = $0 }
     }
-    
+
     @ViewBuilder
     private func logoutButton() -> some View {
         Button {
@@ -96,5 +122,12 @@ struct WelcomeView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 14)
         }
+    }
+}
+
+private struct TileHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
