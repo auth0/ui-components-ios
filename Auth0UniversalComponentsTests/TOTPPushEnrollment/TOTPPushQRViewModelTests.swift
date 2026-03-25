@@ -180,12 +180,12 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.handleContinueButtonTap()
-            if case let .otpScreen(type, _, challenge, _, _) = viewModel.navigationRoute {
-                #expect(type == .totp)
-                #expect(challenge?.authenticationId == totpEnrollmentChallenge?.authenticationId)
-                #expect(challenge?.authenticationSession == totpEnrollmentChallenge?.authenticationSession)
+            if let config = viewModel.otpSheetConfig {
+                #expect(config.type == .totp)
+                #expect(config.totpEnrollmentChallenge?.authenticationId == totpEnrollmentChallenge?.authenticationId)
+                #expect(config.totpEnrollmentChallenge?.authenticationSession == totpEnrollmentChallenge?.authenticationSession)
             } else {
-                Issue.record("Navigation path was not .otpScreen, was \(String(describing: viewModel.navigationRoute))")
+                Issue.record("otpSheetConfig was nil after handleContinueButtonTap")
             }
         }
     }

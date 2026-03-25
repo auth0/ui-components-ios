@@ -7,13 +7,20 @@ import SwiftUI
 /// cases where QR code scanning is not possible.
 struct TOTPPushQRCodeView: View {
 
+    // MARK: - Theme
     @Environment(\.auth0Theme) private var theme
+    // MARK: - Navigation
     @EnvironmentObject private var router: Router<Route>
-    /// View model managing QR code generation and enrollment state
+    // MARK: - View Model
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
-    /// Controls visibility of the "code copied" alert
-    @State private var showCopiedAlert = false
 
+    // MARK: - State properties
+    /// Drives the OTP sheet — non-nil presents the sheet, nil dismisses it
+    @State private var otpSheetItem: OTPSheetItem?
+    /// Pending navigation route to push after the OTP sheet dismisses
+    @State private var pendingNavigationRoute: Route?
+
+    // MARK: - Init
     /// Initializes the TOTP/Push QR code view.
     ///
     /// - Parameter viewModel: The view model managing QR code state and enrollment
@@ -21,11 +28,7 @@ struct TOTPPushQRCodeView: View {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
 
-    /// Core Image context for QR code generation
-    private let context = CIContext()
-    /// QR code filter for generating QR codes
-    private let filter = CIFilter.qrCodeGenerator()
-
+    // MARK: - Main body
     var body: some View {
         ZStack {
             if let errorViewModel = viewModel.errorViewModel {
@@ -145,6 +148,38 @@ struct TOTPPushQRCodeView: View {
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }
+        .onChange(of: viewModel.otpSheetConfig) { _ in
+            guard let config = viewModel.otpSheetConfig else { return }
+            otpSheetItem = OTPSheetItem(
+                viewModel: OTPViewModel(
+                    totpEnrollmentChallenge: config.totpEnrollmentChallenge,
+                    emailEnrollmentChallenge: config.emailEnrollmentChallenge,
+                    phoneEnrollmentChallenge: config.phoneEnrollmentChallenge,
+                    type: config.type,
+                    emailOrPhoneNumber: config.emailOrPhoneNumber,
+                    delegate: nil,
+                    onSuccess: { type in
+                        pendingNavigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
+                        otpSheetItem = nil
+                    }
+                )
+            )
+        }
+        .sheet(item: $otpSheetItem, onDismiss: {
+            viewModel.otpSheetConfig = nil
+            if let route = pendingNavigationRoute {
+                router.navigate(to: route)
+                pendingNavigationRoute = nil
+            }
+        }) { item in
+            OTPView(viewModel: item.viewModel)
+        }
+    }
+
+    // MARK: - Sheet item
+    private struct OTPSheetItem: Identifiable {
+        let id = UUID()
+        let viewModel: OTPViewModel
     }
 
     func attributedString() -> AttributedString {

@@ -13,9 +13,14 @@ struct MyAccountAuthMethodView: View {
     @EnvironmentObject private var router: Router<Route>
     /// View model providing authentication method details and actions
     @StateObject var viewModel: MyAccountAuthMethodViewModel
+    /// Called instead of `router.navigate` when the route is `emailPhoneEnrollmentScreen`.
+    /// When nil the view falls back to push navigation (legacy path).
+    var onPresentEmailPhoneSheet: ((AuthMethodType) -> Void)?
 
-    init(viewModel: MyAccountAuthMethodViewModel) {
+    init(viewModel: MyAccountAuthMethodViewModel,
+         onPresentEmailPhoneSheet: ((AuthMethodType) -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onPresentEmailPhoneSheet = onPresentEmailPhoneSheet
     }
 
     var body: some View {
@@ -47,7 +52,13 @@ struct MyAccountAuthMethodView: View {
                 .stroke(theme.colors.border.regular, lineWidth: 1)
         }
         .onTapGesture {
-            router.navigate(to: viewModel.navigationRoute())
+            let route = viewModel.navigationRoute()
+            if case let .emailPhoneEnrollmentScreen(type) = route,
+               let onPresentEmailPhoneSheet {
+                onPresentEmailPhoneSheet(type)
+            } else {
+                router.navigate(to: route)
+            }
         }
     }
 }

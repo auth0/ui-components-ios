@@ -62,6 +62,16 @@ public struct MyAccountAuthMethodsView: View {
     /// When `true`, the passkey enrollment banner is hidden.
     @State var collapsePasskeyBanner: Bool = false
 
+    // MARK: - Email/Phone sheet state
+
+    @State private var emailPhoneSheetType: AuthMethodType?
+    @State private var showEmailPhoneSheet = false
+    /// Holds the OTP config received from EmailPhoneEnrollmentView, pending the dismiss animation.
+    @State private var pendingOTPConfig: OTPSheetConfig?
+    @State private var otpViewModel: OTPViewModel?
+    @State private var showOTPSheet = false
+    @State private var pendingNavigationRoute: Route?
+
     // MARK: - Init
 
     /// Creates the view. Dependencies are resolved from the environment at render time.
@@ -150,6 +160,51 @@ public struct MyAccountAuthMethodsView: View {
                 await viewModel.loadMyAccountAuthViewComponentData()
             }
         }
+        // Email/Phone enrollment sheet — presented instead of pushing the route
+        .sheet(isPresented: $showEmailPhoneSheet, onDismiss: {
+            guard let config = pendingOTPConfig else { return }
+            pendingOTPConfig = nil
+            let vm = OTPViewModel(
+                totpEnrollmentChallenge: config.totpEnrollmentChallenge,
+                emailEnrollmentChallenge: config.emailEnrollmentChallenge,
+                phoneEnrollmentChallenge: config.phoneEnrollmentChallenge,
+                type: config.type,
+                emailOrPhoneNumber: config.emailOrPhoneNumber,
+                delegate: viewModel,
+                onSuccess: { type in
+                    pendingNavigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
+                    showOTPSheet = false
+                }
+            )
+            otpViewModel = vm
+            showOTPSheet = true
+        }) {
+            if let type = emailPhoneSheetType {
+                EmailPhoneEnrollmentView(
+                    viewModel: EmailPhoneEnrollmentViewModel(type: type),
+                    onOTPReady: { config in
+                        pendingOTPConfig = config
+                        showEmailPhoneSheet = false
+                    }
+                )
+            }
+        }
+        // OTP sheet — presented after email/phone sheet finishes dismissing (via onDismiss above).
+        // Attached to a separate view node to avoid the multiple-.sheet-on-same-view issue.
+        .background(
+            Color.clear
+                .sheet(isPresented: $showOTPSheet, onDismiss: {
+                    if let route = pendingNavigationRoute {
+                        router.navigate(to: route)
+                        pendingNavigationRoute = nil
+                        otpViewModel = nil
+                    }
+                }) {
+                    if let vm = otpViewModel {
+                        OTPView(viewModel: vm)
+                    }
+                }
+        )
     }
 
     // MARK: - Loading Overlay
@@ -176,6 +231,13 @@ public struct MyAccountAuthMethodsView: View {
             }
     }
 
+    // MARK: - Sheet helpers
+
+    private func presentEmailPhoneSheet(type: AuthMethodType) {
+        emailPhoneSheetType = type
+        showEmailPhoneSheet = true
+    }
+
     // MARK: - Component Builder
 
     /// Returns the view for a single `MyAccountAuthViewComponentData` item.
@@ -192,7 +254,8 @@ public struct MyAccountAuthMethodsView: View {
                 }
             }
         case .signinMethods(let viewModel):
-            MyAccountAuthMethodView(viewModel: viewModel)
+            MyAccountAuthMethodView(viewModel: viewModel,
+                                    onPresentEmailPhoneSheet: presentEmailPhoneSheet)
                 .padding(.bottom, theme.spacing.xxl)
         case .title(let text):
             Text(text)
@@ -204,7 +267,8 @@ public struct MyAccountAuthMethodsView: View {
                 .auth0TextStyle(theme.typography.helper)
                 .padding(.bottom, theme.spacing.md)
         case .additionalVerificationMethods(let viewModel):
-            MyAccountAuthMethodView(viewModel: viewModel)
+            MyAccountAuthMethodView(viewModel: viewModel,
+                                    onPresentEmailPhoneSheet: presentEmailPhoneSheet)
         case .emptyFactors:
             EmptyFactorsView()
         }

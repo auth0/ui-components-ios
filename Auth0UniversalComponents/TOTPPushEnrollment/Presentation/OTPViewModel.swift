@@ -12,6 +12,7 @@ import Foundation
 /// Handles input validation, code confirmation, and transitions to next steps.
 @MainActor
 final class OTPViewModel: ObservableObject, ErrorMessageHandler {
+    // MARK: - Properties
     private let totpEnrollmentChallenge: TOTPEnrollmentChallenge?
     private var phoneEnrollmentChallenge: PhoneEnrollmentChallenge?
     private var emailEnrollmentChallenge: EmailEnrollmentChallenge?
@@ -25,15 +26,20 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
     private let emailOrPhoneNumber: String?
     private weak var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
+    
+    // MARK: - Published properties
     @Published var showLoader: Bool = false
     @Published var errorMessage: String?
     @Published var otpText: String = ""
     @Published var apiCallInProgress: Bool = false
-    @Published var navigationRoute: Route?
+    
+    // MARK: - Computed properties
+    var onSuccess: (@MainActor (AuthMethodType) -> Void)?
     var buttonEnabled: Bool {
         otpText.count == 6
     }
 
+    // MARK: - Init
     init(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable = StartPhoneEnrollmentUseCase(),
          confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCaseable = ConfirmPhoneEnrollmentUseCase(),
          startEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable = StartEmailEnrollmentUseCase(),
@@ -45,7 +51,8 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
          phoneEnrollmentChallenge: PhoneEnrollmentChallenge? = nil,
          type: AuthMethodType,
          emailOrPhoneNumber: String? = nil,
-         delegate: RefreshAuthDataProtocol?
+         delegate: RefreshAuthDataProtocol?,
+         onSuccess: (@MainActor (AuthMethodType) -> Void)? = nil
     ) {
         self.dependencies = dependencies
         self.type = type
@@ -59,6 +66,7 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
         self.phoneEnrollmentChallenge = phoneEnrollmentChallenge
         self.totpEnrollmentChallenge = totpEnrollmentChallenge
         self.delegate = delegate
+        self.onSuccess = onSuccess
     }
 
     func confirmEnrollment() async {
@@ -107,7 +115,7 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
             }
             apiCallInProgress = false
             delegate?.refreshAuthData()
-            navigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
+            onSuccess?(type)
         } catch {
             apiCallInProgress = false
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in

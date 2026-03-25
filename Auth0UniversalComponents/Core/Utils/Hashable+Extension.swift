@@ -16,12 +16,6 @@ enum Route: Hashable {
     case totpPushQRScreen(type: AuthMethodType)
     /// Route to the recovery code enrollment screen
     case recoveryCodeScreen
-    /// Route to the OTP verification screen with associated challenge data
-    case otpScreen(type: AuthMethodType,
-                   emailOrPhoneNumber: String? = nil,
-                   totpEnrollmentChallege: TOTPEnrollmentChallenge? = nil,
-                   phoneEnrollmentChallenge: PhoneEnrollmentChallenge? = nil,
-                   emailEnrollmentChallenge: EmailEnrollmentChallenge? = nil)
     /// Route to the filtered authentication method selection screen
     case filteredAuthListScreen(type: AuthMethodType,
                                 authMethods: [AuthenticationMethod])
