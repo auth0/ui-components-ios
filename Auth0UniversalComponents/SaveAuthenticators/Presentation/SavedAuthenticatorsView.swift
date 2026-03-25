@@ -36,7 +36,7 @@ struct SavedAuthenticatorsView: View {
                         Text(viewModel.type.savedAuthenticatorsEmptyStateMessage)
                             .auth0TextStyle(theme.typography.helper)
                             .foregroundStyle(theme.colors.text.regular)
-                            .padding(.vertical, 25.5)
+                            .padding(.vertical, theme.spacing.lg)
                             .frame(maxWidth: .infinity)
                             .background(theme.colors.background.layerMedium)
                         Spacer()
@@ -47,21 +47,25 @@ struct SavedAuthenticatorsView: View {
                                     AuthenticatorView(type: viewModel.type,
                                                       authenticationMethod: authMethod,
                                                       showManageBottomSheet: $viewModel.showManageAuthSheet)
-                                        .confirmationDialog(viewModel.type.confirmationDialogTitle,
-                                                            isPresented: $viewModel.showManageAuthSheet,
-                                                            titleVisibility: .visible) {
-                                            Button(viewModel.type.confirmationDialogDestructiveButtonTitle,
-                                                   role: .destructive) {
-                                                Task {
-                                                   await viewModel.deleteAuthMethod(authMethod: authMethod)
-                                                }
+                                    .confirmationDialog(viewModel.type.confirmationDialogTitle,
+                                                        isPresented: $viewModel.showManageAuthSheet,
+                                                        titleVisibility: .visible) {
+                                        Button(viewModel.type.confirmationDialogDestructiveButtonTitle,
+                                               role: .destructive) {
+                                            Task {
+                                                await viewModel.deleteAuthMethod(authMethod: authMethod)
                                             }
                                         }
+                                    }
                                 }
                             }
                         }
                     }
-                }.padding(EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16))
+                }
+                .padding(EdgeInsets(top: theme.spacing.lg,
+                                    leading: theme.spacing.md,
+                                    bottom: theme.spacing.lg,
+                                    trailing: theme.spacing.md))
             }
         }
         .navigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle)
@@ -88,6 +92,7 @@ struct SavedAuthenticatorsView: View {
                 await viewModel.loadData()
             }
         }
+        .background(theme.colors.background.layerBase)
     }
 
     var trailingPlacement: ToolbarItemPlacement {
@@ -117,6 +122,7 @@ struct AuthenticatorView: View {
 
     var body: some View {
         HStack {
+            
             VStack(alignment: .leading, spacing: theme.spacing.xxs) {
                 Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
                     .auth0TextStyle(theme.typography.label)
@@ -126,7 +132,9 @@ struct AuthenticatorView: View {
                     .auth0TextStyle(theme.typography.helper)
                     .foregroundStyle(theme.colors.text.regular)
             }
+            
             Spacer()
+            
             Image("threedots", bundle: ResourceBundle.default)
                 .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
                 .onTapGesture {
@@ -134,11 +142,14 @@ struct AuthenticatorView: View {
                         showManageBottomSheet = true
                     }
                 }
+            
         }
-        .padding()
+        .padding(theme.spacing.lg)
         .overlay {
             RoundedRectangle(cornerRadius: theme.radius.button)
                 .stroke(theme.colors.border.regular, lineWidth: 1)
         }
+        .background(theme.colors.background.layerMedium)
+        .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
     }
 }

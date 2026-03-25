@@ -28,7 +28,7 @@ struct WelcomeView: View {
 
             logoutButton()
         }
-        .padding(theme.spacing.lg)
+        .padding(theme.spacing.xl)
         .padding(.top, theme.spacing.xxl)
         #if !os(macOS)
         .navigationBarBackButtonHidden()
@@ -50,7 +50,6 @@ struct WelcomeView: View {
                 .foregroundStyle(theme.colors.text.regular)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding(.top, theme.spacing.xxl)
     }
 
     @ViewBuilder
@@ -63,50 +62,57 @@ struct WelcomeView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: theme.spacing.md) {
                 ForEach($viewModel.options) { item in
-                    VStack(alignment: .leading, spacing: 0) {
-                        Image(item.icon.wrappedValue, bundle: .main)
-                            .padding(theme.spacing.xxs)
-                            .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
-
-                        // Flexible gap: collapses to minLength on natural height,
-                        // expands to push the title to the bottom when a uniform
-                        // height is enforced across all tiles.
-                        Spacer(minLength: theme.spacing.lg)
-
-                        Text(item.title.wrappedValue)
-                            .auth0TextStyle(theme.typography.title)
-                            .foregroundStyle(theme.colors.text.bold)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(theme.spacing.lg)
-                    // On the first pass tileHeight is 0 so tiles render at their natural
-                    // height. Once the PreferenceKey reports the maximum, all tiles are
-                    // given that fixed height so the Spacer can push the title to the bottom.
-                    .frame(maxWidth: .infinity, minHeight: tileHeight > 0 ? tileHeight : nil)
-                    .contentShape(Rectangle())
-                    .background(theme.colors.background.layerBase)
-                    .cornerRadius(20)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 20)
-                            .inset(by: 0.5)
-                            .stroke(theme.colors.border.regular, lineWidth: 1)
-                    }
-                    .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
-                    .onTapGesture {
-                        guard let route = item.route.wrappedValue else {
-                            return
-                        }
-                        router.navigate(to: route)
-                    }
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear.preference(key: TileHeightKey.self, value: geo.size.height)
-                        }
-                    )
+                    optionTile(for: item)
                 }
             }
         }
         .onPreferenceChange(TileHeightKey.self) { tileHeight = $0 }
+    }
+
+    // MARK: - Option Tile
+    @ViewBuilder
+    private func optionTile(for item: Binding<WelcomeOptionsModel>) -> some View {
+        let isAvailable = item.route.wrappedValue != nil
+
+        VStack(alignment: .leading, spacing: 0) {
+            Image(item.icon.wrappedValue, bundle: .main)
+                .padding(theme.spacing.xxs)
+                .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
+
+            // Flexible gap: collapses to minLength on natural height,
+            // expands to push the title to the bottom when a uniform
+            // height is enforced across all tiles.
+            Spacer(minLength: theme.spacing.lg)
+
+            Text(item.title.wrappedValue)
+                .auth0TextStyle(theme.typography.title)
+                .foregroundStyle(theme.colors.text.bold)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(theme.spacing.lg)
+        // On the first pass tileHeight is 0 so tiles render at their natural
+        // height. Once the PreferenceKey reports the maximum, all tiles are
+        // given that fixed height so the Spacer can push the title to the bottom.
+        .frame(maxWidth: .infinity, minHeight: tileHeight > 0 ? tileHeight : nil)
+        .contentShape(Rectangle())
+        .background(theme.colors.background.layerMedium)
+        .cornerRadius(20)
+        .overlay {
+            RoundedRectangle(cornerRadius: 20)
+                .inset(by: 0.5)
+                .stroke(theme.colors.border.regular, lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
+        .opacity(isAvailable ? 1 : 0.4)
+        .onTapGesture {
+            guard let route = item.route.wrappedValue else { return }
+            router.navigate(to: route)
+        }
+        .background(
+            GeometryReader { geo in
+                Color.clear.preference(key: TileHeightKey.self, value: geo.size.height)
+            }
+        )
     }
 
     @ViewBuilder
