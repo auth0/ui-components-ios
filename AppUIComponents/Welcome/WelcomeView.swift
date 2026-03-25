@@ -78,13 +78,13 @@ struct WelcomeView: View {
                             .foregroundStyle(theme.colors.text.bold)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .padding(.all, 20)
+                    .padding(theme.spacing.lg)
                     // On the first pass tileHeight is 0 so tiles render at their natural
                     // height. Once the PreferenceKey reports the maximum, all tiles are
                     // given that fixed height so the Spacer can push the title to the bottom.
                     .frame(maxWidth: .infinity, minHeight: tileHeight > 0 ? tileHeight : nil)
                     .contentShape(Rectangle())
-                    .background(Color.white)
+                    .background(theme.colors.background.layerBase)
                     .cornerRadius(20)
                     .overlay {
                         RoundedRectangle(cornerRadius: 20)

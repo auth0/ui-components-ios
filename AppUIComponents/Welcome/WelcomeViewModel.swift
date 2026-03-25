@@ -1,7 +1,6 @@
 import SwiftUI
 import Combine
 import Auth0
-import Auth0UniversalComponents
 
 struct WelcomeOptionsModel: Identifiable {
     let id = UUID().uuidString
@@ -34,7 +33,7 @@ class WelcomeViewModel: ObservableObject {
         completion()
     }
     
-    /// Method to fetch avaialble options
+    /// Method to fetch available options
     func fetchAndUpdateOptions() {
         checkAndAddProfileOption()
     }

@@ -1,5 +1,3 @@
-import Auth0
-
 public enum SampleAppRoute: Hashable {
     case splash
     case loginOptions

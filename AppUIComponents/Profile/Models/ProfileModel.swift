@@ -1,7 +1,7 @@
 import Foundation
 import Auth0
 
-public struct ProfileModel: Equatable, Hashable {
+public struct ProfileModel: Hashable {
     // MARK: - Properties
     let name: String
     let givenName: String?
@@ -11,7 +11,7 @@ public struct ProfileModel: Equatable, Hashable {
     let lastUpdatedAt: Date?
     
     // MARK: - Init
-    init(name: String, givenName: String, familyName: String, email: String, emailVerified: Bool, lastUpdatedAt: Date?) {
+    init(name: String, givenName: String?, familyName: String?, email: String?, emailVerified: Bool?, lastUpdatedAt: Date?) {
         self.name = name
         self.givenName = givenName
         self.familyName = familyName

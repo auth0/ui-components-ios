@@ -49,6 +49,8 @@ struct ProfileView: View {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(theme.colors.text.bold)
+                        .accessibilityLabel("Back")
+                        .accessibilityHint("Go back to the previous screen")
                 }
             }
         }
@@ -141,11 +143,8 @@ struct ProfileView: View {
 
             if row.route.isNotNil {
                 Image(systemName: "chevron.right")
-                    .resizable()
+                    .font(.system(size: theme.sizes.iconSmall))
                     .foregroundStyle(theme.colors.background.primary)
-                    .padding(.vertical, theme.spacing.xxs)
-                    .padding(.horizontal, 6)
-                    .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
             }
         }
         .padding(theme.spacing.md)

@@ -81,7 +81,7 @@ final class ProfileViewModel: ObservableObject {
     // MARK: - Build Sections
 
     private func buildSections(for option: ThemeOption) {
-        let name = combinedName
+        let name = displayName
         let email = profile.email
         let dateStr = formattedDate(profile.lastUpdatedAt)
 
