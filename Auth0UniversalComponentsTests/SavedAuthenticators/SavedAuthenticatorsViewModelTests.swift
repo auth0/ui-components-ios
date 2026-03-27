@@ -338,11 +338,14 @@ struct SavedAuthenticatorsViewModelTests {
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         // Two distinct SMS methods loaded into the list.
+        // Note: IDs intentionally use only URL-safe characters (no '|') so that
+        // the literal ID string can be matched against the percent-decoded request
+        // URL without needing to account for encoding of special characters.
         let twoMethodsData = Data("""
         {
           "authentication_methods": [
             {
-              "id": "phone|method_one",
+              "id": "phone-method-keep",
               "created_at": "2025-07-30T13:01:00.970Z",
               "confirmed": true,
               "usage": ["secondary"],
@@ -350,7 +353,7 @@ struct SavedAuthenticatorsViewModelTests {
               "phone_number": "XXXXXXXXX0001"
             },
             {
-              "id": "phone|method_two",
+              "id": "phone-method-delete",
               "created_at": "2025-08-01T10:00:00.000Z",
               "confirmed": true,
               "usage": ["secondary"],
@@ -366,7 +369,7 @@ struct SavedAuthenticatorsViewModelTests {
         {
           "authentication_methods": [
             {
-              "id": "phone|method_one",
+              "id": "phone-method-keep",
               "created_at": "2025-07-30T13:01:00.970Z",
               "confirmed": true,
               "usage": ["secondary"],
