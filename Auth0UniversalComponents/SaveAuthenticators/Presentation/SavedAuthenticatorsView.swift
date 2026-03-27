@@ -46,17 +46,9 @@ struct SavedAuthenticatorsView: View {
                                 ForEach(viewModel.viewAuthenticationMethods, id: \.self) { authMethod in
                                     AuthenticatorView(type: viewModel.type,
                                                       authenticationMethod: authMethod,
-                                                      showManageBottomSheet: $viewModel.showManageAuthSheet)
-                                    .confirmationDialog(viewModel.type.confirmationDialogTitle,
-                                                        isPresented: $viewModel.showManageAuthSheet,
-                                                        titleVisibility: .visible) {
-                                        Button(viewModel.type.confirmationDialogDestructiveButtonTitle,
-                                               role: .destructive) {
-                                            Task {
-                                                await viewModel.deleteAuthMethod(authMethod: authMethod)
-                                            }
-                                        }
-                                    }
+                                                      onDelete: {
+                                        await viewModel.deleteAuthMethod(authMethod: authMethod)
+                                    })
                                 }
                             }
                         }
@@ -112,44 +104,3 @@ struct SavedAuthenticatorsView: View {
     }
 }
 
-struct AuthenticatorView: View {
-
-    @Environment(\.auth0Theme) private var theme
-
-    let type: AuthMethodType
-    let authenticationMethod: AuthenticationMethod
-    @Binding var showManageBottomSheet: Bool
-
-    var body: some View {
-        HStack {
-            
-            VStack(alignment: .leading, spacing: theme.spacing.xxs) {
-                Text(authenticationMethod.name ?? type.savedAuthenticatorsCellTitle)
-                    .auth0TextStyle(theme.typography.label)
-                    .foregroundStyle(theme.colors.text.bold)
-
-                Text("Created on \(authenticationMethod.formatIsoDate)")
-                    .auth0TextStyle(theme.typography.helper)
-                    .foregroundStyle(theme.colors.text.regular)
-            }
-            
-            Spacer()
-            
-            Image("threedots", bundle: ResourceBundle.default)
-                .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
-                .onTapGesture {
-                    DispatchQueue.main.async {
-                        showManageBottomSheet = true
-                    }
-                }
-            
-        }
-        .padding(theme.spacing.lg)
-        .overlay {
-            RoundedRectangle(cornerRadius: theme.radius.button)
-                .stroke(theme.colors.border.regular, lineWidth: 1)
-        }
-        .background(theme.colors.background.layerMedium)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
-    }
-}

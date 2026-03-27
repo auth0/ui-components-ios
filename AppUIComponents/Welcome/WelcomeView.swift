@@ -104,6 +104,7 @@ struct WelcomeView: View {
         }
         .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
         .opacity(isAvailable ? 1 : 0.4)
+        .disabled(!isAvailable)
         .onTapGesture {
             guard let route = item.route.wrappedValue else { return }
             router.navigate(to: route)
