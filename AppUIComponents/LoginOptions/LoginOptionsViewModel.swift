@@ -14,7 +14,7 @@ final class LoginOptionsViewModel: ObservableObject {
                                                                    description: "Easy to setup, works instantly"),
                                                             .init(type: .embeddedLogin,
                                                                    icon: "ic_embedded_login",
-                                                                   title: "Embedded Login",
+                                                                   title: "Embedded Login (coming soon)",
                                                                    description: "Total brand control and low user frictions")]
     @Published var navigationRoute: SampleAppRoute? = nil
     @Published var error: LoginError? = nil

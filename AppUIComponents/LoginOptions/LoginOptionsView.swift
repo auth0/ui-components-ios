@@ -5,7 +5,7 @@ struct LoginOptionsView: View {
 
     // MARK: - Properties
     @StateObject private var viewModel: LoginOptionsViewModel
-    @State private var selectedOption: LoginOption?
+    @State private var selectedOption: LoginOption? = .hostedLogin
     @State private var showAlert: Bool = false
     @State private var showComingSoonDialog: Bool = false
 
@@ -44,7 +44,7 @@ struct LoginOptionsView: View {
                         Image("ic_appearance")
 
                         Text("Appearance")
-                            .auth0TextStyle(theme.typography.label)
+                            .auth0TextStyle(theme.typography.title)
                             .foregroundStyle(theme.colors.background.primary)
                     }
                     .frame(maxWidth: .infinity)
@@ -73,7 +73,7 @@ struct LoginOptionsView: View {
         .alert("Coming Soon", isPresented: $showComingSoonDialog) {
             Button("Got it", role: .cancel) { selectedOption = nil; showComingSoonDialog = false }
         } message: {
-            Text("Embedded login is currently under development. Stay tuned for updates!")
+            Text("Feature is currently under development. Stay tuned for updates!")
         }
         .alert("", isPresented: $showAlert) {
             Button("OK", role: .cancel) { selectedOption = nil; showAlert = false }
@@ -162,6 +162,30 @@ struct LoginOptionsView: View {
                     ForEach($viewModel.loginOptionModels, id: \.self) { model in
                         makeLoginOptionView(for: model.wrappedValue)
                     }
+                    
+                    Button {
+                        switch selectedOption {
+                        case .hostedLogin:
+                            viewModel.performUniversalLogin()
+                        default:
+                            showComingSoonDialog = true
+                        }
+                    } label: {
+                        HStack {
+                            Text("Continue")
+                                .foregroundStyle(theme.colors.text.onPrimary)
+                                .auth0TextStyle(theme.typography.label)
+                        }.frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacing.sm)
+                    }
+                    .frame(height: theme.sizes.buttonHeight)
+                    .background(theme.colors.background.primary)
+                    .cornerRadius(theme.radius.button)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: theme.radius.button)
+                            .stroke(theme.colors.background.primary, lineWidth: 2)
+                    )
+                    
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -186,16 +210,11 @@ struct LoginOptionsView: View {
                     )
             }
             .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
+            .disabled(option.type == .embeddedLogin)
+            .opacity(option.type != .embeddedLogin ? 1 : 0.4)
             .onTapGesture {
-                guard !viewModel.isLoading else { return }
+                guard !viewModel.isLoading, option.type != .embeddedLogin else { return }
                 selectedOption = option.type
-
-                switch option.type {
-                case .embeddedLogin:
-                    showComingSoonDialog = true
-                case .hostedLogin:
-                    viewModel.performUniversalLogin()
-                }
             }
     }
 
