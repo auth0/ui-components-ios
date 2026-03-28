@@ -89,10 +89,6 @@ struct LoginOptionsView: View {
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }
-        .onAppear {
-            // Reset the selected option when the LoginOptionsView reappears for state reset
-            selectedOption = nil
-        }
     }
 
     // MARK: - Loading Overlay
@@ -179,13 +175,16 @@ struct LoginOptionsView: View {
                             .padding(.vertical, theme.spacing.sm)
                     }
                     .frame(height: theme.sizes.buttonHeight)
-                    .background(theme.colors.background.primary)
+                    .background(theme.colors.background.primary.opacity(selectedOption.isNotNil ? 1.0 : 0.5))
                     .cornerRadius(theme.radius.button)
+                    .disabled(selectedOption.isNil)
                     .overlay(
                         RoundedRectangle(cornerRadius: theme.radius.button)
-                            .stroke(theme.colors.background.primary, lineWidth: 2)
+                            .strokeBorder(
+                                theme.colors.background.primary.opacity(selectedOption.isNotNil ? 1.0 : 0.5),
+                                lineWidth: 2
+                            )
                     )
-                    
                 }
             }
             .fixedSize(horizontal: false, vertical: true)
