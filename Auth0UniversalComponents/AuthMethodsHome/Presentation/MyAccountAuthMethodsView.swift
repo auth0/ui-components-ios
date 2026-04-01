@@ -129,7 +129,6 @@ public struct MyAccountAuthMethodsView: View {
         ZStack {
             if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
-                    .padding()
             } else {
                 ScrollView(showsIndicators: false) {
                     LazyVStack(alignment: .leading, spacing: theme.spacing.xs) {

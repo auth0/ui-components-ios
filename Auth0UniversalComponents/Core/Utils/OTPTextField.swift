@@ -53,14 +53,7 @@ struct OTPTextField: UIViewRepresentable {
 
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
 
-        let doneButton = UIBarButtonItem(
-            title: "Done",
-            style: .plain,
-            target: textField,
-            action: #selector(UIResponder.resignFirstResponder)
-        )
-
-        toolbar.items = [flex, doneButton]
+        toolbar.items = [flex]
         #if !os(visionOS)
         textField.inputAccessoryView = toolbar
         #endif

@@ -9,6 +9,8 @@ import Foundation
 /// they no longer need.
 @MainActor
 final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandler {
+    
+    // MARK: - Properties
     private let dependencies: Auth0UniversalComponentsSDKInitializer
     private let authenticationMethods: [AuthenticationMethod]
     let type: AuthMethodType
@@ -16,10 +18,13 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
     private let deleteAuthMethodUseCase: DeleteAuthMethodUseCaseable
     private weak var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
-    @Published var showManageAuthSheet: Bool = false
+    
+    // MARK: - Published properties
     @Published var showLoader: Bool = true
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var viewAuthenticationMethods: [AuthenticationMethod] = []
+    
+    // MARK: - Init
     init(dependencies: Auth0UniversalComponentsSDKInitializer = .shared,
          getAuthMethodsUseCase: GetAuthMethodsUseCaseable = GetAuthMethodsUseCase(),
          deleteAuthMethodsUseCase: DeleteAuthMethodUseCaseable = DeleteAuthMethodUseCase(),
@@ -34,6 +39,7 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
         self.delegate = delegate
     }
 
+    // MARK: - Methods
     func deleteAuthMethod(authMethod: AuthenticationMethod) async {
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(

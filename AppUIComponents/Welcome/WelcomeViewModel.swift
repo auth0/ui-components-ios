@@ -36,6 +36,7 @@ class WelcomeViewModel: ObservableObject {
     /// Method to fetch available options
     func fetchAndUpdateOptions() {
         checkAndAddProfileOption()
+        checkAndAddOtherOptions()
     }
     
     func checkAndAddProfileOption() {
@@ -47,5 +48,14 @@ class WelcomeViewModel: ObservableObject {
             options.append(WelcomeOptionsModel(icon: "ic_person", title: "Profile", route: .profile(model: .init(fromUserInfo: user,
                                                                                                                  withName: name))))
         }
+    }
+    
+    func checkAndAddOtherOptions() {
+        options.append(contentsOf: [
+            WelcomeOptionsModel(icon: "ic_tokens", title: "Tokens"),
+            WelcomeOptionsModel(icon: "ic_sessions", title: "Sessions"),
+            WelcomeOptionsModel(icon: "ic_docs", title: "Docs"),
+            WelcomeOptionsModel(icon: "ic_favorites", title: "Favorites")
+        ])
     }
 }

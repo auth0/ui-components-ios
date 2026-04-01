@@ -90,7 +90,6 @@ struct SavedAuthenticatorsViewModelTests {
         await MainActor.run {
             #expect(viewModel.showLoader == true)
             #expect(viewModel.errorViewModel == nil)
-            #expect(viewModel.showManageAuthSheet == false)
         }
     }
 
@@ -326,9 +325,107 @@ struct SavedAuthenticatorsViewModelTests {
             }
 
             await viewModel.deleteAuthMethod(authMethod: authMethods[0])
+        }
+    }
 
-            // Verify error was handled
-            #expect(viewModel.showManageAuthSheet == false, "Sheet should be closed after error")
+    /// Verifies that `deleteAuthMethod` targets the specific method passed to it and
+    /// leaves all other methods intact — guarding against the bug where a shared
+    /// `showManageAuthSheet` binding caused an arbitrary row's action to fire instead
+    /// of the one the user actually tapped.
+    @Test func testDeletion_deletesOnlyTargetedAuthMethod() async {
+        let mockTokenProvider = MockTokenProvider()
+        Auth0UniversalComponentsSDKInitializer.reset()
+        Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
+
+        // Two distinct SMS methods loaded into the list.
+        // Note: IDs intentionally use only URL-safe characters (no '|') so that
+        // the literal ID string can be matched against the percent-decoded request
+        // URL without needing to account for encoding of special characters.
+        let twoMethodsData = Data("""
+        {
+          "authentication_methods": [
+            {
+              "id": "phone-method-keep",
+              "created_at": "2025-07-30T13:01:00.970Z",
+              "confirmed": true,
+              "usage": ["secondary"],
+              "type": "phone",
+              "phone_number": "XXXXXXXXX0001"
+            },
+            {
+              "id": "phone-method-delete",
+              "created_at": "2025-08-01T10:00:00.000Z",
+              "confirmed": true,
+              "usage": ["secondary"],
+              "type": "phone",
+              "phone_number": "XXXXXXXXX0002"
+            }
+          ]
+        }
+        """.utf8)
+
+        // After deletion the API returns only the first method.
+        let afterDeletionData = Data("""
+        {
+          "authentication_methods": [
+            {
+              "id": "phone-method-keep",
+              "created_at": "2025-07-30T13:01:00.970Z",
+              "confirmed": true,
+              "usage": ["secondary"],
+              "type": "phone",
+              "phone_number": "XXXXXXXXX0001"
+            }
+          ]
+        }
+        """.utf8)
+
+        let twoMethods = (try? JSONDecoder().decode(AuthenticationMethods.self, from: twoMethodsData))?.authenticationMethods ?? []
+        let methodToKeep = twoMethods[0]
+        let methodToDelete = twoMethods[1]
+
+        let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
+        let deleteAuthMethodsUseCase = DeleteAuthMethodUseCase(session: makeMockSession())
+        let viewModel = await SavedAuthenticatorsViewModel(
+            getAuthMethodsUseCase: getAuthMethodsUseCase,
+            deleteAuthMethodsUseCase: deleteAuthMethodsUseCase,
+            type: .sms,
+            authenticationMethods: [],
+            delegate: nil
+        )
+
+        var deletedRequestURL: String?
+
+        await confirmation(expectedCount: 2) { @MainActor confirmation in
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil
+                )!
+                if request.httpMethod == "DELETE" {
+                    deletedRequestURL = request.url?.absoluteString
+                    confirmation()
+                    return (response, nil)
+                } else {
+                    confirmation()
+                    return (response, afterDeletionData)
+                }
+            }
+
+            // Explicitly delete the second method — not the first.
+            await viewModel.deleteAuthMethod(authMethod: methodToDelete)
+
+            // The DELETE request must target the second method's ID.
+            #expect(deletedRequestURL?.contains(methodToDelete.id) == true,
+                    "DELETE request should target the tapped method, not an arbitrary row")
+
+            // The first method must still be in the list.
+            #expect(viewModel.viewAuthenticationMethods.count == 1,
+                    "Exactly one method should remain after deletion")
+            #expect(viewModel.viewAuthenticationMethods.first?.id == methodToKeep.id,
+                    "The surviving method should be the one that was NOT deleted")
         }
     }
 
@@ -383,32 +480,6 @@ struct SavedAuthenticatorsViewModelTests {
             // Verify empty list is handled
             #expect(viewModel.viewAuthenticationMethods.isEmpty, "Should have no authentication methods")
             #expect(viewModel.showLoader == false, "Loader should be hidden")
-        }
-    }
-
-    // MARK: - State Management Tests
-
-    @Test func testManageAuthSheet_stateManagement() async {
-        let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
-        Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
-
-        let viewModel = await SavedAuthenticatorsViewModel(
-            type: .sms,
-            authenticationMethods: authMethods,
-            delegate: nil
-        )
-
-        // Verify initial state
-        await MainActor.run {
-            #expect(viewModel.showManageAuthSheet == false, "Sheet should be closed initially")
-
-            // Toggle sheet state
-            viewModel.showManageAuthSheet = true
-            #expect(viewModel.showManageAuthSheet == true, "Sheet should be open after setting")
-
-            viewModel.showManageAuthSheet = false
-            #expect(viewModel.showManageAuthSheet == false, "Sheet should be closed after setting")
         }
     }
 

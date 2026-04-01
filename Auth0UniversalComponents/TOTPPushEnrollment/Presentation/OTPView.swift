@@ -140,9 +140,16 @@ struct OTPView: View {
                 )
                 .frame(width: theme.sizes.size2xlDimen, height: theme.sizes.size3xlDimen, alignment: .center)
                 .background(
-                    RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
-                        .stroke(Color.gray, lineWidth: 2)
+                    ZStack {
+                        if focusedField == index {
+                            RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
+                                .strokeBorder(theme.colors.border.subtle, lineWidth: 3)
+                        }
+                        RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
+                            .strokeBorder(theme.colors.border.shadow, lineWidth: 1)
+                    }
                 )
+                .shadow(color: .black.opacity(0.07), radius: 4, x: 0, y: 2)
                 .tag(index)
                 .focused($focusedField, equals: index)
             })
