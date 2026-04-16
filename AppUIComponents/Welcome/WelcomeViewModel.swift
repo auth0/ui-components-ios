@@ -27,10 +27,21 @@ class WelcomeViewModel: ObservableObject {
     
     /// Method to perform logout
     func performLogout(withCompletion completion: @escaping () -> Void) {
-        
-        _ = credentialsManager.clear()
-        
-        completion()
+        // Clear the web browser cookies
+        Auth0.webAuth()
+            .clearSession(federated: false) { [weak self] result in
+                switch result {
+                case .success(_):
+                    
+                    _ = self?.credentialsManager.clear()
+                    
+                    completion()
+                    break
+                case .failure(let error):
+                    debugPrint("Error: \(error.localizedDescription)")
+                    break
+                }
+            }
     }
     
     /// Method to fetch available options
