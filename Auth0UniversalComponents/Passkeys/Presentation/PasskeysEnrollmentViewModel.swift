@@ -79,7 +79,7 @@ final class PasskeysEnrollmentViewModel: NSObject,
             enrollPasskey()
         } catch {
             showLoader = false
-            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
+            errorViewModel = Auth0UIComponentError.unknown(message: error.localizedDescription).errorViewModel { [weak self] in
                 Task { await self?.startEnrollment() }
             }
         }
