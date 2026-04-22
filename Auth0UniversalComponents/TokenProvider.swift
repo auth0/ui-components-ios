@@ -59,7 +59,7 @@ public protocol TokenProvider: Sendable {
     /// - Parameters:
     ///   - apiCredentials: The API credentials to store
     ///   - audience: The API audience (e.g., "https://api.example.com")
-    func store(apiCredentials: APICredentials, for audience: String)
+    func store(apiCredentials: APICredentials, for audience: String, andScope scope: String)
 
     /// Fetches API credentials for a specific audience and scope.
     ///
