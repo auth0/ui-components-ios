@@ -33,6 +33,7 @@ class WelcomeViewModel: ObservableObject {
                 switch result {
                 case .success(_):
                     
+                    // Clears the crendtials stored in keychain after the web session is successfully cleared
                     _ = self?.credentialsManager.clear()
                     
                     completion()
