@@ -37,7 +37,7 @@ final class LoginOptionsViewModel: ObservableObject {
             
             return (isAuthenticated != nil) ? .welcome : nil
         } catch {
-            debugPrint("Check authentication failed!!!")
+            debugPrint("Check authentication failed!!!. Error: \(error)")
             return nil
         }
     }
