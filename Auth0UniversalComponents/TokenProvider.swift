@@ -24,18 +24,18 @@ import Combine
 ///         try? credentialsManager.store(credentials: credentials)
 ///     }
 ///
-///     func store(apiCredentials: APICredentials, for audience: String) {
-///         apiCredentialsCache[audience] = apiCredentials
+///     func store(apiCredentials: APICredentials, for audience: String, andScope scope: String) {
+///         apiCredentialsCache["\(audience)_\(scope)"] = apiCredentials
 ///     }
 ///
 ///     func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials {
-///         if let cached = apiCredentialsCache[audience] {
+///         if let cached = apiCredentialsCache["\(audience)_\(scope)"] {
 ///             return cached
 ///         }
 ///         // Fetch new API credentials
 ///         let credentials = try await Auth0.authentication()
 ///             .credentials(forAudience: audience, scope: scope)
-///         store(apiCredentials: credentials, for: audience)
+///         store(apiCredentials: credentials, for: audience, andScope: scope)
 ///         return credentials
 ///     }
 /// }
@@ -59,6 +59,7 @@ public protocol TokenProvider: Sendable {
     /// - Parameters:
     ///   - apiCredentials: The API credentials to store
     ///   - audience: The API audience (e.g., "https://api.example.com")
+    ///   - scope: The scopes associated with the credentials (space-separated)
     func store(apiCredentials: APICredentials, for audience: String, andScope scope: String)
 
     /// Fetches API credentials for a specific audience and scope.
