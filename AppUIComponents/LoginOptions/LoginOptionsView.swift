@@ -92,7 +92,6 @@ struct LoginOptionsView: View {
     }
 
     // MARK: - Loading Overlay
-
     private var loadingOverlay: some View {
         Color.black.opacity(0.25)
             .ignoresSafeArea()
@@ -247,8 +246,6 @@ struct LoginOptionsView: View {
         .contentShape(Rectangle())
         .padding(.all, theme.spacing.md)
     }
-
-
 }
 
 extension LoginOptionsView {
