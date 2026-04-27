@@ -20,15 +20,17 @@ struct WelcomeView: View {
 
     // MARK: - Main body
     var body: some View {
-        VStack(alignment: .center, spacing: theme.spacing.lg) {
+        VStack(alignment: .center, spacing: theme.spacing.md) {
 
             headerView()
 
             makeAvailableOptionsList()
 
             logoutButton()
+            
+            Spacer()
         }
-        .padding(theme.spacing.xl)
+        .padding(.horizontal, theme.spacing.xl)
         .padding(.top, theme.spacing.xxl)
         #if !os(macOS)
         .navigationBarBackButtonHidden()
@@ -59,19 +61,22 @@ struct WelcomeView: View {
             GridItem(.flexible())
         ]
 
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             LazyVGrid(columns: columns, spacing: theme.spacing.md) {
-                ForEach($viewModel.options) { item in
-                    optionTile(for: item)
+                ForEach(viewModel.options.indices, id: \.self) { index in
+                    let isLastRow = index / 2 == (viewModel.options.count - 1) / 2
+                    optionTile(for: $viewModel.options[index], isLastRow: isLastRow)
                 }
             }
+            .padding(theme.spacing.xxs)
         }
+        .fixedSize(horizontal: false, vertical: true)
         .onPreferenceChange(TileHeightKey.self) { tileHeight = $0 }
     }
 
     // MARK: - Option Tile
     @ViewBuilder
-    private func optionTile(for item: Binding<WelcomeOptionsModel>) -> some View {
+    private func optionTile(for item: Binding<WelcomeOptionsModel>, isLastRow: Bool = false) -> some View {
         let isAvailable = item.route.wrappedValue != nil
 
         VStack(alignment: .leading, spacing: 0) {
@@ -102,7 +107,7 @@ struct WelcomeView: View {
                 .inset(by: 0.5)
                 .stroke(theme.colors.border.regular, lineWidth: 1)
         }
-        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.04), radius: 3, x: 0, y: 1)
         .opacity(isAvailable ? 1 : 0.4)
         .disabled(!isAvailable)
         .onTapGesture {
@@ -127,7 +132,7 @@ struct WelcomeView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color("262420", bundle: .main))
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 14)
+                .frame(height: theme.sizes.buttonHeight)
         }
     }
 }
