@@ -22,13 +22,14 @@ extension CredentialsManager: TokenProvider {
         _ = store(credentials: credentials)
     }
 
-    /// Stores API credentials for a specific audience in the credentials manager.
+    /// Stores API credentials for a specific audience and scope in the credentials manager.
     ///
     /// - Parameters:
     ///   - apiCredentials: The API credentials to store
     ///   - audience: The API audience (e.g., "https://api.example.com")
-    public func store(apiCredentials: APICredentials, for audience: String) {
-        _ = store(apiCredentials: apiCredentials, forAudience: audience)
+    ///   - scope: The scopes associated with the credentials (space-separated)
+    public func store(apiCredentials: APICredentials, for audience: String, andScope scope: String) {
+        _ = store(apiCredentials: apiCredentials, forAudience: audience, forScope: scope)
     }
 
     /// Fetches API credentials for a specific audience and scope from the credentials manager.

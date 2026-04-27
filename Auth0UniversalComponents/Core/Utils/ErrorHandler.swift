@@ -104,7 +104,8 @@ struct ErrorHandler {
                 handler.showLoader = false
                 dependencies.tokenProvider.store(
                     apiCredentials: APICredentials(from: credentials),
-                    for: dependencies.audience
+                    for: dependencies.audience,
+                    andScope: scope
                 )
                 retryCallback()
             } catch {
@@ -141,7 +142,8 @@ struct ErrorHandler {
                 .start()
                 dependencies.tokenProvider.store(
                     apiCredentials: APICredentials(from: credentials),
-                    for: dependencies.audience
+                    for: dependencies.audience,
+                    andScope: scope
                 )
                 retryCallback()
             } catch {
