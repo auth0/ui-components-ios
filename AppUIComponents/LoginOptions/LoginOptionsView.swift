@@ -85,8 +85,8 @@ struct LoginOptionsView: View {
                 showAlert = true
             }
         }
-        .onChange(of: viewModel.navigationRoute) { _ in
-            guard let route = viewModel.navigationRoute else { return }
+        .onReceive(viewModel.$navigationRoute) { route in
+            guard let route = route else { return }
             router.navigate(to: route)
         }
     }
