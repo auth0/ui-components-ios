@@ -151,6 +151,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
                 self.viewComponents = [.emptyFactors]
             }
         } catch {
+            debugPrint("Error occured in My Account Auth View: \(error)")
             await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
                 Task {
                     await self?.loadMyAccountAuthViewComponentData()

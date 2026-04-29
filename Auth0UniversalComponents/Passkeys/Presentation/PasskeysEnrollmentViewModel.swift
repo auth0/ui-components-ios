@@ -79,7 +79,7 @@ final class PasskeysEnrollmentViewModel: NSObject,
             enrollPasskey()
         } catch {
             showLoader = false
-            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
+            errorViewModel = Auth0UIComponentError.unknown(message: error.localizedDescription).errorViewModel { [weak self] in
                 Task { await self?.startEnrollment() }
             }
         }
@@ -129,23 +129,31 @@ final class PasskeysEnrollmentViewModel: NSObject,
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: any Error) {
         showLoader = false
 
-        if let authError = error as? ASAuthorizationError, authError.code != .canceled {
-            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
-                Task {
-                    await self?.startEnrollment()
-                }
-            }
-        } else {
+        guard let authError = error as? ASAuthorizationError else {
             Task { [weak self] in
                 await self?.handle(
                     error: error,
                     scope: "openid create:me:authentication_methods",
                     retryCallback: {
-                        Task {
-                            await self?.startEnrollment()
-                        }
+                        Task { await self?.startEnrollment() }
                     }
                 )
+            }
+            return
+        }
+
+        switch authError.code {
+        case .canceled:
+            break
+        case .failed:
+            // Code 1004: platform rejected the request — most commonly a domain association
+            // misconfiguration (entitlements webcredentials entry or AASA file on the server).
+            errorViewModel = Auth0UIComponentError.unknown(message: authError.localizedDescription).errorViewModel { [weak self] in
+                Task { await self?.startEnrollment() }
+            }
+        default:
+            errorViewModel = Auth0UIComponentError.unknown().errorViewModel { [weak self] in
+                Task { await self?.startEnrollment() }
             }
         }
     }
