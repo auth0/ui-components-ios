@@ -29,6 +29,9 @@ public protocol Auth0RadiusTokens: Sendable {
     /// 16 pt — Primary CTA buttons and authenticator-method cards.
     var button: CGFloat { get }
 
+    /// 20 pt — Floating dialog / modal cards (loading overlays, alert cards).
+    var large: CGFloat { get }
+
     /// 24 pt — Fully rounded pill-style outline buttons ("Copy as Code", "Copy Code").
     var pill: CGFloat { get }
 }
@@ -45,6 +48,7 @@ public struct DefaultAuth0RadiusTokens: Auth0RadiusTokens {
     public var medium: CGFloat
     public var inputField: CGFloat
     public var button: CGFloat
+    public var large: CGFloat
     public var pill: CGFloat
 
     /// Creates the default Auth0 corner-radius scale with optional per-token overrides.
@@ -54,18 +58,21 @@ public struct DefaultAuth0RadiusTokens: Auth0RadiusTokens {
     ///   - medium: Default `12` — used for banner cards.
     ///   - inputField: Default `14` — used for text inputs and code containers.
     ///   - button: Default `16` — used for CTA buttons and auth-method cards.
+    ///   - large: Default `20` — used for floating dialog / modal cards.
     ///   - pill: Default `24` — used for pill-shaped outline buttons.
     public init(
         small: CGFloat = 8,
         medium: CGFloat = 12,
         inputField: CGFloat = 14,
         button: CGFloat = 16,
+        large: CGFloat = 20,
         pill: CGFloat = 24
     ) {
         self.small = small
         self.medium = medium
         self.inputField = inputField
         self.button = button
+        self.large = large
         self.pill = pill
     }
 }

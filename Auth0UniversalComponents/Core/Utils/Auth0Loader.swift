@@ -57,7 +57,7 @@ struct Auth0Loader: View {
                     .padding(.horizontal, 36)
                     .padding(.vertical, 28)
                     .background(theme.colors.background.layerTop)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.radius.large))
                     .shadow(color: Color.black.opacity(0.18), radius: 24, x: 0, y: 8)
                 }
         }

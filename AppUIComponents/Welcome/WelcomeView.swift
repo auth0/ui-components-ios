@@ -35,7 +35,7 @@ struct WelcomeView: View {
         #if !os(macOS)
         .navigationBarBackButtonHidden()
         #endif
-        .background(theme.colors.background.layerBase)
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
     }
 
     // MARK: - Header View
@@ -81,6 +81,8 @@ struct WelcomeView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             Image(item.icon.wrappedValue, bundle: .main)
+                .renderingMode(.template)
+                .foregroundStyle(theme.colors.background.primary)
                 .padding(theme.spacing.xxs)
                 .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
 
@@ -101,9 +103,9 @@ struct WelcomeView: View {
         .frame(maxWidth: .infinity, minHeight: tileHeight > 0 ? tileHeight : nil)
         .contentShape(Rectangle())
         .background(theme.colors.background.layerMedium)
-        .cornerRadius(20)
+        .cornerRadius(theme.radius.large)
         .overlay {
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: theme.radius.large)
                 .inset(by: 0.5)
                 .stroke(theme.colors.border.regular, lineWidth: 1)
         }
@@ -129,8 +131,8 @@ struct WelcomeView: View {
             }
         } label: {
             Text("Log out")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color("262420", bundle: .main))
+                .auth0TextStyle(theme.typography.label)
+                .foregroundStyle(theme.colors.text.bold)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .frame(height: theme.sizes.buttonHeight)
         }

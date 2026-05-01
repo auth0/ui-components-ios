@@ -80,9 +80,11 @@ public struct MyAccountAuthMethodsView: View {
             // Embedded: no inner NavigationStack — destinations attach to the
             // host stack. The SDK router is redirected to the host path on appear.
             sdkRootContent
-                .navigationTitle(Text("Login & Security"))
+                .themedNavigationTitle("Login & Security", theme: theme)
                 #if !os(macOS)
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
                 #endif
                 #if !os(macOS)
                 .navigationBarBackButtonHidden(true)
@@ -109,9 +111,11 @@ public struct MyAccountAuthMethodsView: View {
             // Standalone: the SDK owns the full NavigationStack.
             NavigationStack(path: $router.path) {
                 sdkRootContent
-                    .navigationTitle(Text("Login & Security"))
+                    .themedNavigationTitle("Login & Security", theme: theme)
                     #if !os(macOS)
                     .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+                    .toolbarBackground(.visible, for: .navigationBar)
                     #endif
                     .navigationDestination(for: Route.self) { route in
                         ViewFactory.view(for: route, delegate: viewModel)
@@ -127,6 +131,8 @@ public struct MyAccountAuthMethodsView: View {
     @ViewBuilder
     private var sdkRootContent: some View {
         ZStack {
+            theme.colors.background.layerBase
+                .ignoresSafeArea()
             if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -170,7 +176,7 @@ public struct MyAccountAuthMethodsView: View {
                 .padding(.horizontal, 36)
                 .padding(.vertical, 28)
                 .background(theme.colors.background.layerTop)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.large))
                 .shadow(color: Color.black.opacity(0.18), radius: 24, x: 0, y: 8)
             }
     }
