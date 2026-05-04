@@ -55,11 +55,9 @@ class WelcomeViewModel: ObservableObject {
         guard let user = credentialsManager.user else {
             return
         }
-        
-        if let name = user.name {
-            options.append(WelcomeOptionsModel(icon: "ic_person", title: "Profile", route: .profile(model: .init(fromUserInfo: user,
-                                                                                                                 withName: name))))
-        }
+        let displayName = user.name ?? user.email ?? ""
+        options.append(WelcomeOptionsModel(icon: "ic_person", title: "Profile", route: .profile(model: .init(fromUserInfo: user,
+                                                                                                             withName: displayName))))
     }
     
     func checkAndAddOtherOptions() {
