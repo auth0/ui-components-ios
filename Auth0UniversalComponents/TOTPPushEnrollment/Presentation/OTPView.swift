@@ -134,7 +134,9 @@ struct OTPView: View {
                     fullText: $viewModel.otpText,
                     index: index,
                     digitCount: 6,
+                    #if !os(macOS)
                     cursorTintColor: UIColor(theme.colors.background.primary),
+                    #endif
                     setText: { string in
                         self.setTextAtIndex(string, at: index)
                     },

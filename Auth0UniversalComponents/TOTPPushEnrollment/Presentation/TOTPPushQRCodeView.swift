@@ -33,6 +33,12 @@ struct TOTPPushQRCodeView: View {
     /// `theme.colors.background.layerTop`, so the QR code adapts automatically
     /// whenever the active theme changes.
     private func makeQRCodeImage(from uri: String) -> Image? {
+        // "H" = highest QR error-correction level. QR supports four levels (L/M/Q/H); H allows
+        // ~30% of the code's modules to be damaged or obscured and still scan correctly.
+        // This is important here because CIFalseColor replaces every pixel with theme-derived
+        // colours — on low-contrast themes the visual difference between foreground and background
+        // modules shrinks, making the code harder for a scanner to decode. The extra redundancy
+        // in level H compensates for that reduced contrast.
         filter.correctionLevel = "H"
         filter.message = Data(uri.utf8)
         guard let rawOutput = filter.outputImage else { return nil }
