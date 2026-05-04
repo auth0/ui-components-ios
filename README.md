@@ -1,6 +1,5 @@
 ![ui-components-ios](https://cdn.auth0.com/website/sdks/banners/ui-components-ios.png)
 
-![Version](https://img.shields.io/cocoapods/v/Auth0.svg?style=flat)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/auth0/ui-components-ios/main.yml?style=flat)
 [![Coverage Status](https://img.shields.io/codecov/c/github/auth0/ui-components-ios/master.svg?style=flat)](https://codecov.io/github/auth0/ui-components-ios)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/auth0/ui-components-ios)
@@ -43,16 +42,6 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 - Xcode 26.0+
 
 ### Installation
-
-#### CocoaPods
-
-Add the following to your `Podfile`:
-
-```ruby
-pod 'Auth0UniversalComponents'
-```
-
-Then run `pod install`.
 
 #### Swift Package Manager
 
