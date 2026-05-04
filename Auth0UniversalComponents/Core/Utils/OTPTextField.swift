@@ -28,7 +28,7 @@ struct OTPTextField: UIViewRepresentable {
     /// Total number of digits in the OTP code
     var digitCount: Int
     /// Cursor (caret) tint colour — should match the active theme's primary colour
-    var cursorTintColor: UIColor
+    var cursorTintColor: Color
     /// Callback when text is entered in this field
     var setText: ((String) -> Void)
     /// Callback when the enter/return key is pressed
@@ -47,7 +47,7 @@ struct OTPTextField: UIViewRepresentable {
         textField.clearButtonMode = .never
         textField.autocorrectionType = .no
         textField.spellCheckingType = .no
-        textField.tintColor = cursorTintColor
+        textField.tintColor = UIColor(cursorTintColor)
         textField.keyboardType = .numberPad
         textField.textContentType = .oneTimeCode
         let toolbar = UIToolbar()
@@ -66,7 +66,7 @@ struct OTPTextField: UIViewRepresentable {
     /// Updates the UITextField when the SwiftUI binding changes.
     func updateUIView(_ uiView: UITextField, context: Context) {
         uiView.text = self.getText()
-        uiView.tintColor = cursorTintColor
+        uiView.tintColor = UIColor(cursorTintColor)
         self.setSelection(uiView)
 
         uiView.setContentHuggingPriority(.defaultHigh, for: .vertical)
@@ -170,6 +170,8 @@ struct OTPTextField: NSViewRepresentable {
     var index: Int
     /// Total number of digits in the OTP code
     var digitCount: Int
+    /// Cursor tint colour — accepted for API parity with the iOS version; AppKit has no tintColor equivalent
+    var cursorTintColor: Color
     /// Callback when text is entered in this field
     var setText: ((String) -> Void)
     /// Callback when the enter/return key is pressed
