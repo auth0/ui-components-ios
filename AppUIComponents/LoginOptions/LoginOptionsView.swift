@@ -27,6 +27,8 @@ struct LoginOptionsView: View {
 
             VStack(spacing: 0) {
                 Image("ic_auth0", bundle: .main)
+                    .renderingMode(.template)
+                    .foregroundStyle(theme.colors.text.bold)
                     .aspectRatio(106/40, contentMode: .fit)
                     .frame(width: 106)
                     .padding(.top, 60)
@@ -42,6 +44,8 @@ struct LoginOptionsView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image("ic_appearance")
+                            .renderingMode(.template)
+                            .foregroundStyle(theme.colors.background.primary)
 
                         Text("Appearance")
                             .auth0TextStyle(theme.typography.title)
@@ -109,7 +113,7 @@ struct LoginOptionsView: View {
                 .padding(.horizontal, 36)
                 .padding(.vertical, 28)
                 .background(theme.colors.background.layerTop)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.large))
                 .shadow(color: Color.black.opacity(0.18), radius: 24, x: 0, y: 8)
             }
     }
@@ -118,24 +122,24 @@ struct LoginOptionsView: View {
     private var backgroundView: some View {
         GeometryReader { geo in
             ZStack {
-                Color("F5F5F5", bundle: .main)
-                
+                theme.colors.background.layerBase
+
                 VStack(spacing: 0) {
                     Spacer()
-                    
+
                     LinearGradient(
-                      stops: [
-                        Gradient.Stop(color: Color(red: 0.97, green: 0.97, blue: 0.96), location: 0.13),
-                        Gradient.Stop(color: Color(red: 0.83, green: 0.82, blue: 1), location: 0.28),
-                        Gradient.Stop(color: Color(red: 0.97, green: 0.73, blue: 0.47), location: 0.52),
-                        Gradient.Stop(color: Color(red: 0.94, green: 0.61, blue: 0.02), location: 0.71),
-                        Gradient.Stop(color: Color(red: 0.93, green: 0.92, blue: 0.91), location: 0.99),
-                      ],
-                      startPoint: UnitPoint(x: 0.24, y: 0.22),
-                      endPoint: UnitPoint(x: 0.95, y: 0.24)
+                        stops: [
+                            Gradient.Stop(color: theme.colors.background.layerBase,            location: 0.00),
+                            Gradient.Stop(color: theme.colors.background.accent.opacity(0.35), location: 0.25),
+                            Gradient.Stop(color: theme.colors.background.primary.opacity(0.25), location: 0.52),
+                            Gradient.Stop(color: theme.colors.background.accent.opacity(0.20),  location: 0.75),
+                            Gradient.Stop(color: theme.colors.background.layerBase,            location: 1.00),
+                        ],
+                        startPoint: UnitPoint(x: 0.24, y: 0.22),
+                        endPoint: UnitPoint(x: 0.95, y: 0.24)
                     )
-                    .frame(height: geo.size.height/4)
-                    .blur(radius: 155.91499)
+                    .frame(height: geo.size.height / 4)
+                    .blur(radius: 155)
                 }
             }
             .ignoresSafeArea()
@@ -148,6 +152,7 @@ struct LoginOptionsView: View {
         VStack(spacing: 16) {
             Text("Choose how to sign in")
                 .auth0TextStyle(theme.typography.display)
+                .foregroundStyle(theme.colors.text.bold)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, theme.spacing.xs)

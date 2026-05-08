@@ -21,10 +21,48 @@ struct TOTPPushQRCodeView: View {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
 
-    /// Core Image context for QR code generation
+    /// Core Image context for QR code rendering
     private let context = CIContext()
     /// QR code filter for generating QR codes
     private let filter = CIFilter.qrCodeGenerator()
+
+    /// Generates a theme-coloured QR code image from a URI string.
+    ///
+    /// Uses `CIFalseColor` to replace the default black modules with
+    /// `theme.colors.text.bold` and the white background with
+    /// `theme.colors.background.layerTop`, so the QR code adapts automatically
+    /// whenever the active theme changes.
+    private func makeQRCodeImage(from uri: String) -> Image? {
+        // "H" = highest QR error-correction level. QR supports four levels (L/M/Q/H); H allows
+        // ~30% of the code's modules to be damaged or obscured and still scan correctly.
+        // This is important here because CIFalseColor replaces every pixel with theme-derived
+        // colours — on low-contrast themes the visual difference between foreground and background
+        // modules shrinks, making the code harder for a scanner to decode. The extra redundancy
+        // in level H compensates for that reduced contrast.
+        filter.correctionLevel = "H"
+        filter.message = Data(uri.utf8)
+        guard let rawOutput = filter.outputImage else { return nil }
+
+        let colored: CIImage
+        if let falseColor = CIFilter(name: "CIFalseColor") {
+            #if canImport(UIKit)
+            let fgCIColor = CIColor(color: UIColor(theme.colors.text.bold))
+            let bgCIColor = CIColor(color: UIColor(theme.colors.background.layerTop))
+            #elseif canImport(AppKit)
+            let fgCIColor = CIColor(color: NSColor(theme.colors.text.bold)) ?? CIColor.black
+            let bgCIColor = CIColor(color: NSColor(theme.colors.background.layerTop)) ?? CIColor.white
+            #endif
+            falseColor.setValue(rawOutput, forKey: "inputImage")
+            falseColor.setValue(fgCIColor, forKey: "inputColor0")
+            falseColor.setValue(bgCIColor, forKey: "inputColor1")
+            colored = falseColor.outputImage ?? rawOutput
+        } else {
+            colored = rawOutput
+        }
+
+        guard let cgImage = context.createCGImage(colored, from: rawOutput.extent) else { return nil }
+        return Image(decorative: cgImage, scale: 1.0)
+    }
 
     var body: some View {
         ZStack {
@@ -32,7 +70,8 @@ struct TOTPPushQRCodeView: View {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
                 VStack {
-                    if let qrCodeImage = viewModel.qrCodeImage {
+                    Spacer(minLength: 0)
+                    if let uri = viewModel.qrCodeURI, let qrCodeImage = makeQRCodeImage(from: uri) {
                         qrCodeImage
                             .resizable()
                             .interpolation(.none)
@@ -68,6 +107,8 @@ struct TOTPPushQRCodeView: View {
                         } label: {
                             HStack(alignment: .center, spacing: theme.spacing.xs) {
                                 Image("copy", bundle: ResourceBundle.default)
+                                    .renderingMode(.template)
+                                    .foregroundStyle(theme.colors.background.primary)
                                     .frame(width: theme.sizes.iconSmall, height: theme.sizes.iconSmall)
 
                                 Text("Copy as Code")
@@ -123,7 +164,9 @@ struct TOTPPushQRCodeView: View {
                                 #endif
                             }
                         }
+                    Spacer(minLength: 0)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.all, theme.spacing.md)
             }
 
@@ -131,10 +174,14 @@ struct TOTPPushQRCodeView: View {
                 Auth0Loader()
             }
         }
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
         .toastView(toast: $viewModel.toast)
-        .navigationTitle(viewModel.navigationTitle())
+        .themedNavigationTitle(viewModel.navigationTitle(), theme: theme)
         #if !os(macOS)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .tint(theme.colors.text.bold)
         #endif
         .onAppear {
             Task {

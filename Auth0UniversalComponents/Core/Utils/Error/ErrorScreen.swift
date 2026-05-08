@@ -62,6 +62,6 @@ struct ErrorScreen: View {
                 .padding(theme.spacing.md)
             }
         }
-        .background(theme.colors.background.layerBase)
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
     }
 }
