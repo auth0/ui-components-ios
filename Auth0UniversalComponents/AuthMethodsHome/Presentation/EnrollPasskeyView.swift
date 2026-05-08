@@ -75,7 +75,7 @@ struct EnrollPasskeyView: View {
                     endPoint: UnitPoint(x: 0.5, y: 1)
                 )
             )
-            .background(Color.white)
+            .background(theme.colors.background.layerTop)
             .clipShape(RoundedRectangle(cornerRadius: theme.radius.button))
             .overlay(
                 RoundedRectangle(cornerRadius: theme.radius.button)
@@ -101,7 +101,7 @@ struct EnrollPasskeyView: View {
 
         }
         .padding(.all, theme.spacing.lg)
-        .background(Color("Muted", bundle: ResourceBundle.default))
+        .background(theme.colors.background.layerMedium)
         .clipShape(RoundedRectangle(cornerRadius: theme.radius.medium))
         .fullScreenCoverOrSheet(isPresented: $viewModel.showLoader) {
             Auth0Loader()

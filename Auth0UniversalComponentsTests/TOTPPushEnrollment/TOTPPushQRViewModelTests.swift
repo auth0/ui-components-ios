@@ -81,7 +81,7 @@ struct TOTPPushQRCodeViewModelTests {
         )
         await MainActor.run {
             #expect(viewModel.showLoader == true)
-            #expect(viewModel.qrCodeImage == nil)
+            #expect(viewModel.qrCodeURI == nil)
             #expect(viewModel.manualInputCode == nil)
             #expect(viewModel.errorViewModel == nil)
             #expect(viewModel.apiCallInProgress == false)
@@ -141,7 +141,7 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, pushEnrollmentChallengeData)
             }
             await viewModel.fetchEnrollmentChallenge()
-            #expect(viewModel.qrCodeImage != nil)
+            #expect(viewModel.qrCodeURI != nil)
         }
     }
 
