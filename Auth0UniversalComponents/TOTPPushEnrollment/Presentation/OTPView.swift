@@ -110,8 +110,14 @@ struct OTPView: View {
                 }.padding(EdgeInsets(top: 39, leading: 16, bottom: 40, trailing: 16))
             }
         }
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
-        .navigationTitle(viewModel.navigationTitle)
+        .themedNavigationTitle(viewModel.navigationTitle, theme: theme)
+        #if !os(macOS)
+        .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .tint(theme.colors.text.bold)
+        #endif
         .onAppear {
             focusedField = 0
         }
@@ -128,6 +134,7 @@ struct OTPView: View {
                     fullText: $viewModel.otpText,
                     index: index,
                     digitCount: 6,
+                    cursorTintColor: theme.colors.background.primary,
                     setText: { string in
                         self.setTextAtIndex(string, at: index)
                     },
@@ -141,6 +148,8 @@ struct OTPView: View {
                 .frame(width: theme.sizes.size2xlDimen, height: theme.sizes.size3xlDimen, alignment: .center)
                 .background(
                     ZStack {
+                        RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
+                            .fill(theme.colors.background.layerTop)
                         if focusedField == index {
                             RoundedRectangle(cornerRadius: theme.radius.small, style: .continuous)
                                 .strokeBorder(theme.colors.border.subtle, lineWidth: 3)

@@ -26,7 +26,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     private var totpEnrollmentChallenge: TOTPEnrollmentChallenge?
     private weak var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
-    @Published var qrCodeImage: Image?
+    @Published var qrCodeURI: String?
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String?
     @Published var errorViewModel: ErrorScreenViewModel?
@@ -125,19 +125,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     }
 
     private func setAuthQRCodeImage() {
-        let context = CIContext()
-        let filter = CIFilter.qrCodeGenerator()
-        filter.correctionLevel = "H"
-        let qrCodeURI: String? = totpEnrollmentChallenge?.authenticatorQRCodeURI ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
-        if let qrCodeURI {
-            filter.message = Data(qrCodeURI.utf8)
-        }
-
-        if let outputImage = filter.outputImage {
-            if let cgImage = context.createCGImage(outputImage, from: outputImage.extent) {
-                qrCodeImage = Image(decorative: cgImage, scale: 1.0)
-            }
-        }
+        qrCodeURI = totpEnrollmentChallenge?.authenticatorQRCodeURI ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
     }
 
     private func setAuthManualSetupCode() {
