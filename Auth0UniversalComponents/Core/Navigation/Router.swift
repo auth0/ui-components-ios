@@ -35,6 +35,12 @@ public class Router<Route: Hashable>: ObservableObject {
     /// `nil` in standalone mode; set via `useExternalPath(_:)` at view appearance.
     private var externalPath: Binding<NavigationPath>?
 
+    /// Snapshot of the host path depth at the moment `useExternalPath(_:)` was called.
+    ///
+    /// Used by `popToSDKRoot()` to determine how many entries the SDK itself has
+    /// appended, so only those are removed without disturbing host-app entries.
+    private var initialExternalPathCount = 0
+
     public init() {}
 
     /// Redirects all navigation operations to an external `NavigationPath` binding.
@@ -46,6 +52,7 @@ public class Router<Route: Hashable>: ObservableObject {
     /// - Parameter binding: A writable binding to the host stack's `NavigationPath`.
     func useExternalPath(_ binding: Binding<NavigationPath>) {
         externalPath = binding
+        initialExternalPathCount = binding.wrappedValue.count
     }
 
     /// Pushes `route` onto the navigation stack.
@@ -77,6 +84,22 @@ public class Router<Route: Hashable>: ObservableObject {
     public func popToRoot() {
         if let ext = externalPath {
             ext.wrappedValue.removeLast(ext.wrappedValue.count)
+        } else {
+            path.removeLast(path.count)
+        }
+    }
+
+    /// Pops only the routes pushed by the SDK, returning to `MyAccountAuthMethodsView`.
+    ///
+    /// In standalone mode, clears the entire internal path so the root content
+    /// (`MyAccountAuthMethodsView`) is shown.
+    /// In embedded mode, only removes entries added since `useExternalPath(_:)` was
+    /// called, leaving the host-app entries intact so the host stack is undisturbed.
+    func popToSDKRoot() {
+        if let ext = externalPath {
+            let toRemove = ext.wrappedValue.count - initialExternalPathCount
+            guard toRemove > 0 else { return }
+            ext.wrappedValue.removeLast(toRemove)
         } else {
             path.removeLast(path.count)
         }

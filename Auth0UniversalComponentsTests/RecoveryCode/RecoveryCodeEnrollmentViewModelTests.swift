@@ -139,7 +139,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
             }
 
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .recoveryCode, authMethods: [], isPostEnrollment: true))
         }
     }
 
@@ -212,7 +212,7 @@ struct RecoveryCodeEnrollmentViewModelTests {
 
             // Verify delegate was called
             #expect(mockDelegate.refreshCalled == true, "Delegate should be called after successful enrollment")
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .recoveryCode, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .recoveryCode, authMethods: [], isPostEnrollment: true))
         }
     }
 

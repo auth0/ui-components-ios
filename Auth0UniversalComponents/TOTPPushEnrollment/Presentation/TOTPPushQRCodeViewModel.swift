@@ -112,7 +112,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
                 )
                 delegate?.refreshAuthData()
                 apiCallInProgress = false
-                navigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
+                navigationRoute = .filteredAuthListScreen(type: type, authMethods: [], isPostEnrollment: true)
             } catch {
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in

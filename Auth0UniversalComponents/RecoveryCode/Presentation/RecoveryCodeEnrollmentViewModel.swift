@@ -76,7 +76,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
                     request: confirmRecoveryCodeEnrollmentRequest
                 )
                 apiCallInProgress = false
-                navigationRoute = .filteredAuthListScreen(type: .recoveryCode, authMethods: [])
+                navigationRoute = .filteredAuthListScreen(type: .recoveryCode, authMethods: [], isPostEnrollment: true)
                 delegate?.refreshAuthData()
             } catch {
                 apiCallInProgress = false

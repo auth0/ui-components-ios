@@ -24,7 +24,8 @@ enum Route: Hashable {
                    emailEnrollmentChallenge: EmailEnrollmentChallenge? = nil)
     /// Route to the filtered authentication method selection screen
     case filteredAuthListScreen(type: AuthMethodType,
-                                authMethods: [AuthenticationMethod])
+                                authMethods: [AuthenticationMethod],
+                                isPostEnrollment: Bool = false)
 }
 
 /// Makes AuthMethodType conform to Hashable for use in routes.

@@ -19,9 +19,10 @@ struct ViewFactory {
                                             type: type,
                                             emailOrPhoneNumber: emailOrPhoneNumber,
                                             delegate: delegate))
-        case let .filteredAuthListScreen(type, authMethods):
+        case let .filteredAuthListScreen(type, authMethods, isPostEnrollment):
             SavedAuthenticatorsView(viewModel: SavedAuthenticatorsViewModel(type: type,
                                                                             authenticationMethods: authMethods,
+                                                                            isPostEnrollment: isPostEnrollment,
                                                                             delegate: delegate))
         case let .emailPhoneEnrollmentScreen(type):
             EmailPhoneEnrollmentView(viewModel: EmailPhoneEnrollmentViewModel(type: type))

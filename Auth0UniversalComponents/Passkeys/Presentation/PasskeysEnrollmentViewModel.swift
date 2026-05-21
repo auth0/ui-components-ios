@@ -107,7 +107,7 @@ final class PasskeysEnrollmentViewModel: NSObject,
                         )
                         _ = try await confirmPasskeyEnrollmentUseCase.execute(request: confirmPasskeyEnrollmentRequest)
                         delegate?.refreshAuthData()
-                        navigationRoute = .filteredAuthListScreen(type: .passkey, authMethods: [])
+                        navigationRoute = .filteredAuthListScreen(type: .passkey, authMethods: [], isPostEnrollment: true)
                     } catch {
                         await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                             Task {
