@@ -88,14 +88,16 @@ struct TOTPPushQRCodeView: View {
                     }
 
                     if let manualInputCode = viewModel.manualInputCode {
-                        Text(manualInputCode)
-                            .auth0TextStyle(theme.typography.helper)
-                            .foregroundStyle(theme.colors.text.bold)
-                            .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: theme.radius.inputField)
-                                    .stroke(theme.colors.background.primary, lineWidth: 1)
-                            }.padding(.bottom, theme.spacing.md)
+                        if viewModel.showManualCodeText {
+                            Text(manualInputCode)
+                                .auth0TextStyle(theme.typography.helper)
+                                .foregroundStyle(theme.colors.text.bold)
+                                .padding(EdgeInsets(top: 10, leading: theme.spacing.sm, bottom: 10, trailing: theme.spacing.sm))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: theme.radius.inputField)
+                                        .stroke(theme.colors.background.primary, lineWidth: 1)
+                                }.padding(.bottom, theme.spacing.md)
+                        }
 
                         Button {
                             #if os(macOS)

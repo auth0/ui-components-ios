@@ -29,6 +29,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     @Published var qrCodeURI: String?
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String?
+    @Published var showManualCodeText: Bool = false
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var apiCallInProgress: Bool = false
     @Published var toast: Toast?
@@ -129,8 +130,10 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     }
 
     private func setAuthManualSetupCode() {
-        if let totpEnrollmentChallenge {
-            manualInputCode = totpEnrollmentChallenge.authenticatorManualInputCode
+        if totpEnrollmentChallenge.isNotNil || pushEnrollmentChallenge.isNotNil {
+            let manualCode: String? = totpEnrollmentChallenge?.authenticatorManualInputCode ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
+            manualInputCode = manualCode
+            showManualCodeText = totpEnrollmentChallenge.isNotNil
         }
     }
 
