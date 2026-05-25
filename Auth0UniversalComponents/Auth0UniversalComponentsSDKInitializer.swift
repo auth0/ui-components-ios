@@ -153,11 +153,13 @@ public actor Auth0UniversalComponentsSDKInitializer {
                                     tokenProvider: tokenProvider)
     }
 
-    /// Reset the SDK to an uninitialized state.
+    /// Reset the SDK telemetry state.
     ///
-    /// This is primarily used for testing purposes to clear the singleton instance.
+    /// This is primarily used for testing purposes. It resets the TelemetryManager
+    /// but does not nil out the shared instance to avoid race conditions in parallel tests.
+    /// The subsequent `initialize()` call will overwrite the instance completely.
     static func reset() {
-        _shared = nil
+        TelemetryManager.shared = TelemetryManager(configuration: .enabled)
     }
 }
 

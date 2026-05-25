@@ -102,10 +102,6 @@ struct OTPViewModelTests {
         return data
     }
 
-    init() async throws {
-        Auth0UniversalComponentsSDKInitializer.reset()
-    }
-
     @Test func testInit_initialState() async {
         let mockTokenProvider = MockTokenProvider()
 

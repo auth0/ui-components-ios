@@ -1,7 +1,14 @@
 import Foundation
 
 final class MockURLProtocol: URLProtocol {
-    static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+    nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+
+    private var capturedHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+
+    override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
+        capturedHandler = Self.requestHandler
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+    }
 
     override static func canInit(with request: URLRequest) -> Bool {
         return true
@@ -12,8 +19,9 @@ final class MockURLProtocol: URLProtocol {
     }
 
     override func startLoading() {
-        guard let handler = MockURLProtocol.requestHandler else {
-            fatalError("MockURLProtocol requires a requestHandler.")
+        guard let handler = capturedHandler else {
+            client?.urlProtocol(self, didFailWithError: URLError(.unknown))
+            return
         }
 
         do {
