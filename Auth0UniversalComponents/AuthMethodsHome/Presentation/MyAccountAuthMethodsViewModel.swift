@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 import SwiftUI
 import Auth0
 
@@ -94,6 +95,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
         errorViewModel = nil
         self.viewComponents = []
         showLoader = true
+        TelemetryManager.shared.trackScreenView("my_account_auth_methods")
 
         do {
             if self.authMethodsFetched == false {
@@ -102,6 +104,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
                     scope: "openid read:me:factors read:me:authentication_methods"
                 )
 
+                let startTime = CFAbsoluteTimeGetCurrent()
                 async let factorsResponse = factorsUseCase.execute(
                     request: GetFactorsRequest(token: apiCredentials.accessToken, domain: dependencies.domain)
                 )
@@ -110,6 +113,9 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
                 )
 
                 let (authMethods, factors) = try await (authMethodsResponse, factorsResponse)
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("get_auth_methods", durationMs: durationMs, status: .success)
+                TelemetryManager.shared.trackApiCall("get_factors", durationMs: durationMs, status: .success)
                 self.factors = factors
                 self.authMethods = authMethods
                 self.authMethodsFetched = true
@@ -152,6 +158,7 @@ final class MyAccountAuthMethodsViewModel: ObservableObject, ErrorViewModelHandl
             }
         } catch {
             debugPrint("Error occured in My Account Auth View: \(error)")
+            TelemetryManager.shared.trackApiCall("get_auth_methods", durationMs: 0, status: .failure, errorType: String(describing: type(of: error)))
             await handle(error: error, scope: "openid read:me:factors read:me:authentication_methods") { [weak self] in
                 Task {
                     await self?.loadMyAccountAuthViewComponentData()

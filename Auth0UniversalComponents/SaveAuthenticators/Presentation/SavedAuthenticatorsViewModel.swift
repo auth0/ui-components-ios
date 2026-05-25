@@ -44,6 +44,7 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
 
     // MARK: - Methods
     func deleteAuthMethod(authMethod: AuthenticationMethod) async {
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -56,9 +57,14 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
                     id: authMethod.id
                 )
             )
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            TelemetryManager.shared.trackApiCall("delete_auth_method", durationMs: durationMs, status: .success)
+            TelemetryManager.shared.trackFlow("factor_deleted", factorType: type.rawValue, status: .success)
             delegate?.refreshAuthData()
             await loadData(true)
         } catch {
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            TelemetryManager.shared.trackApiCall("delete_auth_method", durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
             await handle(error: error, scope: "openid delete:me:authentication_methods") { [weak self] in
                 Task {
                     await self?.deleteAuthMethod(authMethod: authMethod)
@@ -71,6 +77,7 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
         viewAuthenticationMethods = []
         showLoader = true
         errorViewModel = nil
+        TelemetryManager.shared.trackScreenView("saved_authenticators", properties: ["factor_type": type.rawValue])
         guard postDeletion || authenticationMethods.isEmpty else {
             showLoader = false
             viewAuthenticationMethods = authenticationMethods.filter {

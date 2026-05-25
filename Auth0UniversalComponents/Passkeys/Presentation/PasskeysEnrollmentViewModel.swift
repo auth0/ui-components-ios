@@ -61,6 +61,9 @@ final class PasskeysEnrollmentViewModel: NSObject,
     func startEnrollment() async {
         showLoader = true
         errorViewModel = nil
+        TelemetryManager.shared.trackScreenView("passkey_enrollment")
+        TelemetryManager.shared.trackFlow("enrollment_started", factorType: "passkey")
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -75,9 +78,14 @@ final class PasskeysEnrollmentViewModel: NSObject,
             passkeyChallenge = try await startPasskeyEnrollmentUseCase.execute(
                 request: startPasskeysEnrollmentRequest
             )
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            TelemetryManager.shared.trackApiCall("start_passkey_enrollment", durationMs: durationMs, status: .success)
             showLoader = false
             enrollPasskey()
         } catch {
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            TelemetryManager.shared.trackApiCall("start_passkey_enrollment", durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
+            TelemetryManager.shared.trackFlow("enrollment_failed", factorType: "passkey", status: .failure)
             showLoader = false
             errorViewModel = Auth0UIComponentError.unknown(message: error.localizedDescription).errorViewModel { [weak self] in
                 Task { await self?.startEnrollment() }
@@ -93,6 +101,7 @@ final class PasskeysEnrollmentViewModel: NSObject,
             switch authorization.credential {
             case let newPasskey as ASAuthorizationPlatformPublicKeyCredentialRegistration:
                 if let passkeyChallenge {
+                    let startTime = CFAbsoluteTimeGetCurrent()
                     do {
                         showLoader = true
                         let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
@@ -106,9 +115,15 @@ final class PasskeysEnrollmentViewModel: NSObject,
                             challenge: passkeyChallenge
                         )
                         _ = try await confirmPasskeyEnrollmentUseCase.execute(request: confirmPasskeyEnrollmentRequest)
+                        let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                        TelemetryManager.shared.trackApiCall("confirm_passkey_enrollment", durationMs: durationMs, status: .success)
+                        TelemetryManager.shared.trackFlow("enrollment_completed", factorType: "passkey", status: .success)
                         delegate?.refreshAuthData()
                         navigationRoute = .filteredAuthListScreen(type: .passkey, authMethods: [], isPostEnrollment: true)
                     } catch {
+                        let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                        TelemetryManager.shared.trackApiCall("confirm_passkey_enrollment", durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
+                        TelemetryManager.shared.trackFlow("enrollment_failed", factorType: "passkey", status: .failure)
                         await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                             Task {
                                 await self?.startEnrollment()

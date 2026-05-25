@@ -62,7 +62,7 @@ struct ConfirmTOTPEnrollmentUseCase: ConfirmTOTPEnrollmentUseCaseable {
     /// - Returns: The newly created TOTP authentication method
     /// - Throws: Auth0APIError if the OTP is invalid or the request fails
     func execute(request: ConfirmTOTPEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .confirmTOTPEnrollment(id: request.id, authSession: request.authSession, otpCode: request.otpCode)
             .start()

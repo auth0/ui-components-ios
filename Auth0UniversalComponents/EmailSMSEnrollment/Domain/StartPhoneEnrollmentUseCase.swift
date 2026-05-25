@@ -56,7 +56,7 @@ struct StartPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable {
     /// - Returns: Phone enrollment challenge with verification details
     /// - Throws: Auth0APIError if the request fails
     func execute(request: StartPhoneEnrollmentRequest) async throws -> PhoneEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .enrollPhone(phoneNumber: request.phoneNumber, preferredAuthenticationMethod: request.preferredAuthenticationMethod)
             .start()

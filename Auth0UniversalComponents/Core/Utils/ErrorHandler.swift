@@ -39,6 +39,7 @@ struct ErrorHandler {
         retryCallback: @escaping () -> Void
     ) async {
         handler.showLoader = false
+        trackError(error, scope: scope)
 
         if let error = error as? CredentialsManagerError {
             await handleCredentialsManagerError(
@@ -67,6 +68,8 @@ struct ErrorHandler {
         handler: ErrorMessageHandler,
         retryCallback: @escaping () -> Void
     ) async {
+        trackError(error, scope: scope)
+
         if let error = error as? CredentialsManagerError {
             await handleCredentialsManagerError(
                 error,
@@ -196,5 +199,23 @@ struct ErrorHandler {
         handler.errorViewModel = uiComponentError.errorViewModel {
             retryCallback()
         }
+    }
+
+    private func trackError(_ error: Error, scope: String) {
+        let errorName: String
+        if error is CredentialsManagerError {
+            errorName = "credentials_error"
+        } else if error is MyAccountError {
+            errorName = "my_account_api_error"
+        } else if error is WebAuthError {
+            errorName = "web_auth_error"
+        } else {
+            errorName = "unknown_error"
+        }
+        TelemetryManager.shared.trackError(
+            errorName,
+            errorType: String(describing: type(of: error)),
+            scope: scope
+        )
     }
 }

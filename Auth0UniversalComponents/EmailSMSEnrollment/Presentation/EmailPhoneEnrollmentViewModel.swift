@@ -39,6 +39,9 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
     func startEnrollment() async {
         apiCallInProgress = true
         errorMessage = nil
+        TelemetryManager.shared.trackScreenView("email_phone_enrollment", properties: ["factor_type": type.rawValue])
+        TelemetryManager.shared.trackFlow("enrollment_started", factorType: type.rawValue)
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -53,6 +56,8 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                 let phoneEnrollmentChallenge = try await startPhoneEnrollmentUseCase.execute(
                     request: startPhoneEnrollmentRequest
                 )
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("start_phone_enrollment", durationMs: durationMs, status: .success)
                 apiCallInProgress = false
                 navigationRoute = .otpScreen(
                     type: .sms,
@@ -68,6 +73,8 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                 let emailEnrollmentChallenge = try await startEmailEnrollmentUseCase.execute(
                     request: startEmailEnrollmentRequest
                 )
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("start_email_enrollment", durationMs: durationMs, status: .success)
                 apiCallInProgress = false
                 navigationRoute = .otpScreen(
                     type: .email,
@@ -76,6 +83,10 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                 )
             }
         } catch {
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            let apiName = type == .sms ? "start_phone_enrollment" : "start_email_enrollment"
+            TelemetryManager.shared.trackApiCall(apiName, durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
+            TelemetryManager.shared.trackFlow("enrollment_failed", factorType: type.rawValue, status: .failure)
             apiCallInProgress = false
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                 Task {

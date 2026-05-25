@@ -52,6 +52,9 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     func fetchEnrollmentChallenge() async {
         showLoader = true
         errorViewModel = nil
+        TelemetryManager.shared.trackScreenView("totp_push_qr", properties: ["factor_type": type.rawValue])
+        TelemetryManager.shared.trackFlow("enrollment_started", factorType: type.rawValue)
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -65,6 +68,8 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
                             domain: dependencies.domain
                         )
                     )
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("start_push_enrollment", durationMs: durationMs, status: .success)
             } else if type == .totp {
                 totpEnrollmentChallenge = try await startTOTPEnrollmentUseCase
                     .execute(
@@ -73,11 +78,17 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
                             domain: dependencies.domain
                         )
                     )
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("start_totp_enrollment", durationMs: durationMs, status: .success)
             }
             showLoader = false
             setAuthQRCodeImage()
             setAuthManualSetupCode()
         } catch {
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            let apiName = type == .pushNotification ? "start_push_enrollment" : "start_totp_enrollment"
+            TelemetryManager.shared.trackApiCall(apiName, durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
+            TelemetryManager.shared.trackFlow("enrollment_failed", factorType: type.rawValue, status: .failure)
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                 Task {
                     await self?.fetchEnrollmentChallenge()
@@ -97,6 +108,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
 
     private func confirmEnrollment() async {
         if let pushEnrollmentChallenge {
+            let startTime = CFAbsoluteTimeGetCurrent()
             do {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                     audience: dependencies.audience,
@@ -111,10 +123,16 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
                 _ = try await confirmPushEnrollmentUseCase.execute(
                     request: confirmPushEnrollmentRequest
                 )
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("confirm_push_enrollment", durationMs: durationMs, status: .success)
+                TelemetryManager.shared.trackFlow("enrollment_completed", factorType: type.rawValue, status: .success)
                 delegate?.refreshAuthData()
                 apiCallInProgress = false
                 navigationRoute = .filteredAuthListScreen(type: type, authMethods: [], isPostEnrollment: true)
             } catch {
+                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+                TelemetryManager.shared.trackApiCall("confirm_push_enrollment", durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
+                TelemetryManager.shared.trackFlow("enrollment_failed", factorType: type.rawValue, status: .failure)
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                     Task {

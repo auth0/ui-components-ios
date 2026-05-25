@@ -46,7 +46,7 @@ struct StartTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable {
     /// - Returns: TOTP enrollment challenge with QR code and secret
     /// - Throws: Auth0APIError if the request fails
     func execute(request: StartTOTPEnrollmentRequest) async throws -> TOTPEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .enrollTOTP()
             .start()

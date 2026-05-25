@@ -64,6 +64,8 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
     func confirmEnrollment() async {
         apiCallInProgress = true
         errorMessage = nil
+        TelemetryManager.shared.trackScreenView("otp_verification", properties: ["factor_type": type.rawValue])
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -105,10 +107,18 @@ final class OTPViewModel: ObservableObject, ErrorMessageHandler {
                     request: confirmPhoneEnrollmentRequest
                 )
             }
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            let apiName = "confirm_\(type.rawValue)_enrollment"
+            TelemetryManager.shared.trackApiCall(apiName, durationMs: durationMs, status: .success)
+            TelemetryManager.shared.trackFlow("enrollment_completed", factorType: type.rawValue, status: .success)
             apiCallInProgress = false
             delegate?.refreshAuthData()
             navigationRoute = .filteredAuthListScreen(type: type, authMethods: [], isPostEnrollment: true)
         } catch {
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            let apiName = "confirm_\(type.rawValue)_enrollment"
+            TelemetryManager.shared.trackApiCall(apiName, durationMs: durationMs, status: .failure, errorType: String(describing: Swift.type(of: error)))
+            TelemetryManager.shared.trackFlow("enrollment_failed", factorType: type.rawValue, status: .failure)
             apiCallInProgress = false
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                 Task {
