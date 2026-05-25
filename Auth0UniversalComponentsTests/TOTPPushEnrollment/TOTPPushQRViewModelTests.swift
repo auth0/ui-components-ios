@@ -226,7 +226,7 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.handleContinueButtonTap()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .pushNotification, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .pushNotification, authMethods: [], isPostEnrollment: true))
         }
     }
 
