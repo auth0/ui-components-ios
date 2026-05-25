@@ -82,7 +82,11 @@ struct SavedAuthenticatorsView: View {
                     .renderingMode(.template)
                     .foregroundStyle(theme.colors.text.bold)
                     .onTapGesture {
-                        router.pop()
+                        if viewModel.isPostEnrollment {
+                            router.popToSDKRoot()
+                        } else {
+                            router.pop()
+                        }
                     }
             }
         }
