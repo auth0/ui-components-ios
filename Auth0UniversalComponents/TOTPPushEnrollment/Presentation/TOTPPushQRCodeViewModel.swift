@@ -131,7 +131,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
 
     private func setAuthManualSetupCode() {
         if totpEnrollmentChallenge.isNotNil || pushEnrollmentChallenge.isNotNil {
-            let manualCode: String? = totpEnrollmentChallenge?.authenticatorManualInputCode ?? pushEnrollmentChallenge!.authenticatorQRCodeURI
+            let manualCode: String? = totpEnrollmentChallenge?.authenticatorManualInputCode ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
             manualInputCode = manualCode
             showManualCodeText = totpEnrollmentChallenge.isNotNil
         }
