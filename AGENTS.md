@@ -174,10 +174,6 @@ let result = try await client.authenticationMethods.enrollTOTP().start()
 let client = Auth0.myAccount(token: token, domain: domain, session: session)
 ```
 
-### Lint Enforcement
-
-A custom SwiftLint rule (`no_direct_myaccount_client`) in `.swiftlint.yml` enforces this at build time. Any direct call to `Auth0.myAccount(` outside of `MyAccountClientFactory.swift` will produce a compilation error.
-
 ---
 
 ## Key Technical Decisions
