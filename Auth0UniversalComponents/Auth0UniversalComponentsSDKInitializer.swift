@@ -142,12 +142,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
                                     tokenProvider: tokenProvider)
     }
 
-    /// Reset the SDK to an uninitialized state.
-    ///
-    /// This is primarily used for testing purposes to clear the singleton instance.
-    static func reset() {
-        _shared = nil
-    }
 }
 
 /// Ensures a URL string has an HTTPS scheme.

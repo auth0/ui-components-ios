@@ -45,7 +45,7 @@ struct GetAuthMethodsUseCase: GetAuthMethodsUseCaseable {
     /// - Returns: Array of enrolled authentication methods
     /// - Throws: Auth0APIError if the request fails
     func execute(request: GetAuthMethodsRequest) async throws -> [AuthenticationMethod] {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .getAuthenticationMethods()
             .start()

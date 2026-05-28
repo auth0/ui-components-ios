@@ -51,7 +51,7 @@ struct StartPasskeyEnrollmentUseCase: StartPasskeyEnrollmentUseCaseable {
     /// - Returns: Passkey enrollment challenge
     /// - Throws: Auth0APIError if the request fails
     func execute(request: StartPasskeyEnrollmentRequest) async throws -> PasskeyEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain)
             .authenticationMethods
             .passkeyEnrollmentChallenge()
             .start()

@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 import Auth0
 
 /// View model for recovery code enrollment.

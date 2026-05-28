@@ -59,7 +59,7 @@ struct ConfirmRecoveryCodeEnrollmentUseCase: ConfirmRecoveryCodeEnrollmentUseCas
     /// - Returns: The newly created recovery code authentication method
     /// - Throws: Auth0APIError if the request fails
     func execute(request: ConfirmRecoveryCodeEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .confirmRecoveryCodeEnrollment(id: request.id, authSession: request.authSession)
             .start()

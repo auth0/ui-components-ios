@@ -58,7 +58,7 @@ struct ConfirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable {
     /// - Returns: The newly created push notification authentication method
     /// - Throws: Auth0APIError if the request fails
     func execute(request: ConfirmPushEnrollmentRequest) async throws -> AuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .confirmPushNotificationEnrollment(id: request.id, authSession: request.authSession)
             .start()

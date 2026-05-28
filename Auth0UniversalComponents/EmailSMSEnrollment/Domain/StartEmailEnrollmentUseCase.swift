@@ -53,7 +53,7 @@ struct StartEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable {
     /// - Returns: Email enrollment challenge with verification details
     /// - Throws: Auth0APIError if the request fails
     func execute(request: StartEmailEnrollmentRequest) async throws -> EmailEnrollmentChallenge {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .enrollEmail(emailAddress: request.email)
             .start()
