@@ -38,9 +38,6 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
     func loadData() async {
         showLoader = true
         errorViewModel = nil
-        TelemetryManager.shared.trackScreenView("recovery_code")
-        TelemetryManager.shared.trackFlow("enrollment_started", factorType: "recovery_code")
-        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                 audience: dependencies.audience,
@@ -52,13 +49,8 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
                     domain: dependencies.domain
                 )
             )
-            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
-            TelemetryManager.shared.trackApiCall("start_recovery_code_enrollment", durationMs: durationMs, status: .success)
             showLoader = false
         } catch {
-            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
-            TelemetryManager.shared.trackApiCall("start_recovery_code_enrollment", durationMs: durationMs, status: .failure, errorType: String(describing: type(of: error)))
-            TelemetryManager.shared.trackFlow("enrollment_failed", factorType: "recovery_code", status: .failure)
             await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                 Task {
                     await self?.loadData()
@@ -70,7 +62,6 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
     func confirmEnrollment() async {
         apiCallInProgress = true
         if let recoveryCodeChallenge {
-            let startTime = CFAbsoluteTimeGetCurrent()
             do {
                 let apiCredentials = try await dependencies.tokenProvider.fetchAPICredentials(
                     audience: dependencies.audience,
@@ -85,16 +76,10 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
                 _ = try await confirmRecoveryCodeEnrollmentUseCase.execute(
                     request: confirmRecoveryCodeEnrollmentRequest
                 )
-                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
-                TelemetryManager.shared.trackApiCall("confirm_recovery_code_enrollment", durationMs: durationMs, status: .success)
-                TelemetryManager.shared.trackFlow("enrollment_completed", factorType: "recovery_code", status: .success)
                 apiCallInProgress = false
                 navigationRoute = .filteredAuthListScreen(type: .recoveryCode, authMethods: [], isPostEnrollment: true)
                 delegate?.refreshAuthData()
             } catch {
-                let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
-                TelemetryManager.shared.trackApiCall("confirm_recovery_code_enrollment", durationMs: durationMs, status: .failure, errorType: String(describing: type(of: error)))
-                TelemetryManager.shared.trackFlow("enrollment_failed", factorType: "recovery_code", status: .failure)
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
                     Task {

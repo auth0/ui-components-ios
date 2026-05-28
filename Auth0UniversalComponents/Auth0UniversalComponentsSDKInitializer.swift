@@ -56,8 +56,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
     let bundle: Bundle
     /// URLSession for making HTTP requests
     let session: URLSession
-    /// Configuration for telemetry (HTTP headers and client-side events)
-    let telemetryConfiguration: TelemetryConfiguration
     static private var _shared: Auth0UniversalComponentsSDKInitializer?
 
     /// Access the shared singleton instance of Auth0UniversalComponentsSDKInitializer.
@@ -77,7 +75,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
                  passkeyConfiguration: PasskeysConfiguration,
                  bundle: Bundle = .main,
                  session: URLSession = .shared,
-                 telemetryConfiguration: TelemetryConfiguration = .enabled,
                  tokenProvider: any TokenProvider) {
         self.audience = audience
         self.domain = domain
@@ -86,8 +83,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
         self.bundle = bundle
         self.session = session
         self.passkeyConfiguration = passkeyConfiguration
-        self.telemetryConfiguration = telemetryConfiguration
-        TelemetryManager.shared = TelemetryManager(configuration: telemetryConfiguration)
     }
 
     /// Initialize the SDK using configuration from Auth0.plist.
@@ -99,14 +94,12 @@ public actor Auth0UniversalComponentsSDKInitializer {
     ///   - session: The URLSession to use for network requests (defaults to .shared)
     ///   - passkeyConfiguration: Configuration for passkey enrollment behavior
     ///   - bundle: The bundle to read Auth0.plist from (defaults to .main)
-    ///   - telemetryConfiguration: Configuration for telemetry behavior (defaults to enabled)
     ///   - tokenProvider: Provider for fetching and managing authentication credentials
     ///
     /// - Throws: Calls fatalError if Auth0.plist is not found or is missing required keys
     public static func initialize(session: URLSession = .shared,
                                   passkeyConfiguration: PasskeysConfiguration = PasskeysConfiguration(),
                                   bundle: Bundle = .main,
-                                  telemetryConfiguration: TelemetryConfiguration = .enabled,
                                   tokenProvider: any TokenProvider) {
         let config = plistValues(bundle: bundle)!
 
@@ -118,7 +111,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
                                                   passkeyConfiguration: passkeyConfiguration,
                                                   bundle: bundle,
                                                   session: session,
-                                                  telemetryConfiguration: telemetryConfiguration,
                                                   tokenProvider: tokenProvider)
     }
 
@@ -133,7 +125,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
     ///   - clientId: Auth0 application client ID
     ///   - passkeyConfiguration: Configuration for passkey enrollment behavior
     ///   - audience: The audience for API requests (typically domain/me/)
-    ///   - telemetryConfiguration: Configuration for telemetry behavior (defaults to enabled)
     ///   - tokenProvider: Provider for fetching and managing authentication credentials
     public static func initialize(session: URLSession = .shared,
                                   bundle: Bundle = .main,
@@ -141,7 +132,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
                                   clientId: String,
                                   passkeyConfiguration: PasskeysConfiguration = PasskeysConfiguration(),
                                   audience: String,
-                                  telemetryConfiguration: TelemetryConfiguration = .enabled,
                                   tokenProvider: any TokenProvider) {
         _shared = Auth0UniversalComponentsSDKInitializer(audience: ensureHTTPS(audience),
                                     domain: domain,
@@ -149,17 +139,14 @@ public actor Auth0UniversalComponentsSDKInitializer {
                                     passkeyConfiguration: passkeyConfiguration,
                                     bundle: bundle,
                                     session: session,
-                                    telemetryConfiguration: telemetryConfiguration,
                                     tokenProvider: tokenProvider)
     }
 
-    /// Reset the SDK telemetry state.
+    /// Reset the SDK state for testing purposes.
     ///
-    /// This is primarily used for testing purposes. It resets the TelemetryManager
-    /// but does not nil out the shared instance to avoid race conditions in parallel tests.
+    /// Does not nil out the shared instance to avoid race conditions in parallel tests.
     /// The subsequent `initialize()` call will overwrite the instance completely.
     static func reset() {
-        TelemetryManager.shared = TelemetryManager(configuration: .enabled)
     }
 }
 

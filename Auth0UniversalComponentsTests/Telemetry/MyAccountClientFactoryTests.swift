@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 @testable import Auth0UniversalComponents
-@testable import Auth0
+import Auth0
 
 @Suite(.serialized)
 struct MyAccountClientFactoryTests {
@@ -15,9 +15,8 @@ struct MyAccountClientFactoryTests {
         return URLSession(configuration: config)
     }
 
-    @Test("Factory creates client with telemetry when enabled")
-    func testCreatesClientWithTelemetryEnabled() {
-        let provider = MockTelemetryEventProvider()
+    @Test("Factory creates client with Auth0-Client header")
+    func testCreatesClientWithTelemetryHeader() async {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -25,41 +24,37 @@ struct MyAccountClientFactoryTests {
             domain: mockDomain,
             clientId: "test_client",
             audience: "\(mockDomain)/me/",
-            telemetryConfiguration: TelemetryConfiguration(enabled: true, provider: provider),
             tokenProvider: MockTokenProvider()
         )
+
+        let session = makeMockSession()
+        var capturedRequest: URLRequest?
+
+        MockURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Location": "https://\(self.mockDomain)/me/v1/authentication-methods/totp%7Ctest"]
+            )!
+            let data = Data("""
+            {"id":"totp|test","type":"totp","confirmed":true,"usage":["secondary"],"created_at":"2025-01-01T00:00:00.000Z"}
+            """.utf8)
+            return (response, data)
+        }
 
         let client = MyAccountClientFactory.create(
             token: mockToken,
             domain: mockDomain,
-            session: makeMockSession()
+            session: session
         )
 
-        // The client should have telemetry enabled (non-nil value)
-        #expect(client.telemetry.value != nil)
-    }
+        // Make a request to capture headers
+        _ = try? await client.authenticationMethods.enrollTOTP().start()
 
-    @Test("Factory creates client with telemetry disabled")
-    func testCreatesClientWithTelemetryDisabled() {
-        Auth0UniversalComponentsSDKInitializer.reset()
-        Auth0UniversalComponentsSDKInitializer.initialize(
-            session: makeMockSession(),
-            bundle: .main,
-            domain: mockDomain,
-            clientId: "test_client",
-            audience: "\(mockDomain)/me/",
-            telemetryConfiguration: .disabled,
-            tokenProvider: MockTokenProvider()
-        )
-
-        let client = MyAccountClientFactory.create(
-            token: mockToken,
-            domain: mockDomain,
-            session: makeMockSession()
-        )
-
-        // When disabled, telemetry value should be nil
-        #expect(client.telemetry.value == nil)
+        #expect(capturedRequest != nil)
+        #expect(capturedRequest?.value(forHTTPHeaderField: "Auth0-Client") != nil)
     }
 
     @Test("Factory overload without session works")
@@ -71,20 +66,20 @@ struct MyAccountClientFactoryTests {
             domain: mockDomain,
             clientId: "test_client",
             audience: "\(mockDomain)/me/",
-            telemetryConfiguration: .enabled,
             tokenProvider: MockTokenProvider()
         )
 
+        // Just verify it doesn't crash
         let client = MyAccountClientFactory.create(
             token: mockToken,
             domain: mockDomain
         )
 
-        #expect(client.telemetry.value != nil)
+        #expect(client != nil)
     }
 
     @Test("Factory sends Auth0-Client header identifying UI Components SDK")
-    func testAuth0ClientHeaderContent() {
+    func testAuth0ClientHeaderContent() async {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -92,30 +87,47 @@ struct MyAccountClientFactoryTests {
             domain: mockDomain,
             clientId: "test_client",
             audience: "\(mockDomain)/me/",
-            telemetryConfiguration: .enabled,
             tokenProvider: MockTokenProvider()
         )
+
+        let session = makeMockSession()
+        var capturedRequest: URLRequest?
+
+        MockURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Location": "https://\(self.mockDomain)/me/v1/authentication-methods/totp%7Ctest"]
+            )!
+            let data = Data("""
+            {"id":"totp|test","type":"totp","confirmed":true,"usage":["secondary"],"created_at":"2025-01-01T00:00:00.000Z"}
+            """.utf8)
+            return (response, data)
+        }
 
         let client = MyAccountClientFactory.create(
             token: mockToken,
             domain: mockDomain,
-            session: makeMockSession()
+            session: session
         )
 
-        // Decode the telemetry value to verify it contains "Auth0UniversalComponents"
-        guard let telemetryValue = client.telemetry.value,
-              let data = Data(base64URLEncoded: telemetryValue),
+        _ = try? await client.authenticationMethods.enrollTOTP().start()
+
+        guard let headerValue = capturedRequest?.value(forHTTPHeaderField: "Auth0-Client"),
+              let data = Data(base64URLEncoded: headerValue),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let name = json["name"] as? String else {
-            Issue.record("Could not decode telemetry header value")
+            Issue.record("Could not decode Auth0-Client header")
             return
         }
 
-        #expect(name == "Auth0UniversalComponents")
+        #expect(name == Auth0UniversalComponents.libraryName)
     }
 
     @Test("Factory includes SDK version in header")
-    func testAuth0ClientHeaderVersion() {
+    func testAuth0ClientHeaderVersion() async {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -123,21 +135,39 @@ struct MyAccountClientFactoryTests {
             domain: mockDomain,
             clientId: "test_client",
             audience: "\(mockDomain)/me/",
-            telemetryConfiguration: .enabled,
             tokenProvider: MockTokenProvider()
         )
+
+        let session = makeMockSession()
+        var capturedRequest: URLRequest?
+
+        MockURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Location": "https://\(self.mockDomain)/me/v1/authentication-methods/totp%7Ctest"]
+            )!
+            let data = Data("""
+            {"id":"totp|test","type":"totp","confirmed":true,"usage":["secondary"],"created_at":"2025-01-01T00:00:00.000Z"}
+            """.utf8)
+            return (response, data)
+        }
 
         let client = MyAccountClientFactory.create(
             token: mockToken,
             domain: mockDomain,
-            session: makeMockSession()
+            session: session
         )
 
-        guard let telemetryValue = client.telemetry.value,
-              let data = Data(base64URLEncoded: telemetryValue),
+        _ = try? await client.authenticationMethods.enrollTOTP().start()
+
+        guard let headerValue = capturedRequest?.value(forHTTPHeaderField: "Auth0-Client"),
+              let data = Data(base64URLEncoded: headerValue),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let headerVersion = json["version"] as? String else {
-            Issue.record("Could not decode telemetry header value")
+            Issue.record("Could not decode Auth0-Client header")
             return
         }
 
@@ -145,7 +175,7 @@ struct MyAccountClientFactoryTests {
     }
 
     @Test("Factory includes Auth0.swift core version in env")
-    func testAuth0ClientHeaderCoreVersion() {
+    func testAuth0ClientHeaderCoreVersion() async {
         Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -153,26 +183,43 @@ struct MyAccountClientFactoryTests {
             domain: mockDomain,
             clientId: "test_client",
             audience: "\(mockDomain)/me/",
-            telemetryConfiguration: .enabled,
             tokenProvider: MockTokenProvider()
         )
+
+        let session = makeMockSession()
+        var capturedRequest: URLRequest?
+
+        MockURLProtocol.requestHandler = { request in
+            capturedRequest = request
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Location": "https://\(self.mockDomain)/me/v1/authentication-methods/totp%7Ctest"]
+            )!
+            let data = Data("""
+            {"id":"totp|test","type":"totp","confirmed":true,"usage":["secondary"],"created_at":"2025-01-01T00:00:00.000Z"}
+            """.utf8)
+            return (response, data)
+        }
 
         let client = MyAccountClientFactory.create(
             token: mockToken,
             domain: mockDomain,
-            session: makeMockSession()
+            session: session
         )
 
-        guard let telemetryValue = client.telemetry.value,
-              let data = Data(base64URLEncoded: telemetryValue),
+        _ = try? await client.authenticationMethods.enrollTOTP().start()
+
+        guard let headerValue = capturedRequest?.value(forHTTPHeaderField: "Auth0-Client"),
+              let data = Data(base64URLEncoded: headerValue),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let env = json["env"] as? [String: String],
               let coreVersion = env["core"] else {
-            Issue.record("Could not decode telemetry env")
+            Issue.record("Could not decode Auth0-Client header env")
             return
         }
 
-        // Core version should be Auth0.swift's version (non-empty)
         #expect(!coreVersion.isEmpty)
     }
 }

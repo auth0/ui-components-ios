@@ -60,10 +60,6 @@ public class Router<Route: Hashable>: ObservableObject {
     /// - Parameter route: The destination to navigate to. Must match a registered
     ///   `.navigationDestination(for:)` in the enclosing `NavigationStack`.
     public func navigate(to route: Route) {
-        TelemetryManager.shared.trackFlow(
-            "navigation_transitioned",
-            factorType: String(describing: route)
-        )
         if let ext = externalPath {
             ext.wrappedValue.append(route)
         } else {
