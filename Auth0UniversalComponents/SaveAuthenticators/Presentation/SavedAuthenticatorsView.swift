@@ -60,13 +60,18 @@ struct SavedAuthenticatorsView: View {
                                     trailing: theme.spacing.md))
             }
         }
-        .navigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle)
+        .themedNavigationTitle(viewModel.type.savedAuthenticatorsNavigationTitle, theme: theme)
         #if !os(macOS)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .tint(theme.colors.text.bold)
         #endif
         .toolbar {
             ToolbarItem(placement: trailingPlacement) {
                 Image("plus", bundle: ResourceBundle.default)
+                    .renderingMode(.template)
+                    .foregroundStyle(theme.colors.text.bold)
                     .onTapGesture {
                         router.navigate(to: viewModel.type.navigationDestination([]))
                     }
@@ -74,8 +79,14 @@ struct SavedAuthenticatorsView: View {
 
             ToolbarItem(placement: leadingPlacement) {
                 Image("back", bundle: ResourceBundle.default)
+                    .renderingMode(.template)
+                    .foregroundStyle(theme.colors.text.bold)
                     .onTapGesture {
-                        router.pop()
+                        if viewModel.isPostEnrollment {
+                            router.popToSDKRoot()
+                        } else {
+                            router.pop()
+                        }
                     }
             }
         }
@@ -84,7 +95,7 @@ struct SavedAuthenticatorsView: View {
                 await viewModel.loadData()
             }
         }
-        .background(theme.colors.background.layerBase)
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
     }
 
     var trailingPlacement: ToolbarItemPlacement {

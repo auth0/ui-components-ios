@@ -14,6 +14,7 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
     private let dependencies: Auth0UniversalComponentsSDKInitializer
     private let authenticationMethods: [AuthenticationMethod]
     let type: AuthMethodType
+    let isPostEnrollment: Bool
     private let getAuthMethodsUseCase: GetAuthMethodsUseCaseable
     private let deleteAuthMethodUseCase: DeleteAuthMethodUseCaseable
     private weak var delegate: RefreshAuthDataProtocol?
@@ -30,12 +31,14 @@ final class SavedAuthenticatorsViewModel: ObservableObject, ErrorViewModelHandle
          deleteAuthMethodsUseCase: DeleteAuthMethodUseCaseable = DeleteAuthMethodUseCase(),
          type: AuthMethodType,
          authenticationMethods: [AuthenticationMethod],
+         isPostEnrollment: Bool = false,
          delegate: RefreshAuthDataProtocol?) {
         self.dependencies = dependencies
         self.type = type
         self.getAuthMethodsUseCase = getAuthMethodsUseCase
         self.deleteAuthMethodUseCase = deleteAuthMethodsUseCase
         self.authenticationMethods = authenticationMethods
+        self.isPostEnrollment = isPostEnrollment
         self.delegate = delegate
     }
 

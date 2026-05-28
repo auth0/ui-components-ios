@@ -81,8 +81,9 @@ struct TOTPPushQRCodeViewModelTests {
         )
         await MainActor.run {
             #expect(viewModel.showLoader == true)
-            #expect(viewModel.qrCodeImage == nil)
+            #expect(viewModel.qrCodeURI == nil)
             #expect(viewModel.manualInputCode == nil)
+            #expect(viewModel.showManualCodeText == false)
             #expect(viewModel.errorViewModel == nil)
             #expect(viewModel.apiCallInProgress == false)
 
@@ -114,6 +115,7 @@ struct TOTPPushQRCodeViewModelTests {
             }
             await viewModel.fetchEnrollmentChallenge()
             #expect(viewModel.manualInputCode == "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5")
+            #expect(viewModel.showManualCodeText == true)
         }
     }
 
@@ -126,7 +128,7 @@ struct TOTPPushQRCodeViewModelTests {
         let viewModel = await TOTPPushQRCodeViewModel(
             startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCase(session: makeMockSession()),
             startPushEnrollmentUseCase: StartPushEnrollmentUseCase(session: makeMockSession()),
-            type: .totp,
+            type: .pushNotification,
             dependencies: Auth0UniversalComponentsSDKInitializer.shared
         )
         await confirmation(expectedCount: 1) { @MainActor confirmation in
@@ -141,7 +143,8 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, pushEnrollmentChallengeData)
             }
             await viewModel.fetchEnrollmentChallenge()
-            #expect(viewModel.qrCodeImage != nil)
+            #expect(viewModel.qrCodeURI != nil)
+            #expect(viewModel.showManualCodeText == false)
         }
     }
 
@@ -215,6 +218,7 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, pushEnrollmentChallengeData)
             }
             await viewModel.fetchEnrollmentChallenge()
+            #expect(viewModel.showManualCodeText == false)
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
                     url: request.url!,
@@ -226,7 +230,7 @@ struct TOTPPushQRCodeViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.handleContinueButtonTap()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .pushNotification, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .pushNotification, authMethods: [], isPostEnrollment: true))
         }
     }
 

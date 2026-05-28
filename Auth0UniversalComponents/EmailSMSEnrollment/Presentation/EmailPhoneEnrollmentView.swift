@@ -53,8 +53,11 @@ struct EmailPhoneEnrollmentView: View {
                     })
 
                     Image("chevrondown", bundle: ResourceBundle.default)
+                        .renderingMode(.template)
+                        .foregroundStyle(theme.colors.text.bold)
                         .frame(width: 10, height: 5.5)
                     TextField("Phone Number", text: $viewModel.phoneNumber)
+                        .foregroundStyle(theme.colors.text.bold)
                     #if !os(macOS)
                         .keyboardType(.numberPad)
                     #endif
@@ -62,6 +65,7 @@ struct EmailPhoneEnrollmentView: View {
                 }
                 .padding()
                 .frame(height: theme.sizes.inputHeight)
+                .background(theme.colors.background.layerTop)
                 .clipShape(RoundedRectangle(cornerRadius: theme.radius.inputField))
                 .overlay {
                     RoundedRectangle(cornerRadius: theme.radius.inputField)
@@ -79,9 +83,11 @@ struct EmailPhoneEnrollmentView: View {
                 }
             } else {
                 TextField("Email", text: $viewModel.email)
+                    .foregroundStyle(theme.colors.text.bold)
                     .focused($textFieldFocused)
                     .padding()
                     .frame(height: theme.sizes.inputHeight)
+                    .background(theme.colors.background.layerTop)
                     .clipShape(RoundedRectangle(cornerRadius: theme.radius.inputField))
                     .overlay {
                         RoundedRectangle(cornerRadius: theme.radius.inputField)
@@ -132,8 +138,14 @@ struct EmailPhoneEnrollmentView: View {
             Spacer()
         }
         .padding()
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
         .ignoresSafeArea(.keyboard)
-        .navigationTitle(Text(viewModel.navigationTitle))
+        .themedNavigationTitle(viewModel.navigationTitle, theme: theme)
+        #if !os(macOS)
+        .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .tint(theme.colors.text.bold)
+        #endif
         .toolbar {
             #if !os(visionOS)
             ToolbarItemGroup(placement: .keyboard) {

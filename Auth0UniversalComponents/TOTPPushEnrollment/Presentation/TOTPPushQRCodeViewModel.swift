@@ -26,9 +26,10 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     private var totpEnrollmentChallenge: TOTPEnrollmentChallenge?
     private weak var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
-    @Published var qrCodeImage: Image?
+    @Published var qrCodeURI: String?
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String?
+    @Published var showManualCodeText: Bool = false
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var apiCallInProgress: Bool = false
     @Published var toast: Toast?
@@ -112,7 +113,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
                 )
                 delegate?.refreshAuthData()
                 apiCallInProgress = false
-                navigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
+                navigationRoute = .filteredAuthListScreen(type: type, authMethods: [], isPostEnrollment: true)
             } catch {
                 apiCallInProgress = false
                 await handle(error: error, scope: "openid create:me:authentication_methods") { [weak self] in
@@ -125,24 +126,14 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     }
 
     private func setAuthQRCodeImage() {
-        let context = CIContext()
-        let filter = CIFilter.qrCodeGenerator()
-        filter.correctionLevel = "H"
-        let qrCodeURI: String? = totpEnrollmentChallenge?.authenticatorQRCodeURI ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
-        if let qrCodeURI {
-            filter.message = Data(qrCodeURI.utf8)
-        }
-
-        if let outputImage = filter.outputImage {
-            if let cgImage = context.createCGImage(outputImage, from: outputImage.extent) {
-                qrCodeImage = Image(decorative: cgImage, scale: 1.0)
-            }
-        }
+        qrCodeURI = totpEnrollmentChallenge?.authenticatorQRCodeURI ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
     }
 
     private func setAuthManualSetupCode() {
-        if let totpEnrollmentChallenge {
-            manualInputCode = totpEnrollmentChallenge.authenticatorManualInputCode
+        if totpEnrollmentChallenge.isNotNil || pushEnrollmentChallenge.isNotNil {
+            let manualCode: String? = totpEnrollmentChallenge?.authenticatorManualInputCode ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
+            manualInputCode = manualCode
+            showManualCodeText = totpEnrollmentChallenge.isNotNil
         }
     }
 

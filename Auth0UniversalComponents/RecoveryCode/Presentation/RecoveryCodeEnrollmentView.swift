@@ -122,15 +122,19 @@ struct RecoveryCodeEnrollmentView: View {
                 }.padding()
             }
         }
+        .background(theme.colors.background.layerBase.ignoresSafeArea())
         .onAppear {
             Task {
                 await viewModel.loadData()
             }
         }
         .toastView(toast: $viewModel.toast)
-        .navigationTitle(Text("Recovery code"))
+        .themedNavigationTitle("Recovery code", theme: theme)
         #if os(iOS) || os(watchOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(theme.colors.background.layerBase, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .tint(theme.colors.text.bold)
         #endif
         .onChange(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }

@@ -155,7 +155,7 @@ struct OTPViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .totp, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .totp, authMethods: [], isPostEnrollment: true))
         }
     }
 
@@ -193,7 +193,7 @@ struct OTPViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .email, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .email, authMethods: [], isPostEnrollment: true))
         }
     }
 
@@ -228,7 +228,7 @@ struct OTPViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .sms, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .sms, authMethods: [], isPostEnrollment: true))
         }
     }
 
@@ -315,7 +315,7 @@ struct OTPViewModelTests {
 
             // Verify delegate was called
             #expect(mockDelegate.refreshCalled == true, "Delegate should be called after successful enrollment")
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .totp, authMethods: []))
+            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .totp, authMethods: [], isPostEnrollment: true))
         }
     }
 

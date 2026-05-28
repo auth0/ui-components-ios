@@ -21,6 +21,8 @@ struct MyAccountAuthMethodView: View {
     var body: some View {
         HStack {
             Image(viewModel.image(), bundle: ResourceBundle.default)
+                .renderingMode(.template)
+                .foregroundStyle(theme.colors.background.primary)
                 .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)
                 .padding(.trailing, theme.spacing.md)
 
