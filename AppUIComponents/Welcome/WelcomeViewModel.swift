@@ -52,12 +52,20 @@ class WelcomeViewModel: ObservableObject {
     }
     
     func checkAndAddProfileOption() {
-        guard let user = credentialsManager.user else {
-            return
-        }
-        let displayName = user.name ?? user.email ?? ""
-        options.append(WelcomeOptionsModel(icon: "ic_person", title: "Profile", route: .profile(model: .init(fromUserInfo: user,
-                                                                                                             withName: displayName))))
+        let user = credentialsManager.user
+        let displayName = user?.name ?? user?.email ?? ""
+        options.append(WelcomeOptionsModel(
+            icon: "ic_person",
+            title: "Profile",
+            route: .profile(model: ProfileModel(
+                name: displayName,
+                givenName: user?.givenName,
+                familyName: user?.familyName,
+                email: user?.email,
+                emailVerified: user?.emailVerified,
+                lastUpdatedAt: user?.updatedAt
+            ))
+        ))
     }
     
     func checkAndAddOtherOptions() {
