@@ -83,7 +83,6 @@ struct SavedAuthenticatorsViewModelTests {
     @Test func testInit_initialState() async {
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: nil)
@@ -95,7 +94,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testLoadDataSuccess() async throws {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(getAuthMethodsUseCase: GetAuthMethodsUseCase(session: makeMockSession()), type: .sms, authenticationMethods: [], delegate: nil)
@@ -118,7 +116,6 @@ struct SavedAuthenticatorsViewModelTests {
     @Test
     func testDeletionSuccess() async {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
@@ -162,7 +159,6 @@ struct SavedAuthenticatorsViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         let mockDelegate = MockRefreshDelegate()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(type: .email, authenticationMethods: [], delegate: mockDelegate)
@@ -175,7 +171,6 @@ struct SavedAuthenticatorsViewModelTests {
     @Test func testDeletion_callsDelegate() async {
         let mockTokenProvider = MockTokenProvider()
         let mockDelegate = MockRefreshDelegate()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
@@ -217,7 +212,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testLoadData_handlesAPIError() async throws {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(
@@ -256,7 +250,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testLoadData_handlesNetworkError() async throws {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(
@@ -282,7 +275,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testDeletion_handlesAPIError() async {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let getAuthMethodsUseCase = GetAuthMethodsUseCase(session: makeMockSession())
@@ -334,7 +326,6 @@ struct SavedAuthenticatorsViewModelTests {
     /// of the one the user actually tapped.
     @Test func testDeletion_deletesOnlyTargetedAuthMethod() async {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         // Two distinct SMS methods loaded into the list.
@@ -431,7 +422,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testLoadData_withPreloadedMethods() async {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(
@@ -448,7 +438,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testLoadData_emptyResponse() async throws {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(
@@ -485,7 +474,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testViewAuthenticationMethods_initialization() async {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let smsViewModel = await SavedAuthenticatorsViewModel(type: .sms, authenticationMethods: [], delegate: nil)
@@ -501,7 +489,6 @@ struct SavedAuthenticatorsViewModelTests {
 
     @Test func testLoadData_populatesAuthenticationMethods() async throws {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await SavedAuthenticatorsViewModel(

@@ -90,7 +90,6 @@ struct ErrorHandlerTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -158,7 +157,6 @@ struct ErrorHandlerTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -196,7 +194,6 @@ struct ErrorHandlerTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,

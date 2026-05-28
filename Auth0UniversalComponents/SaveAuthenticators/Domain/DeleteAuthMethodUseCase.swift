@@ -44,7 +44,7 @@ struct DeleteAuthMethodUseCase: DeleteAuthMethodUseCaseable {
     /// - Parameter request: Request containing the method ID to delete
     /// - Throws: Auth0APIError if the method cannot be deleted
     func execute(request: DeleteAuthMethodRequest) async throws {
-        try await Auth0.myAccount(token: request.token, domain: request.domain, session: session)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain, session: session)
             .authenticationMethods
             .deleteAuthenticationMethod(by: request.id)
             .start()

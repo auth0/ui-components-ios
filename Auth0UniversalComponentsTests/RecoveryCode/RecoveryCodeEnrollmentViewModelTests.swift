@@ -71,7 +71,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testInit_initialState() async {
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
@@ -85,7 +84,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testLoadData() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(startRecoveryCodeEnrollmentUseCase: StartRecoveryCodeEnrollmentUseCase(session: makeMockSession()), delegate: nil)
@@ -108,7 +106,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testConfirmEnrollment_success() async throws {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())
@@ -157,7 +154,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         let mockDelegate = MockRefreshDelegate()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: mockDelegate)
@@ -173,7 +169,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockDelegate = MockRefreshDelegate()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())
@@ -222,7 +217,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(
@@ -261,7 +255,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(
@@ -287,7 +280,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())
@@ -343,7 +335,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
@@ -362,7 +353,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testHandle_setsLoaderToFalse() async {
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
@@ -388,7 +378,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testHandle_webAuthError() async {
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
@@ -410,7 +399,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testHandle_myAccountError() async {
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
@@ -433,7 +421,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
     @Test func testHandle_credentialsManagerError() async {
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await RecoveryCodeEnrollmentViewModel(delegate: nil)
@@ -459,7 +446,6 @@ struct RecoveryCodeEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let startRecoveryCodeEnrollmentUseCase = StartRecoveryCodeEnrollmentUseCase(session: makeMockSession())

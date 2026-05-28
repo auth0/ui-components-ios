@@ -52,7 +52,7 @@ struct ConfirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable {
     /// - Returns: The enrolled passkey authentication method
     /// - Throws: Auth0APIError if the passkey creation or enrollment fails
     func execute(request: ConfirmPasskeyEnrollmentRequest) async throws -> PasskeyAuthenticationMethod {
-        try await Auth0.myAccount(token: request.token, domain: request.domain)
+        try await MyAccountClientFactory.create(token: request.token, domain: request.domain)
             .authenticationMethods
             .enroll(passkey: request.passkey, challenge: request.challenge)
             .start()

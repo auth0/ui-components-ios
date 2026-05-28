@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 import SwiftUI
 import Auth0
 

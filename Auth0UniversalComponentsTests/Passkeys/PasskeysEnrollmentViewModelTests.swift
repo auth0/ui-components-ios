@@ -85,7 +85,6 @@ struct PasskeysEnrollmentViewModelTests {
 
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -110,7 +109,6 @@ struct PasskeysEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         let mockDelegate = MockRefreshDelegate()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -135,7 +133,6 @@ struct PasskeysEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -163,7 +160,6 @@ struct PasskeysEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -202,7 +198,6 @@ struct PasskeysEnrollmentViewModelTests {
         let mockTokenProvider = MockTokenProvider()
         await NavigationStore.shared.reset()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -230,7 +225,6 @@ struct PasskeysEnrollmentViewModelTests {
 
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -266,7 +260,6 @@ struct PasskeysEnrollmentViewModelTests {
 
         let mockTokenProvider = MockTokenProvider()
 
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
