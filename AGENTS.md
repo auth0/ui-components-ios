@@ -143,6 +143,43 @@ This SDK uses **Universal Login** for MFA step-up flows. When an MFA-required er
 
 See [Auth0.swift documentation](https://github.com/auth0/Auth0.swift) for detailed setup.
 
+## MyAccount API Client — Required Pattern
+
+**All My Account API calls MUST use `MyAccountClientFactory.create()` instead of calling `Auth0.myAccount()` directly.**
+
+This factory attaches the `Auth0-Client` HTTP header that identifies requests as originating from the UI Components SDK. The library name and version are defined centrally in `Auth0UniversalComponents/Version.swift`:
+
+```swift
+// Version.swift
+let version = "1.0.0"
+let libraryName = "universal-components-ios"
+```
+
+### Correct Usage
+
+```swift
+// In any UseCase
+let client = MyAccountClientFactory.create(
+    token: apiCredentials.accessToken,
+    domain: dependencies.domain,
+    session: session
+)
+let result = try await client.authenticationMethods.enrollTOTP().start()
+```
+
+### Incorrect Usage (will trigger SwiftLint error)
+
+```swift
+// DO NOT use Auth0.myAccount() directly — this bypasses telemetry headers
+let client = Auth0.myAccount(token: token, domain: domain, session: session)
+```
+
+### Lint Enforcement
+
+A custom SwiftLint rule (`no_direct_myaccount_client`) in `.swiftlint.yml` enforces this at build time. Any direct call to `Auth0.myAccount(` outside of `MyAccountClientFactory.swift` will produce a compilation error.
+
+---
+
 ## Key Technical Decisions
 
 ### UI Framework Support

@@ -136,7 +136,6 @@ struct MyAccountAuthMethodsViewModelTests {
 
     @Test
     func testInitialState() async {
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -155,7 +154,6 @@ struct MyAccountAuthMethodsViewModelTests {
     @Test
     func testFetchingOfAuthMethodsSuccess() async {
         let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,

@@ -142,12 +142,6 @@ public actor Auth0UniversalComponentsSDKInitializer {
                                     tokenProvider: tokenProvider)
     }
 
-    /// Reset the SDK state for testing purposes.
-    ///
-    /// Does not nil out the shared instance to avoid race conditions in parallel tests.
-    /// The subsequent `initialize()` call will overwrite the instance completely.
-    static func reset() {
-    }
 }
 
 /// Ensures a URL string has an HTTPS scheme.

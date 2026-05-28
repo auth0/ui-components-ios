@@ -17,7 +17,6 @@ struct MyAccountClientFactoryTests {
 
     @Test("Factory creates client with Auth0-Client header")
     func testCreatesClientWithTelemetryHeader() async {
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -59,7 +58,6 @@ struct MyAccountClientFactoryTests {
 
     @Test("Factory overload without session works")
     func testCreatesClientWithoutSession() {
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -80,7 +78,6 @@ struct MyAccountClientFactoryTests {
 
     @Test("Factory sends Auth0-Client header identifying UI Components SDK")
     func testAuth0ClientHeaderContent() async {
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -128,7 +125,6 @@ struct MyAccountClientFactoryTests {
 
     @Test("Factory includes SDK version in header")
     func testAuth0ClientHeaderVersion() async {
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
@@ -176,7 +172,6 @@ struct MyAccountClientFactoryTests {
 
     @Test("Factory includes Auth0.swift core version in env")
     func testAuth0ClientHeaderCoreVersion() async {
-        Auth0UniversalComponentsSDKInitializer.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
             bundle: .main,
