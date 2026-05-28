@@ -11,7 +11,7 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
-        .package(url: "https://github.com/auth0/Auth0.swift.git", exact: "2.16.1")
+        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "2.21.0")
     ],
     targets: [
         .target(

@@ -80,15 +80,6 @@ public class Router<Route: Hashable>: ObservableObject {
         }
     }
 
-    /// Pops all destinations, returning to the stack root.
-    public func popToRoot() {
-        if let ext = externalPath {
-            ext.wrappedValue.removeLast(ext.wrappedValue.count)
-        } else {
-            path.removeLast(path.count)
-        }
-    }
-
     /// Pops only the routes pushed by the SDK, returning to `MyAccountAuthMethodsView`.
     ///
     /// In standalone mode, clears the entire internal path so the root content
