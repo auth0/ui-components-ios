@@ -1,0 +1,8 @@
+{
+    "files": {
+        "Auth0UniversalComponents/Version.swift": [],
+        "README.md": ["from: \"{MAJOR}.{MINOR}.{PATCH}\""]
+    },
+    "postbump": "bundle update && bundle exec fastlane ios build_docs",
+    "prefixVersion": false
+}

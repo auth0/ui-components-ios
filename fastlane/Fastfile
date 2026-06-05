@@ -1,10 +1,25 @@
 default_platform :ios
 
 platform :ios do
-  desc "Tags the release and publishes to GitHub"
+  desc "Tags the release and publishes it to GitHub (no CocoaPods)"
   lane :release do
-    perform_release target: 'Auth0UniversalComponents.iOS'
-    publish_release repository: 'ui-components-ios'
+    version = current_version
+    UI.header "Performing release for version #{version} 🏗"
+    add_git_tag(tag: version)
+    push_git_tags(remote: 'origin', tag: version)
+
+    UI.header "Publishing release #{version} 📨"
+    github_token = ENV['GITHUB_TOKEN'] || ENV['AUTH0_SHIPPER_GITHUB_TOKEN']
+    changelog = Fastlane::Helper::Auth0ShipperHelper.get_changelog(version, 'CHANGELOG.md')
+    set_github_release(
+      repository_name: 'auth0/ui-components-ios',
+      api_token: github_token,
+      name: version,
+      tag_name: version,
+      description: changelog,
+      server_url: 'https://api.github.com'
+    ) unless github_token.nil?
+    UI.success "Shipped #{version}! 🚀"
   end
 
   desc 'Generate API documentation'
@@ -33,5 +48,14 @@ platform :ios do
       # Write redirect file
       File.write("#{docs_dir}/index.html", redirect_file)
     end
+  end
+
+  # Reads the SDK version from the `version` literal in Version.swift,
+  # which is the source of truth bumped by Ship (see .shiprc).
+  def current_version
+    contents = File.read(File.join(File.dirname(__FILE__), '..', 'Auth0UniversalComponents', 'Version.swift'))
+    match = contents.match(/let version = "([^"]+)"/)
+    UI.user_error!('Cannot find version in Auth0UniversalComponents/Version.swift') if match.nil?
+    match[1]
   end
 end
