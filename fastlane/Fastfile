@@ -10,7 +10,7 @@ platform :ios do
 
     UI.header "Publishing release #{version} 📨"
     github_token = ENV['GITHUB_TOKEN'] || ENV['AUTH0_SHIPPER_GITHUB_TOKEN']
-    changelog = Fastlane::Helper::Auth0ShipperHelper.get_changelog(version, 'CHANGELOG.md')
+    changelog = Fastlane::Helper::Auth0ShipperHelper.get_changelog(version, File.join(File.dirname(__FILE__), '..', 'CHANGELOG.md'))
     set_github_release(
       repository_name: 'auth0/ui-components-ios',
       api_token: github_token,
