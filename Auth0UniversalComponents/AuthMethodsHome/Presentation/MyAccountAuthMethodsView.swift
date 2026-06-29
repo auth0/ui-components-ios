@@ -135,6 +135,8 @@ public struct MyAccountAuthMethodsView: View {
                 .ignoresSafeArea()
             if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
+            } else if viewModel.showLoader {
+                loadingView
             } else {
                 ScrollView(showsIndicators: false) {
                     LazyVStack(alignment: .leading, spacing: theme.spacing.xs) {
@@ -143,11 +145,6 @@ public struct MyAccountAuthMethodsView: View {
                         }
                     }.padding(.all, theme.spacing.md)
                 }
-                .disabled(viewModel.showLoader)
-            }
-
-            if viewModel.showLoader {
-                loadingOverlay
             }
         }
         .onAppear {
@@ -157,28 +154,29 @@ public struct MyAccountAuthMethodsView: View {
         }
     }
 
-    // MARK: - Loading Overlay
+    // MARK: - Loading View
+    private var loadingView: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: theme.spacing.md) {
+                // Section title + subtitle placeholders.
+                SkeletonShape(.text)
+                    .frame(width: 180, height: 22)
+                SkeletonShape(.text)
+                    .frame(width: 240)
+                    .padding(.bottom, theme.spacing.xs)
 
-    private var loadingOverlay: some View {
-        Color.black.opacity(0.25)
-            .ignoresSafeArea()
-            .overlay {
-                VStack(spacing: theme.spacing.md) {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .tint(theme.colors.background.primary)
-                        .scaleEffect(1.4)
-
-                    Text("Loading…")
-                        .auth0TextStyle(theme.typography.label)
-                        .foregroundStyle(theme.colors.text.bold)
+                // Auth-method card placeholders.
+                ForEach(0..<5, id: \.self) { _ in
+                    AuthMethodCardSkeleton()
                 }
-                .padding(.horizontal, 36)
-                .padding(.vertical, 28)
-                .background(theme.colors.background.layerTop)
-                .clipShape(RoundedRectangle(cornerRadius: theme.radius.large))
-                .shadow(color: Color.black.opacity(0.18), radius: 24, x: 0, y: 8)
             }
+            .padding(.all, theme.spacing.md)
+            // Single sweep across the whole placeholder layout.
+            .shimmering()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Loading")
+        }
+        .disabled(true)
     }
 
     // MARK: - Component Builder
