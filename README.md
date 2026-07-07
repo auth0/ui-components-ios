@@ -234,7 +234,7 @@ Use the bootstrap script to automatically create all required Auth0 resources an
 1. **Login to Auth0 CLI** with the required scopes:
    ```bash
    auth0 login --scopes "create:client_grants,update:client_grants,delete:client_grants,create:connections,create:resource_servers,create:roles,create:users,read:client_keys,read:client_grants,read:clients,read:connections,read:resource_servers,read:roles,update:clients,update:connections,read:connection_profiles,create:connection_profiles,update:connection_profiles,create:user_attribute_profiles,update:user_attribute_profiles,read:user_attribute_profiles,update:resource_servers,update:roles,update:tenant_settings,update:prompts"
-   auth0 tenants list  # verify your tenant shows Active
+   auth0 tenants list
    ```
 
 2. **Run the bootstrap script:**
