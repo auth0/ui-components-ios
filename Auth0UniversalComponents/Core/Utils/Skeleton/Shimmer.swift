@@ -84,22 +84,25 @@ struct Shimmer: ViewModifier {
     // MARK: - Highlight Band
 
     /// The moving highlight, masked by the content's own shape so the sweep only appears
-    /// over the placeholder geometry rather than a rectangle around it.
+    /// over the placeholder geometry rather than as a rectangle around it.
+    ///
+    /// The band is a `base → highlight → base` gradient positioned with **relative**
+    /// `UnitPoint`s (measured 0→1 across the content, independent of its pixel size).
+    /// `phase` drives both endpoints in lockstep, sliding the band one full content-width
+    /// left-to-right per sweep:
+    ///
+    /// - At `phase == 0` the band sits entirely off the leading edge (`start == -1`).
+    /// - At `phase == 1` it has travelled entirely off the trailing edge (`end == 2`).
+    ///
+    /// Because the two outer stops are the base colour, the highlight fades in and out at
+    /// the edges instead of appearing as a hard rectangle, so the sweep reads as seamless.
     @ViewBuilder
     private func highlight<C: View>(palette: SkeletonPalette, content: C) -> some View {
-        GeometryReader { proxy in
-            let width = proxy.size.width
-            // A band twice the placeholder width whose centre is the bright highlight,
-            // fading to the base colour at both ends for a seamless edge.
-            LinearGradient(
-                gradient: Gradient(colors: [palette.base, palette.highlight, palette.base]),
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(width: width * 2)
-            // Travel the highlight centre from off-screen-leading to off-screen-trailing.
-            .offset(x: (phase * 3 - 2) * width)
-        }
+        LinearGradient(
+            gradient: Gradient(colors: [palette.base, palette.highlight, palette.base]),
+            startPoint: UnitPoint(x: phase * 2 - 1, y: 0.5),
+            endPoint: UnitPoint(x: phase * 2, y: 0.5)
+        )
         .mask(content)
         .allowsHitTesting(false)
     }

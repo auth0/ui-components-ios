@@ -123,8 +123,6 @@ private struct SkeletonRedaction: ViewModifier {
                     SkeletonShape(.rounded)
                         .shimmering()
                 )
-                .accessibilityElement()
-                .accessibilityLabel("Loading")
         } else {
             content
         }

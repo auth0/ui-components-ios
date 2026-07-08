@@ -173,8 +173,6 @@ public struct MyAccountAuthMethodsView: View {
             .padding(.all, theme.spacing.md)
             // Single sweep across the whole placeholder layout.
             .shimmering()
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Loading")
         }
         .disabled(true)
     }

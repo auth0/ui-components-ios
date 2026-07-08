@@ -120,8 +120,6 @@ struct SavedAuthenticatorsView: View {
                             trailing: theme.spacing.md))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .shimmering()
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Loading")
     }
 
     var trailingPlacement: ToolbarItemPlacement {
