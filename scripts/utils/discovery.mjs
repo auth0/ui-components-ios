@@ -20,7 +20,11 @@ import {
   checkTenantSettingsChanges,
   checkPromptSettingsChanges,
 } from "./tenant-config.mjs"
+import { checkGuardianFactorChanges } from "./guardian-factors.mjs"
 import { ChangeAction } from "./change-plan.mjs"
+
+// Timeout for direct Auth0 CLI commands (30 seconds)
+const CLI_TIMEOUT = 30000
 
 // ============================================================================
 // Resource Discovery
@@ -36,7 +40,7 @@ export async function discoverExistingResources(domain) {
     let clients = []
     try {
       const clientsArgs = ["apps", "list", "--json", "--no-input"]
-      const { stdout } = await $`auth0 ${clientsArgs}`
+      const { stdout } = await $({ timeout: CLI_TIMEOUT })`auth0 ${clientsArgs}`
       clients = stdout ? JSON.parse(stdout) : []
     } catch {
       clients = []
@@ -45,7 +49,7 @@ export async function discoverExistingResources(domain) {
     let roles = []
     try {
       const rolesArgs = ["roles", "list", "--json", "--no-input"]
-      const { stdout } = await $`auth0 ${rolesArgs}`
+      const { stdout } = await $({ timeout: CLI_TIMEOUT })`auth0 ${rolesArgs}`
       roles = stdout ? JSON.parse(stdout) : []
     } catch {
       roles = []
@@ -61,7 +65,7 @@ export async function discoverExistingResources(domain) {
     let resourceServers = []
     try {
       const rsArgs = ["apis", "list", "--json", "--no-input"]
-      const { stdout } = await $`auth0 ${rsArgs}`
+      const { stdout } = await $({ timeout: CLI_TIMEOUT })`auth0 ${rsArgs}`
       resourceServers = stdout ? JSON.parse(stdout) : []
     } catch {
       resourceServers = []
@@ -90,6 +94,13 @@ export async function discoverExistingResources(domain) {
       userAttributeProfiles = []
     }
 
+    let guardianFactors = []
+    try {
+      guardianFactors = (await auth0ApiCall("get", "guardian/factors")) || []
+    } catch {
+      guardianFactors = []
+    }
+
     spinner.succeed("Discovered existing resources")
 
     return {
@@ -100,6 +111,7 @@ export async function discoverExistingResources(domain) {
       clientGrants,
       connectionProfiles,
       userAttributeProfiles,
+      guardianFactors,
     }
   } catch (e) {
     spinner.fail("Failed to discover existing resources")
@@ -124,6 +136,7 @@ export async function buildChangePlan(resources, domain, iosConfig) {
       settings: null,
       prompts: null,
     },
+    guardianFactors: null,
   }
 
   // Profiles
@@ -164,16 +177,15 @@ export async function buildChangePlan(resources, domain, iosConfig) {
     dashboardClientId
   )
 
-  // Roles
-  plan.roles.admin = await checkAdminRoleChanges(
-    resources.roles,
-    domain,
-    MY_ACCOUNT_API_SCOPES
-  )
+  // Roles (always SKIP in the My-Account-only flow — see roles.mjs)
+  plan.roles.admin = await checkAdminRoleChanges(resources.roles)
 
   // Tenant Config
   plan.tenantConfig.settings = await checkTenantSettingsChanges()
   plan.tenantConfig.prompts = await checkPromptSettingsChanges()
+
+  // MFA Factors (WebAuthn / Passkey)
+  plan.guardianFactors = checkGuardianFactorChanges(resources.guardianFactors)
 
   return plan
 }
@@ -195,6 +207,7 @@ export function displayChangePlan(plan) {
     { name: "Client Grant (My Account)", ...plan.clientGrants.myAccount },
     { name: "Database Connection", ...plan.connection },
     { name: "Admin Role", ...plan.roles.admin },
+    { name: "MFA Factors (WebAuthn/Passkey)", ...plan.guardianFactors },
   ]
 
   for (const item of items) {
@@ -214,8 +227,8 @@ export function displayChangePlan(plan) {
     let detail = ""
     if (item.summary) {
       detail = ` (${item.summary})`
-    } else if (item.callbackUrl) {
-      detail = ` (callback: ${item.callbackUrl})`
+    } else if (item.redirectUrls?.length) {
+      detail = ` (callbacks: ${item.redirectUrls.join(", ")})`
     }
 
     console.log(`  ${icon} [${label}] ${item.name || item.resource}${detail}`)
