@@ -24,6 +24,7 @@ This library provides ready-to-use UI components for multi-factor authentication
 - 📧 **Email OTP** - Email-based verification
 - 🔑 **Recovery Codes** - Backup authentication codes for account recovery
 - 🔐 **Passkeys** - Passwordless authentication using FIDO2/WebAuthn standards (Requires iOS 16.6+, macOS 13.5+, visionOS 1.0+)
+- ✨ **Skeleton shimmer loading** - Card screens show animated, theme-aware skeleton placeholders while data loads (light/dark mode, Reduce Motion aware)
 
 All components are built on top of the [Auth0 Swift SDK](https://github.com/auth0/Auth0.swift) and integrate with Auth0's My Account APIs.
 
@@ -198,6 +199,8 @@ Allows users to:
 - View connected authenticators
 - Enroll in new authentication methods (TOTP, Push, Email, SMS, Recovery Code)
 - Remove authentication methods
+
+While fetching data, the card screens display animated **skeleton placeholders**. The shimmer adapts to light/dark mode, follows the active `Auth0Theme`, and falls back to a static placeholder when **Reduce Motion** is enabled — no configuration required.
 
 #### Screenshots
 
