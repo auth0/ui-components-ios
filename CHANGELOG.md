@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased]
+
+**Added**
+
+- **Skeleton shimmer loading** — Card screens (`MyAccountAuthMethodsView`, `SavedAuthenticatorsView`) now show animated, theme-aware skeleton placeholders while data loads, replacing the previous spinner. Supports light/dark mode and respects Reduce Motion.
+
 ## [1.0.0-beta.0](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.0) (2026-06-05)
 
 **Auth0UniversalComponents iOS — Beta Release**
