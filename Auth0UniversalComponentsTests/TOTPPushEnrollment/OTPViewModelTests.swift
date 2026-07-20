@@ -121,6 +121,7 @@ struct OTPViewModelTests {
         await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
+        var successType: AuthMethodType?
         let viewModel = await OTPViewModel(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCase(session: makeMockSession()),
                                            confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
                                            startEmailEnrollmentUseCase: StartEmailEnrollmentUseCase(session: makeMockSession()),
@@ -129,7 +130,9 @@ struct OTPViewModelTests {
                                            totpEnrollmentChallenge: totpEnrollmentChallenge,
             emailEnrollmentChallenge: nil,
             phoneEnrollmentChallenge: nil,
-                                           type: .totp, delegate: nil
+                                           type: .totp,
+                                           delegate: nil,
+                                           onSuccess: { type in successType = type }
         )
 
         // Set OTP text before confirming
@@ -149,7 +152,7 @@ struct OTPViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .totp, authMethods: [], isPostEnrollment: true))
+            #expect(successType == .totp)
         }
     }
 
@@ -158,6 +161,7 @@ struct OTPViewModelTests {
         await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
+        var successType: AuthMethodType?
         let viewModel = await OTPViewModel(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCase(session: makeMockSession()),
                                            confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
                                            startEmailEnrollmentUseCase: StartEmailEnrollmentUseCase(session: makeMockSession()),
@@ -166,7 +170,9 @@ struct OTPViewModelTests {
                                            totpEnrollmentChallenge: nil,
                                            emailEnrollmentChallenge: emailEnrollmentChallenge,
                                            phoneEnrollmentChallenge: nil,
-                                           type: .email, delegate: nil
+                                           type: .email,
+                                           delegate: nil,
+                                           onSuccess: { type in successType = type }
         )
 
         // Set OTP text before confirming
@@ -186,7 +192,7 @@ struct OTPViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .email, authMethods: [], isPostEnrollment: true))
+            #expect(successType == .email)
         }
     }
 
@@ -195,12 +201,14 @@ struct OTPViewModelTests {
         await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
+        var successType: AuthMethodType?
         let viewModel = await OTPViewModel(confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
                                            totpEnrollmentChallenge: nil,
                                            emailEnrollmentChallenge: nil,
                                            phoneEnrollmentChallenge: phoneEnrollmentChallenge,
                                            type: .sms,
-                                           delegate: nil
+                                           delegate: nil,
+                                           onSuccess: { type in successType = type }
         )
 
         // Set OTP text before confirming
@@ -220,7 +228,7 @@ struct OTPViewModelTests {
                 return (response, confirmEnrollmentTOTPData)
             }
             await viewModel.confirmEnrollment()
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .sms, authMethods: [], isPostEnrollment: true))
+            #expect(successType == .sms)
         }
     }
 
@@ -288,6 +296,11 @@ struct OTPViewModelTests {
             viewModel.otpText = "123456"
         }
 
+        var successType: AuthMethodType?
+        await MainActor.run {
+            viewModel.onSuccess = { type in successType = type }
+        }
+
         await confirmation(expectedCount: 1) { @MainActor confirmation in
             MockURLProtocol.requestHandler = { request in
                 let response = HTTPURLResponse(
@@ -303,7 +316,7 @@ struct OTPViewModelTests {
 
             // Verify delegate was called
             #expect(mockDelegate.refreshCalled == true, "Delegate should be called after successful enrollment")
-            #expect(viewModel.navigationRoute == Route.filteredAuthListScreen(type: .totp, authMethods: [], isPostEnrollment: true))
+            #expect(successType == .totp)
         }
     }
 
