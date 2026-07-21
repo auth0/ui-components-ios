@@ -178,8 +178,6 @@ export async function checkDashboardClientChanges(
 
 export async function applyDashboardClientChanges(
   changePlan,
-  connectionProfileId,
-  userAttributeProfileId,
   domain,
   myAccountApiScopes
 ) {

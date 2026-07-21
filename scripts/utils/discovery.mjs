@@ -3,10 +3,6 @@ import ora from "ora"
 
 import { auth0ApiCall } from "./auth0-api.mjs"
 import {
-  checkConnectionProfileChanges,
-  checkUserAttributeProfileChanges,
-} from "./profiles.mjs"
-import {
   checkDashboardClientChanges,
   checkMyAccountClientGrantChanges,
 } from "./clients.mjs"
@@ -78,22 +74,6 @@ export async function discoverExistingResources(domain) {
       clientGrants = []
     }
 
-    let connectionProfiles = []
-    try {
-      const cpResult = await auth0ApiCall("get", "connection-profiles")
-      connectionProfiles = cpResult?.connection_profiles || []
-    } catch {
-      connectionProfiles = []
-    }
-
-    let userAttributeProfiles = []
-    try {
-      const uapResult = await auth0ApiCall("get", "user-attribute-profiles")
-      userAttributeProfiles = uapResult?.user_attribute_profiles || []
-    } catch {
-      userAttributeProfiles = []
-    }
-
     let guardianFactors = []
     try {
       guardianFactors = (await auth0ApiCall("get", "guardian/factors")) || []
@@ -109,8 +89,6 @@ export async function discoverExistingResources(domain) {
       connections,
       resourceServers,
       clientGrants,
-      connectionProfiles,
-      userAttributeProfiles,
       guardianFactors,
     }
   } catch (e) {
@@ -125,8 +103,6 @@ export async function discoverExistingResources(domain) {
 
 export async function buildChangePlan(resources, domain, iosConfig) {
   const plan = {
-    connectionProfile: null,
-    userAttributeProfile: null,
     clients: { dashboard: null },
     clientGrants: { myAccount: null },
     connection: null,
@@ -138,14 +114,6 @@ export async function buildChangePlan(resources, domain, iosConfig) {
     },
     guardianFactors: null,
   }
-
-  // Profiles
-  plan.connectionProfile = checkConnectionProfileChanges(
-    resources.connectionProfiles
-  )
-  plan.userAttributeProfile = checkUserAttributeProfileChanges(
-    resources.userAttributeProfiles
-  )
 
   // Client
   plan.clients.dashboard = await checkDashboardClientChanges(
@@ -200,8 +168,6 @@ export function displayChangePlan(plan) {
   const items = [
     { name: "Tenant Settings", ...plan.tenantConfig.settings },
     { name: "Prompt Settings", ...plan.tenantConfig.prompts },
-    { name: "Connection Profile", ...plan.connectionProfile },
-    { name: "User Attribute Profile", ...plan.userAttributeProfile },
     { name: "My Account API", ...plan.resourceServer },
     { name: "Native Client", ...plan.clients.dashboard },
     { name: "Client Grant (My Account)", ...plan.clientGrants.myAccount },

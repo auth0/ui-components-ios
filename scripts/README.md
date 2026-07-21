@@ -42,8 +42,10 @@ safety measure to prevent accidentally configuring the wrong tenant.
 
 The script guides you through:
 
-1. **Pre-flight checks** — Node version, Auth0 CLI install, and CLI session.
-   If your session is expired it offers to log you in.
+1. **Pre-flight checks** — Node version, Auth0 CLI install, CLI session, and
+   Carthage dependencies. If your session is expired it offers to log you in;
+   if the Carthage frameworks are missing it runs
+   `carthage bootstrap --use-xcframeworks` so the Xcode project can build.
 2. **Tenant validation** — confirms the provided domain matches your active CLI
    tenant. On a mismatch it offers to `auth0 tenants use <tenant>` (switch) or
    log in to it, then continues.
@@ -52,37 +54,35 @@ The script guides you through:
 4. **Change plan review** — displays what will be created, updated, or skipped.
 5. **Confirmation** — prompts for approval before applying any changes.
 6. **Apply changes** — creates and configures the required Auth0 resources.
-7. **Local wiring** — writes `AppUIComponents/Auth0.plist` and adds the `demo`
-   callback URL scheme to `AppUIComponents/Info.plist` (idempotent).
+7. **Local wiring** — writes `AppUIComponents/Auth0.plist` and registers the
+   app's callback URL scheme in `AppUIComponents/Info.plist` (idempotent).
 
 ## What It Configures
 
-| Resource                   | Details                                                                                         |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Native Application**     | `iOS UI Components Demo` (`app_type: native`) with the `demo://…/callback` callback + refresh-token rotation, and a My Account API refresh-token policy |
-| **My Account API**         | Resource server at `https://{domain}/me/` (MFA / authentication-methods)                        |
-| **Client Grant**           | Native app authorized for the available My Account API scopes                                   |
-| **Database Connection**    | `Username-Password-Authentication` enabled for the application                                  |
-| **Connection Profile**     | `Universal Components Connection Profile`                                                        |
-| **User Attribute Profile** | `Universal Components Profile`                                                                   |
-| **Admin Role**             | `admin` role with the My Account API permissions                                                |
-| **Tenant Settings**        | Identifier-first prompt and MFA customization in the post-login action                          |
+| Resource                | Details                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| **Native Application**  | `iOS UI Components Demo` (`app_type: native`). Callback + logout URLs use the app's bundle identifier (`https://{domain}/ios/{bundleId}/callback` and `{bundleId}://{domain}/ios/{bundleId}/callback`), plus refresh-token rotation and a My Account API refresh-token policy |
+| **My Account API**      | Resource server at `https://{domain}/me/` (MFA / authentication-methods)                        |
+| **Client Grant**        | Native app authorized for the available My Account API scopes                                   |
+| **Database Connection** | `Username-Password-Authentication` enabled for the app, with the **passkey** authentication method turned on (progressive enrollment) so the Passkey option appears in Universal Login |
+| **MFA Factors**         | WebAuthn factors enabled — `webauthn-platform` (Face ID / Touch ID) and `webauthn-roaming` (security keys) — so the MFA components have factors to enroll |
+| **Tenant Settings**     | Identifier-first prompt (required for the Passkey prompt) and MFA customization in the post-login action |
 
 Locally, it then writes:
 
 - `AppUIComponents/Auth0.plist` — `Domain` and `ClientId` read by the SDK at
   launch (`Auth0UniversalComponentsSDKInitializer`).
 - `AppUIComponents/Info.plist` — a `CFBundleURLTypes` entry registering the
-  `demo` URL scheme so the login/logout callback returns to the app.
+  app's bundle identifier as a URL scheme so the login/logout callback returns
+  to the app.
 
 ## Auth0 CLI Scopes
 
-If the script triggers a login, it requests these scopes automatically. To
-authenticate manually beforehand:
-
-```bash
-auth0 login --scopes "read:connection_profiles,create:connection_profiles,update:connection_profiles,read:user_attribute_profiles,create:user_attribute_profiles,update:user_attribute_profiles,read:client_grants,create:client_grants,update:client_grants,delete:client_grants,read:connections,create:connections,update:connections,read:clients,create:clients,update:clients,read:client_keys,read:roles,create:roles,update:roles,read:resource_servers,create:resource_servers,update:resource_servers,update:tenant_settings,update:prompts"
-```
+If the script triggers a login, it requests the required scopes automatically.
+To authenticate manually beforehand, run `npm run auth0:bootstrap --help`, which
+prints the exact, always-up-to-date `auth0 login --scopes "…"` command (the list
+is generated from the script's scope definitions, so it can never drift from
+what the script actually requests).
 
 ## Manual Configuration
 

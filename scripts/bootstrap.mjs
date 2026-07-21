@@ -14,10 +14,6 @@ import { writeInfoPlistUrlScheme } from "./utils/info-plist-writer.mjs"
 import { confirmWithUser } from "./utils/helpers.mjs"
 import { getManualActions } from "./utils/manual-actions.mjs"
 import {
-  applyConnectionProfileChanges,
-  applyUserAttributeProfileChanges,
-} from "./utils/profiles.mjs"
-import {
   applyMyAccountResourceServerChanges,
   MY_ACCOUNT_API_SCOPES,
 } from "./utils/resource-servers.mjs"
@@ -30,6 +26,7 @@ import { applyGuardianFactorChanges } from "./utils/guardian-factors.mjs"
 import {
   checkAuth0CLI,
   checkNodeVersion,
+  ensureCarthageDependencies,
   hasMachineCredentials,
   printScopeUsageDetails,
   validateAuth0Session,
@@ -119,6 +116,9 @@ async function main() {
   await validateAuth0Session(tenantName)
   const domain = await validateTenant(tenantName)
   const iosConfig = validateIOSProject()
+  // Fetch/build the Carthage dependencies the Xcode project links against, so
+  // the "open Xcode and build" next step actually compiles.
+  await ensureCarthageDependencies()
   // Auth0.swift builds the custom-scheme callback ({bundleId}://.../callback)
   // from the bundle identifier, so the Info.plist URL scheme must be the bundle
   // identifier for the OAuth redirect to reach the app.
@@ -143,8 +143,6 @@ async function main() {
   const planItems = [
     plan.tenantConfig.settings,
     plan.tenantConfig.prompts,
-    plan.connectionProfile,
-    plan.userAttributeProfile,
     plan.resourceServer,
     plan.clients.dashboard,
     plan.clientGrants.myAccount,
@@ -208,33 +206,21 @@ async function main() {
   await applyPromptSettingsChanges(plan.tenantConfig.prompts)
   console.log("")
 
-  // 4b. Profiles
-  console.log("Configuring Profiles...")
-  const connectionProfile = await applyConnectionProfileChanges(
-    plan.connectionProfile
-  )
-  const userAttributeProfile = await applyUserAttributeProfileChanges(
-    plan.userAttributeProfile
-  )
-  console.log("")
-
-  // 4c. Resource Server (My Account API)
+  // 4b. Resource Server (My Account API)
   console.log("Configuring My Account API...")
   await applyMyAccountResourceServerChanges(plan.resourceServer, domain)
   console.log("")
 
-  // 4d. Native Client
+  // 4c. Native Client
   console.log("Configuring Native Client...")
   const dashboardClient = await applyDashboardClientChanges(
     plan.clients.dashboard,
-    connectionProfile?.id,
-    userAttributeProfile?.id,
     domain,
     MY_ACCOUNT_API_SCOPES
   )
   console.log("")
 
-  // 4e. Client Grants
+  // 4d. Client Grants
   console.log("Configuring Client Grants...")
   await applyMyAccountClientGrantChanges(
     plan.clientGrants.myAccount,
@@ -243,7 +229,7 @@ async function main() {
   )
   console.log("")
 
-  // 4f. Database Connection
+  // 4e. Database Connection
   console.log("Configuring Database Connection...")
   const connection = await applyDatabaseConnectionChanges(
     plan.connection,
@@ -251,12 +237,12 @@ async function main() {
   )
   console.log("")
 
-  // 4g. Roles
+  // 4f. Roles
   console.log("Configuring Roles...")
   await applyAdminRoleChanges(plan.roles.admin)
   console.log("")
 
-  // 4h. MFA Factors (WebAuthn / Passkey)
+  // 4g. MFA Factors (WebAuthn / Passkey)
   console.log("Configuring MFA Factors...")
   await applyGuardianFactorChanges(plan.guardianFactors)
   console.log("")

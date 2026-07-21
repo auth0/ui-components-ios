@@ -18,13 +18,17 @@ const CLI_TIMEOUT = 15000
 // likely to be missing on an M2M app and to silently block setup. They are
 // highlighted in the pre-login summary so you know why they are requested.
 //
-// NOTE: Organization-only scopes (create:organization_*) are intentionally
-// omitted — the iOS sample app configures the My Account feature only.
+// NOTE: Organization-only scopes (create:organization_*) and role scopes
+// (*:roles) are intentionally omitted — the iOS sample app configures the My
+// Account feature only, and the admin role is always SKIP (System-API scopes
+// cannot be attached to a role). Connection/user-attribute *profile* scopes are
+// likewise omitted; those resources are not created by this bootstrap.
+//
+// This array is the single source of truth for the requested scopes: the
+// pre-login summary, the `--help` details, AND the copy-paste manual-login
+// command are all derived from it, so the README/manual instructions can never
+// drift out of sync with what the script actually requests.
 const BOOTSTRAP_SCOPE_METADATA = [
-  { scope: "read:connection_profiles", reason: "Read connection profiles" },
-  { scope: "create:connection_profiles", reason: "Create the connection profile" },
-  { scope: "read:user_attribute_profiles", reason: "Read user attribute profiles" },
-  { scope: "create:user_attribute_profiles", reason: "Create the user attribute profile" },
   { scope: "read:client_grants", reason: "Read existing client grants" },
   { scope: "create:client_grants", reason: "Grant the app access to the My Account API" },
   {
@@ -94,7 +98,20 @@ export function printScopeUsageDetails() {
     const marker = important ? "★" : " "
     console.log(`  ${marker} ${scope.padEnd(30)} ${reason}`)
   }
-  console.log("")
+  console.log(
+    "\nTo authenticate manually beforehand, run this exact command (kept in sync\nwith the list above):\n"
+  )
+  console.log(`  ${buildManualLoginCommand()}\n`)
+}
+
+/**
+ * Build the exact `auth0 login --scopes "..."` command a user can run to
+ * authenticate manually. Generated from BOOTSTRAP_SCOPES so it can never drift
+ * from the scopes the script actually requests.
+ * @returns {string}
+ */
+export function buildManualLoginCommand() {
+  return `auth0 login --scopes "${BOOTSTRAP_SCOPES.join(",")}"`
 }
 
 /**
@@ -149,6 +166,81 @@ export async function checkAuth0CLI() {
       "The Auth0 CLI must be installed: https://github.com/auth0/auth0-cli"
     )
     process.exit(1)
+  }
+}
+
+/**
+ * Fetch and build the project's Carthage dependencies (Auth0.swift, etc.) so
+ * the Xcode project can compile. The sample app links XCFrameworks produced by
+ * `carthage bootstrap --use-xcframeworks`; without them the "open Xcode and
+ * build" next step fails with missing-framework errors.
+ *
+ * Behavior:
+ *   - Idempotent-ish: if Carthage/Build already contains XCFrameworks, it is
+ *     skipped (a full bootstrap takes minutes; re-running the tool shouldn't
+ *     re-fetch every time). Delete Carthage/Build to force a rebuild.
+ *   - If Carthage isn't installed, this is a soft warning with install guidance
+ *     rather than a hard failure — the tenant is already configured by this
+ *     point, and the user can run the command themselves.
+ *
+ * @returns {Promise<void>}
+ */
+export async function ensureCarthageDependencies() {
+  const projectRoot = path.resolve(process.cwd(), "..")
+  const cartfilePath = path.join(projectRoot, "Cartfile")
+  const buildDir = path.join(projectRoot, "Carthage", "Build")
+
+  // No Cartfile means this project doesn't use Carthage — nothing to do.
+  if (!fs.existsSync(cartfilePath)) return
+
+  const spinner = ora({ text: "Checking Carthage dependencies" }).start()
+
+  // Already built? Skip the (slow) bootstrap. We look for at least one
+  // .xcframework in Carthage/Build as the signal that deps are present.
+  const alreadyBuilt =
+    fs.existsSync(buildDir) &&
+    fs
+      .readdirSync(buildDir)
+      .some((entry) => entry.endsWith(".xcframework"))
+
+  if (alreadyBuilt) {
+    spinner.succeed("Carthage dependencies already built")
+    return
+  }
+
+  // Carthage must be installed to fetch/build the frameworks.
+  try {
+    await $({ timeout: CLI_TIMEOUT })`carthage version`
+  } catch {
+    spinner.warn("Carthage is not installed — skipping dependency build")
+    console.log(
+      "\n   The Xcode project links Carthage-built frameworks. Install Carthage"
+    )
+    console.log("   and build them before opening Xcode:\n")
+    console.log("     brew install carthage")
+    console.log("     carthage bootstrap --use-xcframeworks\n")
+    return
+  }
+
+  spinner.text =
+    "Building Carthage dependencies (carthage bootstrap --use-xcframeworks)"
+
+  try {
+    // This can take several minutes on a cold checkout. Inherit stdio so the
+    // user sees Carthage's own progress instead of a stalled spinner, and allow
+    // a generous 10-minute timeout.
+    spinner.stop()
+    execaSync("carthage", ["bootstrap", "--use-xcframeworks"], {
+      cwd: projectRoot,
+      stdio: "inherit",
+      timeout: 600000,
+    })
+    ora().succeed("Built Carthage dependencies")
+  } catch (e) {
+    ora().warn("Could not build Carthage dependencies automatically")
+    console.log(
+      `\n   Run it manually before opening Xcode:\n     carthage bootstrap --use-xcframeworks\n`
+    )
   }
 }
 
