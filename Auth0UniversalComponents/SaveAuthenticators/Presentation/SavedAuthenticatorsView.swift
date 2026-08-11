@@ -22,7 +22,7 @@ struct SavedAuthenticatorsView: View {
     var body: some View {
         ZStack {
             if viewModel.showLoader {
-                Auth0Loader()
+                loadingView
             } else if let errorViewModel = viewModel.errorViewModel {
                 ErrorScreen(viewModel: errorViewModel)
             } else {
@@ -98,6 +98,30 @@ struct SavedAuthenticatorsView: View {
         .background(theme.colors.background.layerBase.ignoresSafeArea())
     }
 
+    // MARK: - Loading View
+
+    /// Skeleton placeholder shown while `loadData()` runs.
+    /// The loading layout shows a header line above a stack of authenticator cards, to avoid layout shift.
+    private var loadingView: some View {
+        VStack(alignment: .leading, spacing: theme.spacing.md) {
+            SkeletonShape(.text)
+                .frame(width: 200)
+                .padding(.bottom, theme.spacing.xs)
+
+            ForEach(0..<4, id: \.self) { _ in
+                SavedAuthenticatorCardSkeleton()
+            }
+
+            Spacer()
+        }
+        .padding(EdgeInsets(top: theme.spacing.lg,
+                            leading: theme.spacing.md,
+                            bottom: theme.spacing.lg,
+                            trailing: theme.spacing.md))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .shimmering()
+    }
+
     var trailingPlacement: ToolbarItemPlacement {
         #if os(macOS)
         return .automatic
@@ -114,4 +138,3 @@ struct SavedAuthenticatorsView: View {
         #endif
     }
 }
-

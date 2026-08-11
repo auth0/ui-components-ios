@@ -3,6 +3,11 @@ import ora from "ora"
 
 import { auth0ApiCall } from "./auth0-api.mjs"
 import { ChangeAction, createChangeItem } from "./change-plan.mjs"
+import {
+  extractMissingScope,
+  isPermissionError,
+  recordManualAction,
+} from "./manual-actions.mjs"
 
 // ============================================================================
 // CHECK FUNCTIONS - Determine what changes are needed
@@ -116,6 +121,25 @@ export async function applyTenantSettingsChanges(changePlan) {
       await $`auth0 ${tenantSettingsArgs}`
       spinner.succeed("Updated tenant settings")
     } catch (e) {
+      // Missing update:tenant_settings should not abort the whole bootstrap —
+      // record it as a manual step and continue. The MFA-customization flag in
+      // particular is required for the MFA/Passkeys components in the demo, so
+      // we surface it clearly at the end.
+      if (isPermissionError(e)) {
+        const scope = extractMissingScope(e) || "update:tenant_settings"
+        spinner.warn(
+          `Skipped tenant settings — M2M app lacks scope: ${scope}`
+        )
+        recordManualAction({
+          resource: "Tenant Settings",
+          scope,
+          reason:
+            "Enables MFA customization in the post-login action, disables client connections, and sets the friendly name/logo.",
+          manualStep:
+            "Dashboard → Settings → enable required flags, OR grant the scope above to the M2M app and re-run the bootstrap.",
+        })
+        return
+      }
       spinner.fail(`Failed to configure tenant settings`)
       throw e
     }
@@ -151,6 +175,19 @@ export async function applyPromptSettingsChanges(changePlan) {
       await $`auth0 ${promptSettingsArgs}`
       spinner.succeed("Updated prompt settings")
     } catch (e) {
+      if (isPermissionError(e)) {
+        const scope = extractMissingScope(e) || "update:prompts"
+        spinner.warn(`Skipped prompt settings — M2M app lacks scope: ${scope}`)
+        recordManualAction({
+          resource: "Prompt Settings",
+          scope,
+          reason:
+            "Enables the identifier-first login experience for Universal Login.",
+          manualStep:
+            "Dashboard → Authentication → Login → enable Identifier First, OR grant the scope above and re-run.",
+        })
+        return
+      }
       spinner.fail(`Failed to configure prompt settings`)
       throw e
     }
