@@ -4,15 +4,19 @@ import ora from "ora"
 import { auth0ApiCall } from "./auth0-api.mjs"
 import { ChangeAction, createChangeItem } from "./change-plan.mjs"
 
-// Constants
+// The exact set of My Account API scopes the sample app requests at runtime.
+// Keep this aligned with the `scope:` strings used across the SDK view models
+// (grep for `:me:` in Auth0UniversalComponents) — the client grant and the
+// native client's refresh-token policy are provisioned with precisely these, so
+// an unused scope here would over-request access the app never exercises.
+//   read:me:authentication_methods    — list enrolled authenticators
+//   create:me:authentication_methods  — enroll TOTP/passkey/email/SMS/recovery
+//   delete:me:authentication_methods  — remove a saved authenticator
+//   read:me:factors                   — list available factors on the home view
 export const MY_ACCOUNT_API_SCOPES = [
   "read:me:authentication_methods",
   "create:me:authentication_methods",
   "delete:me:authentication_methods",
-  "update:me:authentication_methods",
-  "read:me:connected_accounts",
-  "create:me:connected_accounts",
-  "delete:me:connected_accounts",
   "read:me:factors",
 ]
 
