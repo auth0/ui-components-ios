@@ -99,3 +99,11 @@ vendor/bundle
 
 # Documentation generation
 docs.archive/
+
+# npm
+#
+# The only npm package lives in /scripts. A lockfile at the repo root has no
+# package.json beside it, which breaks dependency scanners (Snyk/SCA). Ignore it
+# here so an accidental `npm install` from the root is not committed again.
+/package-lock.json
+/node_modules/
