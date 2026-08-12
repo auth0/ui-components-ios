@@ -3,10 +3,6 @@ import ora from "ora"
 
 import { auth0ApiCall } from "./auth0-api.mjs"
 import {
-  checkConnectionProfileChanges,
-  checkUserAttributeProfileChanges,
-} from "./profiles.mjs"
-import {
   checkDashboardClientChanges,
   checkMyAccountClientGrantChanges,
 } from "./clients.mjs"
@@ -20,7 +16,11 @@ import {
   checkTenantSettingsChanges,
   checkPromptSettingsChanges,
 } from "./tenant-config.mjs"
+import { checkGuardianFactorChanges } from "./guardian-factors.mjs"
 import { ChangeAction } from "./change-plan.mjs"
+
+// Timeout for direct Auth0 CLI commands (30 seconds)
+const CLI_TIMEOUT = 30000
 
 // ============================================================================
 // Resource Discovery
@@ -36,7 +36,7 @@ export async function discoverExistingResources(domain) {
     let clients = []
     try {
       const clientsArgs = ["apps", "list", "--json", "--no-input"]
-      const { stdout } = await $`auth0 ${clientsArgs}`
+      const { stdout } = await $({ timeout: CLI_TIMEOUT })`auth0 ${clientsArgs}`
       clients = stdout ? JSON.parse(stdout) : []
     } catch {
       clients = []
@@ -45,7 +45,7 @@ export async function discoverExistingResources(domain) {
     let roles = []
     try {
       const rolesArgs = ["roles", "list", "--json", "--no-input"]
-      const { stdout } = await $`auth0 ${rolesArgs}`
+      const { stdout } = await $({ timeout: CLI_TIMEOUT })`auth0 ${rolesArgs}`
       roles = stdout ? JSON.parse(stdout) : []
     } catch {
       roles = []
@@ -61,7 +61,7 @@ export async function discoverExistingResources(domain) {
     let resourceServers = []
     try {
       const rsArgs = ["apis", "list", "--json", "--no-input"]
-      const { stdout } = await $`auth0 ${rsArgs}`
+      const { stdout } = await $({ timeout: CLI_TIMEOUT })`auth0 ${rsArgs}`
       resourceServers = stdout ? JSON.parse(stdout) : []
     } catch {
       resourceServers = []
@@ -74,20 +74,11 @@ export async function discoverExistingResources(domain) {
       clientGrants = []
     }
 
-    let connectionProfiles = []
+    let guardianFactors = []
     try {
-      const cpResult = await auth0ApiCall("get", "connection-profiles")
-      connectionProfiles = cpResult?.connection_profiles || []
+      guardianFactors = (await auth0ApiCall("get", "guardian/factors")) || []
     } catch {
-      connectionProfiles = []
-    }
-
-    let userAttributeProfiles = []
-    try {
-      const uapResult = await auth0ApiCall("get", "user-attribute-profiles")
-      userAttributeProfiles = uapResult?.user_attribute_profiles || []
-    } catch {
-      userAttributeProfiles = []
+      guardianFactors = []
     }
 
     spinner.succeed("Discovered existing resources")
@@ -98,8 +89,7 @@ export async function discoverExistingResources(domain) {
       connections,
       resourceServers,
       clientGrants,
-      connectionProfiles,
-      userAttributeProfiles,
+      guardianFactors,
     }
   } catch (e) {
     spinner.fail("Failed to discover existing resources")
@@ -113,8 +103,6 @@ export async function discoverExistingResources(domain) {
 
 export async function buildChangePlan(resources, domain, iosConfig) {
   const plan = {
-    connectionProfile: null,
-    userAttributeProfile: null,
     clients: { dashboard: null },
     clientGrants: { myAccount: null },
     connection: null,
@@ -124,15 +112,8 @@ export async function buildChangePlan(resources, domain, iosConfig) {
       settings: null,
       prompts: null,
     },
+    guardianFactors: null,
   }
-
-  // Profiles
-  plan.connectionProfile = checkConnectionProfileChanges(
-    resources.connectionProfiles
-  )
-  plan.userAttributeProfile = checkUserAttributeProfileChanges(
-    resources.userAttributeProfiles
-  )
 
   // Client
   plan.clients.dashboard = await checkDashboardClientChanges(
@@ -164,16 +145,15 @@ export async function buildChangePlan(resources, domain, iosConfig) {
     dashboardClientId
   )
 
-  // Roles
-  plan.roles.admin = await checkAdminRoleChanges(
-    resources.roles,
-    domain,
-    MY_ACCOUNT_API_SCOPES
-  )
+  // Roles (always SKIP in the My-Account-only flow — see roles.mjs)
+  plan.roles.admin = await checkAdminRoleChanges(resources.roles)
 
   // Tenant Config
   plan.tenantConfig.settings = await checkTenantSettingsChanges()
   plan.tenantConfig.prompts = await checkPromptSettingsChanges()
+
+  // MFA Factors (WebAuthn / Passkey)
+  plan.guardianFactors = checkGuardianFactorChanges(resources.guardianFactors)
 
   return plan
 }
@@ -188,13 +168,12 @@ export function displayChangePlan(plan) {
   const items = [
     { name: "Tenant Settings", ...plan.tenantConfig.settings },
     { name: "Prompt Settings", ...plan.tenantConfig.prompts },
-    { name: "Connection Profile", ...plan.connectionProfile },
-    { name: "User Attribute Profile", ...plan.userAttributeProfile },
     { name: "My Account API", ...plan.resourceServer },
     { name: "Native Client", ...plan.clients.dashboard },
     { name: "Client Grant (My Account)", ...plan.clientGrants.myAccount },
     { name: "Database Connection", ...plan.connection },
     { name: "Admin Role", ...plan.roles.admin },
+    { name: "MFA Factors (WebAuthn/Passkey)", ...plan.guardianFactors },
   ]
 
   for (const item of items) {
@@ -214,8 +193,8 @@ export function displayChangePlan(plan) {
     let detail = ""
     if (item.summary) {
       detail = ` (${item.summary})`
-    } else if (item.callbackUrl) {
-      detail = ` (callback: ${item.callbackUrl})`
+    } else if (item.redirectUrls?.length) {
+      detail = ` (callbacks: ${item.redirectUrls.join(", ")})`
     }
 
     console.log(`  ${icon} [${label}] ${item.name || item.resource}${detail}`)
