@@ -140,7 +140,7 @@ export async function buildChangePlan(resources, domain, iosConfig) {
   )
 
   // Connection
-  plan.connection = checkDatabaseConnectionChanges(
+  plan.connection = await checkDatabaseConnectionChanges(
     resources.connections,
     dashboardClientId
   )

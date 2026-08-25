@@ -9,8 +9,35 @@ import {
   recordManualAction,
 } from "./manual-actions.mjs"
 
-// Constants
-export const CLIENT_NAME = "iOS UI Components Demo"
+// The default name for the native Auth0 application. The name actually used for
+// a run is resolved once at startup (CLI flag / env / interactive prompt) and
+// stored in module state via setClientName. The name is the lookup key — re-runs
+// find the app by exact name + app_type "native" — so every check and apply
+// below reads it through getClientName() rather than a hardcoded constant.
+export const DEFAULT_CLIENT_NAME = "iOS UI Components Demo"
+
+let _clientName = DEFAULT_CLIENT_NAME
+
+/**
+ * Set the native application's name for this run. Called once from bootstrap
+ * before discovery, because the change plan (find-or-create the app by exact
+ * name match) depends on it.
+ *
+ * @param {string} name - The resolved application name
+ */
+export function setClientName(name) {
+  _clientName = name
+}
+
+/**
+ * The native application's name for this run (defaults to DEFAULT_CLIENT_NAME
+ * until setClientName is called).
+ *
+ * @returns {string}
+ */
+export function getClientName() {
+  return _clientName
+}
 
 /**
  * Build the allowed callback / logout URLs for the native iOS client.
@@ -81,6 +108,7 @@ export async function checkDashboardClientChanges(
   myAccountApiScopes
 ) {
   const { bundleIdentifier } = iosConfig
+  const clientName = getClientName()
 
   // Auth0.swift's WebAuthentication builds its redirect URL from the bundle
   // identifier, not an arbitrary scheme. The two supported forms are the
@@ -89,14 +117,16 @@ export async function checkDashboardClientChanges(
   // whether or not associated domains are configured.
   const redirectUrls = buildRedirectUrls(domain, bundleIdentifier)
 
+  // Re-runs find the app by exact name + app_type "native": the same name
+  // updates it, a different name creates a second application (§3.7).
   const existingClient = existingClients.find(
-    (c) => c.name === CLIENT_NAME && c.app_type === "native"
+    (c) => c.name === clientName && c.app_type === "native"
   )
 
   if (!existingClient) {
     return createChangeItem(ChangeAction.CREATE, {
       resource: "Native Client",
-      name: CLIENT_NAME,
+      name: clientName,
       redirectUrls,
     })
   }
@@ -157,7 +187,7 @@ export async function checkDashboardClientChanges(
 
     return createChangeItem(ChangeAction.UPDATE, {
       resource: "Native Client",
-      name: CLIENT_NAME,
+      name: clientName,
       existing: existingClient,
       redirectUrls,
       updates,
@@ -167,7 +197,7 @@ export async function checkDashboardClientChanges(
 
   return createChangeItem(ChangeAction.SKIP, {
     resource: "Native Client",
-    name: CLIENT_NAME,
+    name: clientName,
     existing: existingClient,
   })
 }
@@ -181,6 +211,8 @@ export async function applyDashboardClientChanges(
   domain,
   myAccountApiScopes
 ) {
+  const clientName = getClientName()
+
   if (changePlan.action === ChangeAction.SKIP) {
     const spinner = ora({
       text: `Native Client is up to date: ${changePlan.name}`,
@@ -191,12 +223,12 @@ export async function applyDashboardClientChanges(
 
   if (changePlan.action === ChangeAction.CREATE) {
     const spinner = ora({
-      text: `Creating Native Client: ${CLIENT_NAME}`,
+      text: `Creating Native Client: ${clientName}`,
     }).start()
 
     try {
       const clientData = {
-        name: CLIENT_NAME,
+        name: clientName,
         description:
           "Native client for Auth0 iOS UI Components sample app",
         app_type: "native",
@@ -235,7 +267,7 @@ export async function applyDashboardClientChanges(
       const { stdout } = await $`auth0 ${createClientArgs}`
       const client = JSON.parse(stdout)
 
-      spinner.succeed(`Created Native Client: ${CLIENT_NAME}`)
+      spinner.succeed(`Created Native Client: ${clientName}`)
       return client
     } catch (e) {
       // The native client is the anchor for everything downstream (client
@@ -246,7 +278,7 @@ export async function applyDashboardClientChanges(
         const scope = extractMissingScope(e) || "create:clients"
         spinner.fail(`Cannot create Native Client — M2M app lacks scope: ${scope}`)
         recordManualAction({
-          resource: `Native Client: ${CLIENT_NAME}`,
+          resource: `Native Client: ${clientName}`,
           scope,
           reason:
             "The native client is required for the sample app to authenticate; the rest of the bootstrap depends on it.",
@@ -262,7 +294,7 @@ export async function applyDashboardClientChanges(
 
   if (changePlan.action === ChangeAction.UPDATE) {
     const spinner = ora({
-      text: `Updating Native Client: ${CLIENT_NAME}`,
+      text: `Updating Native Client: ${clientName}`,
     }).start()
 
     try {
@@ -326,7 +358,7 @@ export async function applyDashboardClientChanges(
       const { stdout } = await $`auth0 ${getArgs}`
       const client = JSON.parse(stdout)
 
-      spinner.succeed(`Updated Native Client: ${CLIENT_NAME}`)
+      spinner.succeed(`Updated Native Client: ${clientName}`)
       return client
     } catch (e) {
       // A missing scope (e.g. update:clients on the M2M app) should not abort
@@ -338,7 +370,7 @@ export async function applyDashboardClientChanges(
           `Skipped updating Native Client — M2M app lacks scope: ${scope}`
         )
         recordManualAction({
-          resource: `Native Client: ${CLIENT_NAME}`,
+          resource: `Native Client: ${clientName}`,
           scope,
           reason:
             "The native client's callback/logout URLs (and My Account refresh-token policy) must be set for the app's login/logout redirects to resolve.",
@@ -406,6 +438,8 @@ export async function applyMyAccountClientGrantChanges(
   domain,
   clientId
 ) {
+  const clientName = getClientName()
+
   if (changePlan.action === ChangeAction.SKIP) {
     const spinner = ora({
       text: `My Account API Client Grant is up to date`,
@@ -416,7 +450,7 @@ export async function applyMyAccountClientGrantChanges(
 
   if (changePlan.action === ChangeAction.CREATE) {
     const spinner = ora({
-      text: `Creating ${CLIENT_NAME} client grants for My Account API`,
+      text: `Creating ${clientName} client grants for My Account API`,
     }).start()
 
     try {
@@ -435,7 +469,7 @@ export async function applyMyAccountClientGrantChanges(
       spinner.succeed(`Created My Account API Client Grant`)
     } catch (e) {
       spinner.fail(
-        `Failed to create the ${CLIENT_NAME} client grants for My Account API`
+        `Failed to create the ${clientName} client grants for My Account API`
       )
       throw e
     }
@@ -464,5 +498,3 @@ export async function applyMyAccountClientGrantChanges(
     }
   }
 }
-
-
