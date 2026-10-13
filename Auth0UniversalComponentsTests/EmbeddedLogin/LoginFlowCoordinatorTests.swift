@@ -1,0 +1,206 @@
+@testable import Auth0UniversalComponents
+import Testing
+
+@Suite
+@MainActor
+struct LoginFlowCoordinatorTests {
+
+    private typealias Scripted = ScriptedAuthInteractor.ScriptedAuthError
+
+    private let email = "user@example.com"
+
+    private func emailDiscovery(_ connection: String = "email") -> Result<[LoginOption], Error> {
+        .success([.emailOTP(connection: connection)])
+    }
+
+    /// Runs discovery and submits the email, landing on code entry.
+    private func atCodeEntry(_ interactor: ScriptedAuthInteractor) async -> LoginFlowCoordinator {
+        let sut = LoginFlowCoordinator(interactor: interactor)
+        await sut.send(.start)
+        await sut.send(.submitIdentifier(email))
+        return sut
+    }
+
+    // MARK: Discovery
+
+    @Test func emailOption_advancesToIdentifier() async {
+        let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: emailDiscovery()))
+        await sut.send(.start)
+        #expect(sut.step == .collectOTPIdentifier)
+    }
+
+    @Test func noOptions_reportsNoMethods() async {
+        let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: .success([])))
+        await sut.send(.start)
+        #expect(sut.step == .noMethodsAvailable)
+    }
+
+    @Test func onlyUnsupportedOptions_reportsNoMethods() async {
+        let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: .success([.unsupported("webauthn")])))
+        await sut.send(.start)
+        #expect(sut.step == .noMethodsAvailable)
+    }
+
+    @Test func firstEmailOption_connectionIsUsedForStartOTP() async {
+        let interactor = ScriptedAuthInteractor(
+            discover: .success([.unsupported("webauthn"), .emailOTP(connection: "first"), .emailOTP(connection: "second")]),
+            startOTP: .success(())
+        )
+        _ = await atCodeEntry(interactor)
+        #expect(interactor.receivedRequests.contains(.startOTP(connection: "first", email: email)))
+    }
+
+    @Test func discoveryFailure_retry_reRunsDiscovery() async {
+        let interactor = ScriptedAuthInteractor(discover: .failure(Scripted.scripted(message: "network down")))
+        let sut = LoginFlowCoordinator(interactor: interactor)
+
+        await sut.send(.start)
+        #expect(sut.step == .failed(message: "network down"))
+
+        interactor.discoverResult = emailDiscovery()
+        await sut.send(.retry)
+        #expect(interactor.receivedRequests == [.discover, .discover])
+        #expect(sut.step == .collectOTPIdentifier)
+    }
+
+    // MARK: Email OTP
+
+    @Test func happyPath_authenticates() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .success(.authenticated))
+        let sut = await atCodeEntry(interactor)
+        #expect(sut.step == .collectOTPCode(identifier: email))
+
+        await sut.send(.submitOTP(code: "112233"))
+        #expect(sut.step == .authenticated)
+        #expect(interactor.receivedRequests == [
+            .discover, .startOTP(connection: "email", email: email), .verifyOTP(code: "112233"),
+        ])
+    }
+
+    @Test func resend_reSendsToSameEmail() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()))
+        let sut = await atCodeEntry(interactor)
+
+        await sut.resendOTP()
+        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", email: email) }.count == 2)
+    }
+
+    @Test func startOTPFailure_retry_returnsToIdentifier() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(),
+                                                startOTP: .failure(Scripted.scripted(message: "network down")))
+        let sut = await atCodeEntry(interactor)
+        #expect(sut.step == .failed(message: "network down"))
+
+        await sut.send(.retry)
+        #expect(sut.step == .collectOTPIdentifier)
+
+        interactor.startOTPResult = .success(())
+        await sut.send(.submitIdentifier(email))
+        #expect(sut.step == .collectOTPCode(identifier: email))
+    }
+
+    @Test func codeNotSent_staysOnIdentifierWithInlineError() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(),
+                                                startOTP: .failure(AuthFailure.codeNotSent))
+        let sut = await atCodeEntry(interactor)
+        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.inputError == .codeNotSent)
+
+        interactor.startOTPResult = .success(())
+        await sut.send(.submitIdentifier(email))
+        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.inputError == nil)
+    }
+
+    @Test func nonLocalizedError_usesFallbackMessage() async {
+        struct Opaque: Error {}
+        let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: .failure(Opaque())))
+        await sut.send(.start)
+        #expect(sut.step == .failed(message: "Something went wrong. Please try again."))
+    }
+
+    // MARK: Inline code errors
+
+    @Test(arguments: [AuthFailure.invalidCode, .tooManyAttempts])
+    func rejectedCode_staysOnCodeScreen(_ failure: AuthFailure) async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .failure(failure))
+        let sut = await atCodeEntry(interactor)
+
+        await sut.send(.submitOTP(code: "000000"))
+        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.inputError == failure)
+    }
+
+    @Test func verifySystemError_goesFullScreen() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .failure(Scripted.scripted(message: "network down")))
+        let sut = await atCodeEntry(interactor)
+
+        await sut.send(.submitOTP(code: "112233"))
+        #expect(sut.step == .failed(message: "network down"))
+        #expect(sut.inputError == nil)
+
+        await sut.send(.retry)
+        #expect(sut.step == .collectOTPCode(identifier: email))
+    }
+
+    @Test func resubmit_clearsInlineError() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .failure(AuthFailure.invalidCode))
+        let sut = await atCodeEntry(interactor)
+        await sut.send(.submitOTP(code: "000000"))
+        #expect(sut.inputError == .invalidCode)
+
+        interactor.verifyOTPResult = .success(.authenticated)
+        await sut.send(.submitOTP(code: "112233"))
+        #expect(sut.inputError == nil)
+        #expect(sut.step == .authenticated)
+    }
+
+    // MARK: Step-up
+
+    @Test func stepUp_verifiesWithChallengedFactor() async {
+        let challenge = MFAChallenge(factor: .otp)
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .success(.mfaRequired(challenge)),
+                                                verifyMFA: .success(.authenticated))
+        let sut = await atCodeEntry(interactor)
+
+        await sut.send(.submitOTP(code: "112233"))
+        #expect(sut.step == .stepUpMFA(challenge))
+
+        await sut.send(.submitMFA(code: "445566"))
+        #expect(sut.step == .authenticated)
+        #expect(interactor.receivedRequests.last == .verifyMFA(code: "445566", factor: .otp))
+    }
+
+    @Test func stepUp_rejectedCode_staysOnStepUp() async {
+        let challenge = MFAChallenge(factor: .email)
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .success(.mfaRequired(challenge)),
+                                                verifyMFA: .failure(AuthFailure.invalidCode))
+        let sut = await atCodeEntry(interactor)
+        await sut.send(.submitOTP(code: "112233"))
+
+        await sut.send(.submitMFA(code: "000000"))
+        #expect(sut.step == .stepUpMFA(challenge))
+        #expect(sut.inputError == .invalidCode)
+    }
+
+    // MARK: Back
+
+    @Test func back_fromCodeEntry_returnsToIdentifier() async {
+        let sut = await atCodeEntry(ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(())))
+        #expect(sut.goBack() == .movedBack)
+        #expect(sut.step == .collectOTPIdentifier)
+    }
+
+    @Test func back_fromIdentifier_exitsFlow() async {
+        let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: emailDiscovery()))
+        await sut.send(.start)
+        #expect(sut.goBack() == .exitFlow)
+    }
+}

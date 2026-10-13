@@ -35,6 +35,8 @@ struct OTPTextField: UIViewRepresentable {
     var enterKeyPressed: (() -> Void)
     /// Callback when backspace is pressed on an empty field
     var emptyBackspaceKeyPressed: (() -> Void)
+    /// Digit colour; `nil` uses the system label colour.
+    var textColor: Color? = nil
 
     /// Creates the underlying UITextField for the OTP input.
     func makeUIView(context: Context) -> UITextField {
@@ -48,6 +50,7 @@ struct OTPTextField: UIViewRepresentable {
         textField.autocorrectionType = .no
         textField.spellCheckingType = .no
         textField.tintColor = UIColor(cursorTintColor)
+        textField.textColor = textColor.map { UIColor($0) } ?? .label
         textField.keyboardType = .numberPad
         textField.textContentType = .oneTimeCode
         let toolbar = UIToolbar()
@@ -67,6 +70,7 @@ struct OTPTextField: UIViewRepresentable {
     func updateUIView(_ uiView: UITextField, context: Context) {
         uiView.text = self.getText()
         uiView.tintColor = UIColor(cursorTintColor)
+        uiView.textColor = textColor.map { UIColor($0) } ?? .label
         self.setSelection(uiView)
 
         uiView.setContentHuggingPriority(.defaultHigh, for: .vertical)
@@ -178,6 +182,8 @@ struct OTPTextField: NSViewRepresentable {
     var enterKeyPressed: (() -> Void)
     /// Callback when backspace is pressed on an empty field
     var emptyBackspaceKeyPressed: (() -> Void)
+    /// Digit colour; `nil` uses the system label colour.
+    var textColor: Color? = nil
 
     /// Creates the underlying NSTextField for the OTP input.
     func makeNSView(context: Context) -> NSTextField {
@@ -187,6 +193,7 @@ struct OTPTextField: NSViewRepresentable {
         textField.stringValue = getText()
         textField.font = NSFont.systemFont(ofSize: 20, weight: .semibold)
         textField.alignment = .center
+        textField.textColor = textColor.map { NSColor($0) } ?? .labelColor
 
         textField.delegate = context.coordinator
         textField.isBordered = true
@@ -202,6 +209,7 @@ struct OTPTextField: NSViewRepresentable {
     /// Updates the NSTextField when the SwiftUI binding changes.
     func updateNSView(_ nsView: NSTextField, context: Context) {
         nsView.stringValue = getText()
+        nsView.textColor = textColor.map { NSColor($0) } ?? .labelColor
         setSelection(nsView)
     }
 
