@@ -7,9 +7,24 @@ import Foundation
 
 enum Auth0EmbeddedAuthError: LocalizedError {
     case discoveryConnectionMissing
+    /// `message` is `nil` when the SDK error carries no user-facing text.
+    case requestFailed(message: String?)
 
     var errorDescription: String? {
-        "No connection is configured to start sign-in with."
+        switch self {
+        case .discoveryConnectionMissing: return "No connection is configured to start sign-in with."
+        case let .requestFailed(message): return message
+        }
+    }
+}
+
+extension EmbeddedAuthError {
+    /// The cause's own description (e.g. "The Internet connection appears to be offline."), else the
+    /// server's `error_description`. The SDK's `errorDescription` is debug text and isn't shown.
+    var displayMessage: String? {
+        if let cause { return cause.localizedDescription }
+        if let description = info["error_description"] as? String, !description.isEmpty { return description }
+        return nil
     }
 }
 
@@ -78,7 +93,9 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         do {
             try await makeRequest().start()
         } catch let error as EmbeddedAuthError {
-            guard case let .insufficientAuthorization(_, nextActions) = error.reason else { throw error }
+            guard case let .insufficientAuthorization(_, nextActions) = error.reason else {
+                throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
+            }
             lastNextActions = nextActions
         }
     }
@@ -89,7 +106,9 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             try? credentialsManager.store(credentials: credentials)
             return .authenticated
         } catch let error as EmbeddedAuthError {
-            guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else { throw error }
+            guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else {
+                throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
+            }
             lastNextActions = nextActions
             // Checked first so a re-presented code step isn't mistaken for a step-up.
             if subReason == .invalidCode || subReason == .invalidIdentifierOrCode {
@@ -98,7 +117,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             if let challenge = Self.challenge(from: nextActions) {
                 return .mfaRequired(challenge)
             }
-            throw error
+            throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
         }
     }
 
