@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.0-beta.1](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.1) (2026-10-14)
+[Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.0...1.0.0-beta.1)
+
+**Added**
+- Embedded Login Implementation: Initial Discovery + Login via Email OTP factor [\#71](https://github.com/auth0/ui-components-ios/pull/71) ([Sudhanshu96](https://github.com/Sudhanshu96))
+
 ## [Unreleased]
 
 **⚠️ Breaking**
