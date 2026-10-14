@@ -2,15 +2,6 @@ import SwiftUI
 
 // iOS/visionOS-only modifiers; each returns `self` unchanged elsewhere.
 extension View {
-    @ViewBuilder
-    func navigationBarTitleDisplayModeInlineIfAvailable() -> some View {
-        #if os(iOS) || os(visionOS)
-        self.navigationBarTitleDisplayMode(.inline)
-        #else
-        self
-        #endif
-    }
-
     /// Hides the system bar and back button so `LoginNavigationBar` can stand in.
     @ViewBuilder
     func systemNavigationBarHidden() -> some View {

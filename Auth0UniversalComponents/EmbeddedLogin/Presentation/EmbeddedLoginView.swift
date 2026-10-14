@@ -14,25 +14,10 @@ public struct EmbeddedLoginView: View {
     }
 
     public var body: some View {
-        #if AUTH0_EMBEDDED_AUTH
         LoginRenderingHostView(interactor: Auth0EmbeddedAuthInteractor(connection: connection),
                                onAuthenticated: onAuthenticated)
-        #else
-        EmbeddedLoginUnavailableView()
-        #endif
     }
 }
-
-#if !AUTH0_EMBEDDED_AUTH
-/// Shown when built without `AUTH0_EMBEDDED_AUTH`.
-private struct EmbeddedLoginUnavailableView: View {
-    var body: some View {
-        LoginNoMethodsScreen()
-            .navigationTitle("Log in")
-            .navigationBarTitleDisplayModeInlineIfAvailable()
-    }
-}
-#endif
 
 #Preview {
     NavigationStack { EmbeddedLoginView() }

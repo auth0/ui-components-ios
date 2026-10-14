@@ -27,7 +27,7 @@ struct MFAChallenge: Equatable {
     }
 }
 
-/// The result of verifying a code. Credentials are stored in the Keychain by the interactor.
+/// The result of verifying a code. On `.authenticated` the credentials are already in the Keychain.
 enum AuthOutcome: Equatable {
     case authenticated
     case mfaRequired(MFAChallenge)
@@ -48,6 +48,13 @@ enum AuthFailure: Error, Equatable {
     }
 }
 
+/// Sign-in succeeded but the credentials couldn't be saved to the Keychain.
+struct CredentialsNotSavedError: LocalizedError, Equatable {
+    var errorDescription: String? { "We couldn't save your sign-in on this device. Please try again." }
+}
+
+/// Main-actor isolated: implementations keep per-flow loop state.
+@MainActor
 protocol AuthInteracting {
     /// Opens the embedded authorize loop and returns the methods it advertises.
     func discover() async throws -> [LoginOption]

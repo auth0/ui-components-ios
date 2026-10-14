@@ -1,4 +1,3 @@
-#if AUTH0_EMBEDDED_AUTH
 @testable import Auth0UniversalComponents
 import Auth0
 import Foundation
@@ -26,4 +25,3 @@ struct EmbeddedAuthErrorMessageTests {
         #expect(Auth0EmbeddedAuthError.requestFailed(message: nil).errorDescription == nil)
     }
 }
-#endif

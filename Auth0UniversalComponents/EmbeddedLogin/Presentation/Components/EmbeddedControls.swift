@@ -6,12 +6,14 @@ import SwiftUI
 /// Top bar with a back arrow and a centered title.
 public struct LoginNavigationBar: View {
     let title: String
+    let isBackEnabled: Bool
     let onBack: (() -> Void)?
 
     @Environment(\.auth0Theme) private var theme
 
-    public init(title: String = "Log in", onBack: (() -> Void)? = nil) {
+    public init(title: String = "Log in", isBackEnabled: Bool = true, onBack: (() -> Void)? = nil) {
         self.title = title
+        self.isBackEnabled = isBackEnabled
         self.onBack = onBack
     }
 
@@ -30,6 +32,8 @@ public struct LoginNavigationBar: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .disabled(!isBackEnabled)
+                    .opacity(isBackEnabled ? 1 : 0.4)
                     .accessibilityLabel("Back")
                     Spacer()
                 }
@@ -44,13 +48,15 @@ public struct LoginNavigationBar: View {
 public struct LoginScreenHeader: View {
     let title: String
     let subtitle: String?
+    let isEditEnabled: Bool
     let onEdit: (() -> Void)?
 
     @Environment(\.auth0Theme) private var theme
 
-    public init(title: String, subtitle: String? = nil, onEdit: (() -> Void)? = nil) {
+    public init(title: String, subtitle: String? = nil, isEditEnabled: Bool = true, onEdit: (() -> Void)? = nil) {
         self.title = title
         self.subtitle = subtitle
+        self.isEditEnabled = isEditEnabled
         self.onEdit = onEdit
     }
 
@@ -73,6 +79,8 @@ public struct LoginScreenHeader: View {
                             .buttonStyle(.plain)
                             .auth0TextStyle(theme.typography.title)
                             .foregroundStyle(theme.colors.text.bold)
+                            .disabled(!isEditEnabled)
+                            .opacity(isEditEnabled ? 1 : 0.4)
                     }
                 }
             }

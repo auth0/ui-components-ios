@@ -41,7 +41,7 @@ struct LoginRenderingHostView: View {
         // Horizontal only, so backgrounds still reach under the home indicator.
         .clipShape(HorizontalClip())
         .safeAreaInset(edge: .top, spacing: 0) {
-            LoginNavigationBar(title: "Log in", onBack: handleBack)
+            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
         }
         .systemNavigationBarHidden()
         .task {
@@ -69,14 +69,9 @@ struct LoginRenderingHostView: View {
         renderer.plan(for: displayStep)
     }
 
-    private var isSubmitting: Bool {
-        if case .loading = coordinator.step { return lastInputStep != nil }
-        return false
-    }
-
     private var context: RenderContext {
         RenderContext(
-            isSubmitting: isSubmitting,
+            isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
             dispatch: { send($0) },
             resend: { Task { await coordinator.resendOTP() } },
@@ -121,7 +116,10 @@ struct LoginRenderingHostView: View {
     // MARK: Navigation
 
     private func handleBack() {
-        if coordinator.goBack() == .exitFlow { dismiss() }
+        switch coordinator.goBack() {
+        case .exitFlow: dismiss()
+        case .movedBack, .ignored: break
+        }
     }
 
     private func trackInputStep(_ step: LoginStep) {

@@ -8,8 +8,10 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private(set) var step: LoginStep = .loading
     /// A recoverable failure, shown inline on the current input screen.
     @Published private(set) var inputError: AuthFailure?
+    /// True while an email submit, resend or verify is in flight. Blocks re-entry and Back.
+    @Published private(set) var isSubmitting = false
 
-    enum BackOutcome { case movedBack, exitFlow }
+    enum BackOutcome { case movedBack, exitFlow, ignored }
 
     private let interactor: AuthInteracting
 
@@ -48,6 +50,8 @@ final class LoginFlowCoordinator: ObservableObject {
     /// Code entry steps back to email entry; anywhere else leaves the flow.
     @discardableResult
     func goBack() -> BackOutcome {
+        // Leaving now would orphan the in-flight result (e.g. credentials stored, no callback).
+        if isSubmitting { return .ignored }
         inputError = nil
         guard case .collectOTPCode = step else { return .exitFlow }
         step = .collectOTPIdentifier
@@ -77,7 +81,9 @@ final class LoginFlowCoordinator: ObservableObject {
     }
 
     private func sendCode(to email: String) async {
-        guard let connection else { return }
+        guard let connection, !isSubmitting else { return }
+        isSubmitting = true
+        defer { isSubmitting = false }
         inputError = nil
         step = .loading
         do {
@@ -94,6 +100,9 @@ final class LoginFlowCoordinator: ObservableObject {
 
     /// Shared by OTP and step-up: a rejected code stays on `codeStep` with an inline error.
     private func verify(returningTo codeStep: LoginStep, _ call: () async throws -> AuthOutcome) async {
+        guard !isSubmitting else { return }
+        isSubmitting = true
+        defer { isSubmitting = false }
         inputError = nil
         step = .loading
         do {
@@ -107,6 +116,9 @@ final class LoginFlowCoordinator: ObservableObject {
         } catch let failure as AuthFailure {
             inputError = failure
             step = codeStep
+        } catch let error as CredentialsNotSavedError {
+            // The code was consumed and the loop closed, so retry starts a fresh one.
+            fail(error, returningTo: .collectOTPIdentifier)
         } catch {
             fail(error, returningTo: codeStep)
         }

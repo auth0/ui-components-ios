@@ -3,9 +3,7 @@
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
-    .swiftLanguageMode(.v5),
-    // Enables Embedded Login (needs Auth0.swift 4.0.0-beta.0); remove with the pin below.
-    .define("AUTH0_EMBEDDED_AUTH")
+    .swiftLanguageMode(.v5)
 ]
 
 let package = Package(
@@ -13,7 +11,7 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
-        // First release with `Auth0.embeddedAuth()`.
+        // Embedded Login needs `Auth0.embeddedAuth()`, first shipped in this beta.
         .package(url: "https://github.com/auth0/Auth0.swift.git", exact: "4.0.0-beta.0")
     ],
     targets: [

@@ -203,4 +203,99 @@ struct LoginFlowCoordinatorTests {
         await sut.send(.start)
         #expect(sut.goBack() == .exitFlow)
     }
+
+    @Test func back_whileVerifying_isIgnored() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .success(.authenticated))
+        let sut = await atCodeEntry(interactor)
+        interactor.held = [.verifyOTP]
+
+        let verify = Task { await sut.send(.submitOTP(code: "112233")) }
+        await interactor.waitUntilHeld(.verifyOTP)
+        #expect(sut.isSubmitting)
+        #expect(sut.goBack() == .ignored)
+
+        interactor.release(.verifyOTP)
+        await verify.value
+        #expect(sut.step == .authenticated)
+        #expect(!sut.isSubmitting)
+    }
+
+    @Test func back_whileResending_isIgnored() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()))
+        let sut = await atCodeEntry(interactor)
+        interactor.held = [.startOTP]
+
+        let resend = Task { await sut.resendOTP() }
+        await interactor.waitUntilHeld(.startOTP)
+        #expect(sut.goBack() == .ignored)
+
+        interactor.release(.startOTP)
+        await resend.value
+        #expect(sut.goBack() == .movedBack)
+    }
+
+    @Test func back_duringDiscovery_exitsFlow() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery())
+        interactor.held = [.discover]
+        let sut = LoginFlowCoordinator(interactor: interactor)
+
+        let start = Task { await sut.send(.start) }
+        await interactor.waitUntilHeld(.discover)
+        #expect(!sut.isSubmitting)
+        #expect(sut.goBack() == .exitFlow)
+
+        interactor.release(.discover)
+        await start.value
+    }
+
+    // MARK: Re-entry
+
+    @Test func doubleSubmitIdentifier_startsOTPOnce() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()))
+        interactor.held = [.startOTP]
+        let sut = LoginFlowCoordinator(interactor: interactor)
+        await sut.send(.start)
+
+        let first = Task { await sut.send(.submitIdentifier(email)) }
+        await interactor.waitUntilHeld(.startOTP)
+        await sut.send(.submitIdentifier(email))
+
+        interactor.release(.startOTP)
+        await first.value
+        #expect(interactor.receivedRequests == [.discover, .startOTP(connection: "email", email: email)])
+        #expect(sut.step == .collectOTPCode(identifier: email))
+    }
+
+    @Test func doubleSubmitOTP_verifiesOnce() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .success(.authenticated))
+        let sut = await atCodeEntry(interactor)
+        interactor.held = [.verifyOTP]
+
+        let first = Task { await sut.send(.submitOTP(code: "112233")) }
+        await interactor.waitUntilHeld(.verifyOTP)
+        await sut.send(.submitOTP(code: "112233"))
+        await sut.resendOTP()
+
+        interactor.release(.verifyOTP)
+        await first.value
+        #expect(interactor.receivedRequests.filter { $0 == .verifyOTP(code: "112233") }.count == 1)
+        #expect(interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", email: email) }.count == 1)
+        #expect(sut.step == .authenticated)
+    }
+
+    // MARK: Credentials storage
+
+    @Test func credentialsNotSaved_goesFullScreen_retryReturnsToIdentifier() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
+                                                verifyOTP: .failure(CredentialsNotSavedError()))
+        let sut = await atCodeEntry(interactor)
+
+        await sut.send(.submitOTP(code: "112233"))
+        #expect(sut.step == .failed(message: "We couldn't save your sign-in on this device. Please try again."))
+
+        await sut.send(.retry)
+        #expect(sut.step == .collectOTPIdentifier)
+    }
 }

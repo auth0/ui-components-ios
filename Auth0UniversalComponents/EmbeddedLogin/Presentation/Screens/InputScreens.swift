@@ -61,6 +61,8 @@ public struct LoginEmailScreen: View {
     }
 
     private func submit() {
+        // Return on the keyboard bypasses the button's loading guard.
+        guard !isLoading else { return }
         guard EmailValidator.isValid(email) else {
             validationError = "Please enter a valid email address."
             return
@@ -111,7 +113,7 @@ public struct LoginCodeScreen: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            LoginScreenHeader(title: title, subtitle: subtitle, onEdit: onEdit)
+            LoginScreenHeader(title: title, subtitle: subtitle, isEditEnabled: !isLoading, onEdit: onEdit)
 
             LoginFieldLabel(fieldLabel)
             LoginCodeField(code: $code, digitCount: digitCount, isError: activeError != nil)
@@ -121,9 +123,7 @@ public struct LoginCodeScreen: View {
                     .padding(.top, theme.spacing.xs)
             }
 
-            LoginPrimaryButton("Verify", isLoading: isLoading, isEnabled: code.count == digitCount) {
-                onVerify(code)
-            }
+            LoginPrimaryButton("Verify", isLoading: isLoading, isEnabled: code.count == digitCount, action: verify)
             .padding(.top, theme.spacing.lg)
 
             if let onResend {
@@ -136,6 +136,11 @@ public struct LoginCodeScreen: View {
         .embeddedScreenChrome(theme: theme)
         .onChange(of: code) { _ in suppressError = true }
         .onChange(of: errorMessage) { if $0 != nil { suppressError = false } }
+    }
+
+    private func verify() {
+        guard !isLoading, code.count == digitCount else { return }
+        onVerify(code)
     }
 }
 
