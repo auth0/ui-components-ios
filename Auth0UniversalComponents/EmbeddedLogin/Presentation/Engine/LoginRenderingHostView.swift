@@ -124,7 +124,7 @@ struct LoginRenderingHostView: View {
 
     private func trackInputStep(_ step: LoginStep) {
         switch step {
-        case .collectOTPIdentifier, .collectOTPCode, .stepUpMFA:
+        case .collectOTPIdentifier, .collectOTPCode:
             lastInputStep = step
         case .loading:
             break

@@ -19,12 +19,6 @@ struct LoginRendererTests {
         #expect(plan(.noMethodsAvailable) == .noMethods)
     }
 
-    @Test func stepUpMFA_carriesFactorAndDestination() {
-        let email = MFAChallenge(factor: .email, destination: "s***@atko.email")
-        #expect(plan(.stepUpMFA(email)) == .mfaCode(factor: .email, destination: "s***@atko.email"))
-        #expect(plan(.stepUpMFA(MFAChallenge(factor: .otp))) == .mfaCode(factor: .otp, destination: nil))
-    }
-
     @Test func payloadChange_keepsTransitionIdentity() {
         #expect(ScreenPlan.otpCode(identifier: "a").transitionIdentity
                 == ScreenPlan.otpCode(identifier: "b").transitionIdentity)
@@ -35,11 +29,4 @@ struct LoginRendererTests {
         #expect(ScreenPlan.loading.navigationDepth < ScreenPlan.identifier.navigationDepth)
         #expect(ScreenPlan.identifier.navigationDepth < ScreenPlan.otpCode(identifier: "a").navigationDepth)
         #expect(ScreenPlan.otpCode(identifier: "a").navigationDepth < ScreenPlan.authenticated.navigationDepth)
-    }
-
-    @Test func codeSourceHint_prefersDestination() {
-        #expect(MFAFactor.email.codeSourceHint(destination: "s***@x.com") == "From s***@x.com")
-        #expect(MFAFactor.otp.codeSourceHint(destination: nil) == "From your authenticator app")
-        #expect(MFAFactor.email.codeSourceHint(destination: "") == "From the code sent to your email")
-    }
-}
+    }}

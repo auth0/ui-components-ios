@@ -7,14 +7,13 @@ import Foundation
 final class ScriptedAuthInteractor: AuthInteracting {
 
     enum Call: Hashable {
-        case discover, startOTP, verifyOTP, verifyMFA
+        case discover, startOTP, verifyOTP
     }
 
     enum Request: Equatable {
         case discover
         case startOTP(connection: String, email: String)
         case verifyOTP(code: String)
-        case verifyMFA(code: String, factor: MFAFactor)
     }
 
     enum ScriptedAuthError: LocalizedError, Equatable {
@@ -33,8 +32,7 @@ final class ScriptedAuthInteractor: AuthInteracting {
 
     var discoverResult: Result<[LoginOption], Error>?
     var startOTPResult: Result<Void, Error>?
-    var verifyOTPResult: Result<AuthOutcome, Error>?
-    var verifyMFAResult: Result<AuthOutcome, Error>?
+    var verifyOTPResult: Result<Void, Error>?
 
     var held: Set<Call> = []
     private var gates: [Call: CheckedContinuation<Void, Never>] = [:]
@@ -42,13 +40,11 @@ final class ScriptedAuthInteractor: AuthInteracting {
     init(
         discover: Result<[LoginOption], Error>? = nil,
         startOTP: Result<Void, Error>? = nil,
-        verifyOTP: Result<AuthOutcome, Error>? = nil,
-        verifyMFA: Result<AuthOutcome, Error>? = nil
+        verifyOTP: Result<Void, Error>? = nil
     ) {
         self.discoverResult = discover
         self.startOTPResult = startOTP
         self.verifyOTPResult = verifyOTP
-        self.verifyMFAResult = verifyMFA
     }
 
     func discover() async throws -> [LoginOption] {
@@ -63,16 +59,10 @@ final class ScriptedAuthInteractor: AuthInteracting {
         try resolve(startOTPResult, call: "startOTP")
     }
 
-    func verifyOTP(code: String) async throws -> AuthOutcome {
+    func verifyOTP(code: String) async throws {
         receivedRequests.append(.verifyOTP(code: code))
         await gate(.verifyOTP)
-        return try resolve(verifyOTPResult, call: "verifyOTP")
-    }
-
-    func verifyMFA(code: String, factor: MFAFactor) async throws -> AuthOutcome {
-        receivedRequests.append(.verifyMFA(code: code, factor: factor))
-        await gate(.verifyMFA)
-        return try resolve(verifyMFAResult, call: "verifyMFA")
+        try resolve(verifyOTPResult, call: "verifyOTP")
     }
 
     /// Suspends until `call` is held at its gate.

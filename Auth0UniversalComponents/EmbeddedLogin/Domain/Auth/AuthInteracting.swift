@@ -9,30 +9,6 @@ enum LoginOption: Equatable {
     case unsupported(String)
 }
 
-/// A factor the server can ask for as an in-loop step-up.
-enum MFAFactor: Hashable {
-    case otp
-    case email
-}
-
-/// An in-loop step-up the server requires after the email code.
-struct MFAChallenge: Equatable {
-    let factor: MFAFactor
-    /// Masked destination for the "From …" subtitle, e.g. `s***@atko.email`.
-    let destination: String?
-
-    init(factor: MFAFactor, destination: String? = nil) {
-        self.factor = factor
-        self.destination = destination
-    }
-}
-
-/// The result of verifying a code. On `.authenticated` the credentials are already in the Keychain.
-enum AuthOutcome: Equatable {
-    case authenticated
-    case mfaRequired(MFAChallenge)
-}
-
 /// Failures shown inline on the current input screen. Any other error goes full-screen.
 enum AuthFailure: Error, Equatable {
     case tooManyAttempts
@@ -60,6 +36,6 @@ protocol AuthInteracting {
     func discover() async throws -> [LoginOption]
     /// Sends a one-time code to `email`.
     func startOTP(connection: String, email: String) async throws
-    func verifyOTP(code: String) async throws -> AuthOutcome
-    func verifyMFA(code: String, factor: MFAFactor) async throws -> AuthOutcome
+    /// On return the credentials are already in the Keychain.
+    func verifyOTP(code: String) async throws
 }

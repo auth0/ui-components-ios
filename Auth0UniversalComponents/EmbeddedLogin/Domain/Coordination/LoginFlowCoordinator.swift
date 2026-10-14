@@ -18,7 +18,6 @@ final class LoginFlowCoordinator: ObservableObject {
     // Outputs of earlier calls that later calls need.
     private var connection: String?
     private var email: String?
-    private var challenge: MFAChallenge?
     /// Where `retry` returns to; `nil` re-runs discovery.
     private var retryStep: LoginStep?
 
@@ -33,15 +32,7 @@ final class LoginFlowCoordinator: ObservableObject {
         case let .submitIdentifier(email):
             await sendCode(to: email)
         case let .submitOTP(code):
-            guard let email else { return }
-            await verify(returningTo: .collectOTPCode(identifier: email)) {
-                try await self.interactor.verifyOTP(code: code)
-            }
-        case let .submitMFA(code):
-            guard let challenge else { return }
-            await verify(returningTo: .stepUpMFA(challenge)) {
-                try await self.interactor.verifyMFA(code: code, factor: challenge.factor)
-            }
+            await verify(code)
         case .retry:
             await retry()
         }
@@ -98,21 +89,17 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
-    /// Shared by OTP and step-up: a rejected code stays on `codeStep` with an inline error.
-    private func verify(returningTo codeStep: LoginStep, _ call: () async throws -> AuthOutcome) async {
-        guard !isSubmitting else { return }
+    /// A rejected code stays on code entry with an inline error.
+    private func verify(_ code: String) async {
+        guard let email, !isSubmitting else { return }
         isSubmitting = true
         defer { isSubmitting = false }
+        let codeStep = LoginStep.collectOTPCode(identifier: email)
         inputError = nil
         step = .loading
         do {
-            switch try await call() {
-            case .authenticated:
-                step = .authenticated
-            case let .mfaRequired(challenge):
-                self.challenge = challenge
-                step = .stepUpMFA(challenge)
-            }
+            try await interactor.verifyOTP(code: code)
+            step = .authenticated
         } catch let failure as AuthFailure {
             inputError = failure
             step = codeStep

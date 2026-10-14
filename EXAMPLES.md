@@ -131,7 +131,7 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ### Display the Embedded Login View
 
-`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, the one-time code, and an optional MFA step-up. It reads `ClientId` and `Domain` from `Auth0.plist`, stores the credentials in the Keychain, and then calls `onAuthenticated` on the main actor:
+`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, then the one-time code. This flow doesn't support MFA step-up yet: if the tenant asks for a second factor during embedded sign-in, it shows its error screen. The MFA enrollment components above are unaffected. It reads `ClientId` and `Domain` from `Auth0.plist`, stores the credentials in the Keychain, and then calls `onAuthenticated` on the main actor:
 
 ```swift
 import SwiftUI

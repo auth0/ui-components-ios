@@ -102,12 +102,25 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         }
     }
 
-    func verifyOTP(code: String) async throws -> AuthOutcome {
-        try await verify(code, type: .oob)
-    }
-
-    func verifyMFA(code: String, factor: MFAFactor) async throws -> AuthOutcome {
-        try await verify(code, type: factor == .otp ? .totp : .oob)
+    func verifyOTP(code: String) async throws {
+        do {
+            let credentials = try await client.verifyOtp(code, type: .oob)
+            do {
+                try credentialsStore.store(credentials: credentials)
+            } catch {
+                throw CredentialsNotSavedError()
+            }
+        } catch let error as EmbeddedAuthError {
+            guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else {
+                throw Self.failure(for: error)
+            }
+            lastNextActions = nextActions
+            if subReason == .invalidCode || subReason == .invalidIdentifierOrCode {
+                throw AuthFailure.invalidCode
+            }
+            // Includes MFA step-up, which is out of scope.
+            throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
+        }
     }
 
     // MARK: Loop helpers
@@ -121,31 +134,6 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
                 throw Self.failure(for: error)
             }
             lastNextActions = nextActions
-        }
-    }
-
-    private func verify(_ code: String, type: OtpType) async throws -> AuthOutcome {
-        do {
-            let credentials = try await client.verifyOtp(code, type: type)
-            do {
-                try credentialsStore.store(credentials: credentials)
-            } catch {
-                throw CredentialsNotSavedError()
-            }
-            return .authenticated
-        } catch let error as EmbeddedAuthError {
-            guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else {
-                throw Self.failure(for: error)
-            }
-            lastNextActions = nextActions
-            // Checked first so a re-presented code step isn't mistaken for a step-up.
-            if subReason == .invalidCode || subReason == .invalidIdentifierOrCode {
-                throw AuthFailure.invalidCode
-            }
-            if let challenge = Self.challenge(from: nextActions) {
-                return .mfaRequired(challenge)
-            }
-            throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
         }
     }
 
@@ -175,17 +163,5 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         default:
             return .unsupported(String(describing: action))
         }
-    }
-
-    /// SMS and voice are unsupported.
-    private static func challenge(from nextActions: [NextAction]) -> MFAChallenge? {
-        for case let .verifyOTP(channel, identifier) in nextActions {
-            switch channel {
-            case .email: return MFAChallenge(factor: .email, destination: identifier)
-            case .totp:  return MFAChallenge(factor: .otp, destination: identifier)
-            case .sms, .voice: continue
-            }
-        }
-        return nil
     }
 }

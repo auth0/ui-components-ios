@@ -6,7 +6,6 @@ enum LoginStep: Equatable {
     case collectOTPIdentifier
     /// `identifier` is the email the code was sent to.
     case collectOTPCode(identifier: String)
-    case stepUpMFA(MFAChallenge)
     case authenticated
     case failed(message: String)
     case noMethodsAvailable
@@ -17,6 +16,5 @@ enum LoginEvent: Equatable {
     case start
     case submitIdentifier(String)
     case submitOTP(code: String)
-    case submitMFA(code: String)
     case retry
 }

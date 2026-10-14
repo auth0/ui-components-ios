@@ -92,8 +92,7 @@ struct Auth0EmbeddedAuthInteractorTests {
 
     @Test func success_storesCredentials() async throws {
         client.verifyOtpResults = [.success(Credentials(accessToken: "at"))]
-        let outcome = try await makeSUT().verifyOTP(code: "112233")
-        #expect(outcome == .authenticated)
+        try await makeSUT().verifyOTP(code: "112233")
         #expect(store.stored.map(\.accessToken) == ["at"])
         #expect(client.calls == [.verifyOtp(code: "112233", type: .oob)])
     }
@@ -109,32 +108,15 @@ struct Auth0EmbeddedAuthInteractorTests {
         await #expect(throws: AuthFailure.invalidCode) { try await makeSUT().verifyOTP(code: "000000") }
     }
 
-    @Test func invalidCode_checkedBeforeStepUp() async {
-        client.verifyOtpResults = [.failure(F.needs([F.verifyTOTP], subReason: "invalid_code"))]
-        await #expect(throws: AuthFailure.invalidCode) { try await makeSUT().verifyOTP(code: "000000") }
-    }
-
     @Test func tooManyWrongAttempts_throwsTooManyAttempts() async {
         client.verifyOtpResults = [.failure(F.terminal("access_denied", description: "too_many_wrong_otp_attempts"))]
         await #expect(throws: AuthFailure.tooManyAttempts) { try await makeSUT().verifyOTP(code: "000000") }
     }
 
-    @Test func totpNextAction_returnsMFARequired() async throws {
-        client.verifyOtpResults = [.failure(F.needs([F.verifyTOTP]))]
-        let outcome = try await makeSUT().verifyOTP(code: "112233")
-        #expect(outcome == .mfaRequired(MFAChallenge(factor: .otp)))
-        #expect(store.stored.isEmpty)
-    }
-
-    @Test func smsOnlyStepUp_throwsRequestFailed() async {
-        client.verifyOtpResults = [.failure(F.needs([F.verifySMS]))]
+    /// MFA step-up is out of scope: any second-factor request goes full-screen.
+    @Test func stepUpRequested_throwsRequestFailed() async {
+        client.verifyOtpResults = [.failure(F.needs([F.verifyTOTP, F.verifyEmail, F.verifySMS]))]
         await #expect(throws: Auth0EmbeddedAuthError.self) { try await makeSUT().verifyOTP(code: "112233") }
-    }
-
-    @Test func verifyMFA_mapsFactorToOtpType() async throws {
-        let sut = makeSUT()
-        _ = try await sut.verifyMFA(code: "111111", factor: .otp)
-        _ = try await sut.verifyMFA(code: "222222", factor: .email)
-        #expect(client.calls == [.verifyOtp(code: "111111", type: .totp), .verifyOtp(code: "222222", type: .oob)])
+        #expect(store.stored.isEmpty)
     }
 }

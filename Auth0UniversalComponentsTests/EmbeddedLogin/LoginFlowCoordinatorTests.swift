@@ -67,7 +67,7 @@ struct LoginFlowCoordinatorTests {
 
     @Test func happyPath_authenticates() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(.authenticated))
+                                                verifyOTP: .success(()))
         let sut = await atCodeEntry(interactor)
         #expect(sut.step == .collectOTPCode(identifier: email))
 
@@ -154,40 +154,10 @@ struct LoginFlowCoordinatorTests {
         await sut.send(.submitOTP(code: "000000"))
         #expect(sut.inputError == .invalidCode)
 
-        interactor.verifyOTPResult = .success(.authenticated)
+        interactor.verifyOTPResult = .success(())
         await sut.send(.submitOTP(code: "112233"))
         #expect(sut.inputError == nil)
         #expect(sut.step == .authenticated)
-    }
-
-    // MARK: Step-up
-
-    @Test func stepUp_verifiesWithChallengedFactor() async {
-        let challenge = MFAChallenge(factor: .otp)
-        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(.mfaRequired(challenge)),
-                                                verifyMFA: .success(.authenticated))
-        let sut = await atCodeEntry(interactor)
-
-        await sut.send(.submitOTP(code: "112233"))
-        #expect(sut.step == .stepUpMFA(challenge))
-
-        await sut.send(.submitMFA(code: "445566"))
-        #expect(sut.step == .authenticated)
-        #expect(interactor.receivedRequests.last == .verifyMFA(code: "445566", factor: .otp))
-    }
-
-    @Test func stepUp_rejectedCode_staysOnStepUp() async {
-        let challenge = MFAChallenge(factor: .email)
-        let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(.mfaRequired(challenge)),
-                                                verifyMFA: .failure(AuthFailure.invalidCode))
-        let sut = await atCodeEntry(interactor)
-        await sut.send(.submitOTP(code: "112233"))
-
-        await sut.send(.submitMFA(code: "000000"))
-        #expect(sut.step == .stepUpMFA(challenge))
-        #expect(sut.inputError == .invalidCode)
     }
 
     // MARK: Back
@@ -206,7 +176,7 @@ struct LoginFlowCoordinatorTests {
 
     @Test func back_whileVerifying_isIgnored() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(.authenticated))
+                                                verifyOTP: .success(()))
         let sut = await atCodeEntry(interactor)
         interactor.held = [.verifyOTP]
 
@@ -269,7 +239,7 @@ struct LoginFlowCoordinatorTests {
 
     @Test func doubleSubmitOTP_verifiesOnce() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(.authenticated))
+                                                verifyOTP: .success(()))
         let sut = await atCodeEntry(interactor)
         interactor.held = [.verifyOTP]
 

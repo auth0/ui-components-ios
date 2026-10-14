@@ -71,7 +71,7 @@ public struct LoginEmailScreen: View {
     }
 }
 
-/// Code entry, shared by the email-OTP and MFA steps.
+/// One-time code entry.
 public struct LoginCodeScreen: View {
     let title: String
     let subtitle: String?
@@ -141,17 +141,6 @@ public struct LoginCodeScreen: View {
     private func verify() {
         guard !isLoading, code.count == digitCount else { return }
         onVerify(code)
-    }
-}
-
-extension MFAFactor {
-    /// Subtitle for the step-up code screen.
-    func codeSourceHint(destination: String?) -> String {
-        if let destination, !destination.isEmpty { return "From \(destination)" }
-        switch self {
-        case .otp:   return "From your authenticator app"
-        case .email: return "From the code sent to your email"
-        }
     }
 }
 

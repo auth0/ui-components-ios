@@ -188,8 +188,8 @@ public struct LoginPrimaryButton: View {
             .background(fill, in: shape)
             .overlay(shape.fill(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.04)],
                                                startPoint: .top, endPoint: .bottom)))
-            .overlay(shape.strokeBorder(theme.colors.background.primary, lineWidth: 1))
-            .shadow(color: .black.opacity(isEnabled ? 0.12 : 0), radius: 4, x: 0, y: 2)
+            .overlay(shape.strokeBorder(theme.colors.background.primary.opacity(isLoading ? 0 : 1), lineWidth: 1))
+            .shadow(color: .black.opacity(isEnabled && !isLoading ? 0.12 : 0), radius: 4, x: 0, y: 2)
             .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -198,7 +198,7 @@ public struct LoginPrimaryButton: View {
     }
 
     private var fill: Color {
-        isLoading ? Color(white: 0.55) : theme.colors.background.primary
+        isLoading ? theme.colors.background.primary.opacity(0.7) : theme.colors.background.primary
     }
 }
 
