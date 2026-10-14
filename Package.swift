@@ -11,7 +11,8 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
-        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "2.21.0")
+        // Embedded Login needs `Auth0.embeddedAuth()`, first shipped in this beta.
+        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "4.0.0-beta.0")
     ],
     targets: [
         .target(

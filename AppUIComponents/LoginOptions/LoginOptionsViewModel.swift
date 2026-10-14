@@ -8,14 +8,14 @@ final class LoginOptionsViewModel: ObservableObject {
     typealias LoginOptionModel = LoginOptionsView.LoginOptionsModel
     
     // MARK: - Published Properties
-    @Published var loginOptionModels: [LoginOptionModel] = [.init(type: .hostedLogin,
+    @Published var loginOptionModels: [LoginOptionModel] = [.init(type: .embeddedLogin,
+                                                                  icon: "ic_embedded_login",
+                                                                  title: "Embedded Login",
+                                                                  description: "Total brand control and low user frictions"),
+                                                            .init(type: .hostedLogin,
                                                                    icon: "ic_hosted_login",
                                                                    title: "Hosted Login",
-                                                                   description: "Easy to setup, works instantly"),
-                                                            .init(type: .embeddedLogin,
-                                                                   icon: "ic_embedded_login",
-                                                                   title: "Embedded Login (coming soon)",
-                                                                   description: "Total brand control and low user frictions")]
+                                                                   description: "Easy to setup, works instantly")]
     @Published var navigationRoute: SampleAppRoute? = nil
     @Published var error: LoginError? = nil
     @Published var isLoading: Bool = false
@@ -43,7 +43,7 @@ final class LoginOptionsViewModel: ObservableObject {
     }
     
     private func storeCredentials(_ credentials: Credentials) {
-        let _ = credentialsManager.store(credentials: credentials)
+        try? credentialsManager.store(credentials: credentials)
     }
     
     func performUniversalLogin() {
@@ -53,6 +53,7 @@ final class LoginOptionsViewModel: ObservableObject {
             .start { [weak self] result in
                 switch result {
                 case .success(let credentials):
+                    LoginSession.record(.universal)
                     self?.storeCredentials(credentials)
                     self?.getCredentials()
                 case .failure(let error):
@@ -60,6 +61,10 @@ final class LoginOptionsViewModel: ObservableObject {
                     self?.error = .init(webAuthError: error)
                 }
             }
+    }
+    
+    func performEmbeddedLogin() {
+        navigationRoute = .embeddedLogin
     }
 
     private func getCredentials() {

@@ -13,6 +13,6 @@ struct MockTokenProvider: TokenProvider {
     func store(apiCredentials: APICredentials, for audience: String, andScope scope: String) {}
 
     func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials {
-        APICredentials(accessToken: "mock-access-token", tokenType: "Bearer", expiresIn: Date(), scope: "openid profile offline_access")
+        APICredentials(accessToken: "mock-access-token", tokenType: "Bearer", expiresAt: Date(), scope: "openid profile offline_access")
     }
 }
