@@ -41,9 +41,15 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 - visionOS 1.0+
 - Swift 6.0+
 - Xcode 26.0+
-- [Auth0.swift](https://github.com/auth0/Auth0.swift) 4.0.0-beta.0+ (resolved for you by SPM and Carthage)
 
-> ⚠️ **Breaking change:** This SDK now depends on the **pre-release Auth0.swift `4.0.0-beta.0`**, up from Auth0.swift 2.x. If your app also depends on Auth0.swift directly, move it to `4.0.0-beta.0` or later. See the [CHANGELOG](CHANGELOG.md) for the migration notes.
+### Compatibility
+
+| Universal Components | Auth0.swift | Notes |
+|---|---|---|
+| 1.0.0-beta.1 | 4.0.0-beta.0+ (< 5.0.0) | Adds Embedded Login. Breaking: needs the Auth0.swift 4 beta |
+| 1.0.0-beta.0 | 2.21.0+ (< 3.0.0) | First beta |
+
+> ⚠️ **Breaking change in 1.0.0-beta.1:** This SDK now depends on the **pre-release Auth0.swift `4.0.0-beta.0`**, up from Auth0.swift 2.x. If your app also depends on Auth0.swift directly, move it to `4.0.0-beta.0` or later. If you aren't ready to move, pin this SDK with `exact: "1.0.0-beta.0"`. See the [CHANGELOG](CHANGELOG.md) for the migration notes.
 
 ### Installation
 
@@ -52,8 +58,10 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 Add the following to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0")
+.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0-beta.1")
 ```
+
+> **Note:** This range also accepts later `1.0.0` betas. To stay on one beta, use `exact: "1.0.0-beta.1"`.
 
 Or use Xcode: File → Add Packages → Enter the repository URL.
 
@@ -62,7 +70,7 @@ Or use Xcode: File → Add Packages → Enter the repository URL.
 Add the following to your `Cartfile`:
 
 ```
-github "auth0/ui-components-ios"
+github "auth0/ui-components-ios" "1.0.0-beta.1"
 ```
 
 ### Configure the SDK
