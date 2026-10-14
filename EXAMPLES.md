@@ -127,7 +127,7 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ## Embedded Login
 
-> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.0`**, which this SDK pins exactly. Your tenant must have Embedded Login enabled, with Email OTP on the connection you pass in.
+> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.0` or later 4.x**, a pre-release that replaces the earlier Auth0.swift 2.x dependency. Your tenant must have Embedded Login enabled, with Email OTP on the connection you pass in.
 
 ### Display the Embedded Login View
 

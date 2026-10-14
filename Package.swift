@@ -12,7 +12,7 @@ let package = Package(
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
         // Embedded Login needs `Auth0.embeddedAuth()`, first shipped in this beta.
-        .package(url: "https://github.com/auth0/Auth0.swift.git", exact: "4.0.0-beta.0")
+        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "4.0.0-beta.0")
     ],
     targets: [
         .target(

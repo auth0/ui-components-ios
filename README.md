@@ -41,6 +41,9 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 - visionOS 1.0+
 - Swift 6.0+
 - Xcode 26.0+
+- [Auth0.swift](https://github.com/auth0/Auth0.swift) 4.0.0-beta.0+ (resolved for you by SPM and Carthage)
+
+> ⚠️ **Breaking change:** This SDK now depends on the **pre-release Auth0.swift `4.0.0-beta.0`**, up from Auth0.swift 2.x. If your app also depends on Auth0.swift directly, move it to `4.0.0-beta.0` or later. See the [CHANGELOG](CHANGELOG.md) for the migration notes.
 
 ### Installation
 

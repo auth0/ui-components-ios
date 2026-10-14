@@ -2,7 +2,16 @@
 
 ## [Unreleased]
 
+**⚠️ Breaking**
+
+- **Auth0.swift moves from `2.x` (GA) to `4.0.0-beta.0` (pre-release).** SPM now requires `from: "4.0.0-beta.0"`, and Carthage pins `"4.0.0-beta.0"` exactly. JWTDecode.swift moves to `4.0.0`. Apps that depend on Auth0.swift 2.x or 3.x directly must move to 4.0.0-beta.0 or later, and follow the Auth0.swift migration guides.
+- **`TokenProvider` implementations** compile against the Auth0.swift 4.0 `Credentials` and `APICredentials` types. `CredentialsManager.store(...)` now throws, and `APICredentials` uses `expiresAt`. Web Auth `clearSession` is now `logout`.
+- **Carthage users** must rebuild every platform slice: `carthage update --use-xcframeworks --platform iOS,macOS,visionOS`.
+
 **Added**
+
+- **Embedded Login (beta)** — `EmbeddedLoginView` runs a native, in-app sign-in with Email OTP (email entry, then the one-time code). It stores the credentials in the Keychain and calls `onAuthenticated`. MFA step-up isn't supported in this flow yet: a tenant that asks for a second factor during embedded sign-in gets the error screen.
+- **`Router.replaceTop(with:)`** — replaces the top destination in a single path change. Use it instead of `pop()` followed by `navigate(to:)`, which `NavigationStack` can turn into a double push.
 
 - **Skeleton shimmer loading** — Card screens (`MyAccountAuthMethodsView`, `SavedAuthenticatorsView`) now show animated, theme-aware skeleton placeholders while data loads, replacing the previous spinner. Supports light/dark mode and respects Reduce Motion.
 
