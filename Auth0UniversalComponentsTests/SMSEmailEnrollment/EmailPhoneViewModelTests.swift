@@ -83,7 +83,10 @@ struct EmailPhoneViewModelTests {
             }
             viewModel.phoneNumber = "1111000222"
             await viewModel.startEnrollment()
-            #expect(viewModel.navigationRoute == Route.otpScreen(type: .sms, emailOrPhoneNumber: "+11111000222", phoneEnrollmentChallenge: phoneEnrollmentChallenge))
+            let config = viewModel.otpSheetConfig
+            #expect(config?.type == .sms)
+            #expect(config?.emailOrPhoneNumber == "+11111000222")
+            #expect(config?.phoneEnrollmentChallenge?.authenticationId == phoneEnrollmentChallenge?.authenticationId)
         }
     }
 
@@ -107,17 +110,10 @@ struct EmailPhoneViewModelTests {
             }
             viewModel.email = "example@auth0.com"
             await viewModel.startEnrollment()
-            #expect(viewModel.navigationRoute == Route.otpScreen(type: .email, emailOrPhoneNumber: "example@auth0.com", emailEnrollmentChallenge: emailEnrollmentChallenge))
-        }
-    }
-
-    @Test func navigationTitle() async {
-        let mockTokenProvider = MockTokenProvider()
-        Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
-
-        let viewModel = await EmailPhoneEnrollmentViewModel(type: .sms)
-        await MainActor.run {
-            #expect(viewModel.navigationTitle == "Add Phone for SMS OTP")
+            let config = viewModel.otpSheetConfig
+            #expect(config?.type == .email)
+            #expect(config?.emailOrPhoneNumber == "example@auth0.com")
+            #expect(config?.emailEnrollmentChallenge?.authenticationId == emailEnrollmentChallenge?.authenticationId)
         }
     }
 

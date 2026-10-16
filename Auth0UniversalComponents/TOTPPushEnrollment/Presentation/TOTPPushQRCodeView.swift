@@ -7,13 +7,20 @@ import SwiftUI
 /// cases where QR code scanning is not possible.
 struct TOTPPushQRCodeView: View {
 
+    // MARK: - Theme
     @Environment(\.auth0Theme) private var theme
+    // MARK: - Navigation
     @EnvironmentObject private var router: Router<Route>
-    /// View model managing QR code generation and enrollment state
+    // MARK: - View Model
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
-    /// Controls visibility of the "code copied" alert
-    @State private var showCopiedAlert = false
 
+    // MARK: - State properties
+    /// Drives the OTP sheet — non-nil presents the sheet, nil dismisses it
+    @State private var otpSheetItem: OTPSheetItem?
+    /// Pending navigation route to push after the OTP sheet dismisses
+    @State private var pendingNavigationRoute: Route?
+
+    // MARK: - Init
     /// Initializes the TOTP/Push QR code view.
     ///
     /// - Parameter viewModel: The view model managing QR code state and enrollment
@@ -21,49 +28,7 @@ struct TOTPPushQRCodeView: View {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
 
-    /// Core Image context for QR code rendering
-    private let context = CIContext()
-    /// QR code filter for generating QR codes
-    private let filter = CIFilter.qrCodeGenerator()
-
-    /// Generates a theme-coloured QR code image from a URI string.
-    ///
-    /// Uses `CIFalseColor` to replace the default black modules with
-    /// `theme.colors.text.bold` and the white background with
-    /// `theme.colors.background.layerTop`, so the QR code adapts automatically
-    /// whenever the active theme changes.
-    private func makeQRCodeImage(from uri: String) -> Image? {
-        // "H" = highest QR error-correction level. QR supports four levels (L/M/Q/H); H allows
-        // ~30% of the code's modules to be damaged or obscured and still scan correctly.
-        // This is important here because CIFalseColor replaces every pixel with theme-derived
-        // colours — on low-contrast themes the visual difference between foreground and background
-        // modules shrinks, making the code harder for a scanner to decode. The extra redundancy
-        // in level H compensates for that reduced contrast.
-        filter.correctionLevel = "H"
-        filter.message = Data(uri.utf8)
-        guard let rawOutput = filter.outputImage else { return nil }
-
-        let colored: CIImage
-        if let falseColor = CIFilter(name: "CIFalseColor") {
-            #if canImport(UIKit)
-            let fgCIColor = CIColor(color: UIColor(theme.colors.text.bold))
-            let bgCIColor = CIColor(color: UIColor(theme.colors.background.layerTop))
-            #elseif canImport(AppKit)
-            let fgCIColor = CIColor(color: NSColor(theme.colors.text.bold)) ?? CIColor.black
-            let bgCIColor = CIColor(color: NSColor(theme.colors.background.layerTop)) ?? CIColor.white
-            #endif
-            falseColor.setValue(rawOutput, forKey: "inputImage")
-            falseColor.setValue(fgCIColor, forKey: "inputColor0")
-            falseColor.setValue(bgCIColor, forKey: "inputColor1")
-            colored = falseColor.outputImage ?? rawOutput
-        } else {
-            colored = rawOutput
-        }
-
-        guard let cgImage = context.createCGImage(colored, from: rawOutput.extent) else { return nil }
-        return Image(decorative: cgImage, scale: 1.0)
-    }
-
+    // MARK: - Main body
     var body: some View {
         ZStack {
             if let errorViewModel = viewModel.errorViewModel {
@@ -71,7 +36,7 @@ struct TOTPPushQRCodeView: View {
             } else {
                 VStack {
                     Spacer(minLength: 0)
-                    if let uri = viewModel.qrCodeURI, let qrCodeImage = makeQRCodeImage(from: uri) {
+                    if let qrCodeImage = viewModel.qrCodeImage {
                         qrCodeImage
                             .resizable()
                             .interpolation(.none)
@@ -194,6 +159,38 @@ struct TOTPPushQRCodeView: View {
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }
+        .onChange(of: viewModel.otpSheetConfig) { _ in
+            guard let config = viewModel.otpSheetConfig else { return }
+            otpSheetItem = OTPSheetItem(
+                viewModel: OTPViewModel(
+                    totpEnrollmentChallenge: config.totpEnrollmentChallenge,
+                    emailEnrollmentChallenge: config.emailEnrollmentChallenge,
+                    phoneEnrollmentChallenge: config.phoneEnrollmentChallenge,
+                    type: config.type,
+                    emailOrPhoneNumber: config.emailOrPhoneNumber,
+                    delegate: nil,
+                    onSuccess: { type in
+                        pendingNavigationRoute = .filteredAuthListScreen(type: type, authMethods: [])
+                        otpSheetItem = nil
+                    }
+                )
+            )
+        }
+        .sheet(item: $otpSheetItem, onDismiss: {
+            viewModel.otpSheetConfig = nil
+            if let route = pendingNavigationRoute {
+                router.navigate(to: route)
+                pendingNavigationRoute = nil
+            }
+        }) { item in
+            OTPView(viewModel: item.viewModel)
+        }
+    }
+
+    // MARK: - Sheet item
+    private struct OTPSheetItem: Identifiable {
+        let id = UUID()
+        let viewModel: OTPViewModel
     }
 
     func attributedString() -> AttributedString {
