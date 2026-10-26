@@ -32,7 +32,10 @@ final class ScriptedAuthInteractor: AuthInteracting {
 
     var discoverResult: Result<[LoginOption], Error>?
     var startOTPResult: Result<Void, Error>?
-    var verifyOTPResult: Result<Void, Error>?
+    var verifyOTPResult: Result<AuthProgress, Error>?
+    /// What `makeGuardianPushClient()` hands out.
+    var pushClient = AnyGuardianPushClient<Void>(sendPush: { _ in GuardianPushPending(retryAfter: 1_000) },
+                                                  checkApproval: { .approved(()) })
 
     var held: Set<Call> = []
     private var gates: [Call: CheckedContinuation<Void, Never>] = [:]
@@ -40,7 +43,7 @@ final class ScriptedAuthInteractor: AuthInteracting {
     init(
         discover: Result<[LoginOption], Error>? = nil,
         startOTP: Result<Void, Error>? = nil,
-        verifyOTP: Result<Void, Error>? = nil
+        verifyOTP: Result<AuthProgress, Error>? = nil
     ) {
         self.discoverResult = discover
         self.startOTPResult = startOTP
@@ -59,11 +62,13 @@ final class ScriptedAuthInteractor: AuthInteracting {
         try resolve(startOTPResult, call: "startOTP")
     }
 
-    func verifyOTP(code: String) async throws {
+    func verifyOTP(code: String) async throws -> AuthProgress {
         receivedRequests.append(.verifyOTP(code: code))
         await gate(.verifyOTP)
-        try resolve(verifyOTPResult, call: "verifyOTP")
+        return try resolve(verifyOTPResult, call: "verifyOTP")
     }
+
+    func makeGuardianPushClient() -> AnyGuardianPushClient<Void> { pushClient }
 
     /// Suspends until `call` is held at its gate.
     func waitUntilHeld(_ call: Call) async {

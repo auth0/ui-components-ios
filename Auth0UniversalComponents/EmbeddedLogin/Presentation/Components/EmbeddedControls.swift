@@ -347,10 +347,15 @@ extension View {
     }
 
     /// Padding and background for an input screen. Only the background ignores the safe area.
-    func embeddedScreenChrome(theme: Auth0Theme) -> some View {
-        self
-            .padding(EdgeInsets(top: theme.spacing.lg, leading: theme.spacing.lg,
-                                bottom: theme.spacing.xl, trailing: theme.spacing.lg))
+    /// - Parameters:
+    ///   - horizontalPadding: Side margin; defaults to `spacing.lg`. Second-factor screens use `spacing.xl`.
+    ///   - topPadding: Space under the navigation bar; defaults to `spacing.lg`.
+    func embeddedScreenChrome(theme: Auth0Theme, horizontalPadding: CGFloat? = nil,
+                              topPadding: CGFloat? = nil) -> some View {
+        let horizontal = horizontalPadding ?? theme.spacing.lg
+        return self
+            .padding(EdgeInsets(top: topPadding ?? theme.spacing.lg, leading: horizontal,
+                                bottom: theme.spacing.xl, trailing: horizontal))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .background {
                 ZStack {

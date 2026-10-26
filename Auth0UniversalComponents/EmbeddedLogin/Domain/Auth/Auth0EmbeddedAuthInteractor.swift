@@ -1,8 +1,9 @@
 import Auth0
 import Foundation
 
-// The only file that imports Auth0: authorize → identify → challengeEmail → verifyOtp.
-// Intermediate steps return `insufficient_authorization` with the `nextActions` to take.
+// The Embedded Login adapter over Auth0: authorize → identify → challengeEmail → verifyOtp, then Guardian
+// push when the tenant asks for a second factor. Intermediate steps return `insufficient_authorization`
+// with the `nextActions` to take. `EmbeddedAuthGuardianPushClient` is the only other Auth0-aware file.
 
 enum Auth0EmbeddedAuthError: LocalizedError {
     case discoveryConnectionMissing
@@ -34,17 +35,33 @@ protocol EmbeddedAuthClient {
     func identify(email: String) async throws
     func challengeEmail(index: Int) async throws
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials
+    func challengePush(index: Int) async throws
+    func verifyOob() async throws -> Credentials
 }
 
 struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
+    /// The steps this flow has screens for, so the server never routes to one it can't render:
+    /// Email OTP, then Guardian push.
+    static let capabilities: [EmbeddedCapability] = [
+        .identifyEmail, .challengeEmail, .verifyOTP,
+        .challengePush, .verifyOob
+    ]
+
     let auth: EmbeddedAuth
 
-    func authorize(connection: String) async throws { try await auth.authorize(connection: connection).start() }
+    func authorize(connection: String) async throws {
+        try await auth.authorize(connection: connection,
+                                 capabilities: Self.capabilities,
+                                 scope: "openid profile email offline_access",
+                                 audience: nil).start()
+    }
     func identify(email: String) async throws { try await auth.identify(email, type: .email).start() }
     func challengeEmail(index: Int) async throws { try await auth.challengeEmail(index: index).start() }
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials {
         try await auth.verifyOtp(code, type: type).start()
     }
+    func challengePush(index: Int) async throws { try await auth.challengePush(index: index).start() }
+    func verifyOob() async throws -> Credentials { try await auth.verifyOob().start() }
 }
 
 protocol CredentialsStoring {
@@ -102,7 +119,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         }
     }
 
-    func verifyOTP(code: String) async throws {
+    func verifyOTP(code: String) async throws -> AuthProgress {
         do {
             let credentials = try await client.verifyOtp(code, type: .oob)
             do {
@@ -110,6 +127,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             } catch {
                 throw CredentialsNotSavedError()
             }
+            return .authenticated
         } catch let error as EmbeddedAuthError {
             guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else {
                 throw Self.failure(for: error)
@@ -118,8 +136,19 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             if subReason == .invalidCode || subReason == .invalidIdentifierOrCode {
                 throw AuthFailure.invalidCode
             }
-            // Includes MFA step-up, which is out of scope.
-            throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
+            // The email code is accepted and the tenant wants a second factor.
+            return .guardianPush(EmbeddedAuthGuardianPushClient.devices(in: nextActions))
+        }
+    }
+
+    func makeGuardianPushClient() -> AnyGuardianPushClient<Void> {
+        let credentialsStore = self.credentialsStore
+        return AnyGuardianPushClient(EmbeddedAuthGuardianPushClient(client: client)).mapApproval { credentials in
+            do {
+                try credentialsStore.store(credentials: credentials)
+            } catch {
+                throw GuardianPushFailure.other(message: CredentialsNotSavedError().errorDescription)
+            }
         }
     }
 

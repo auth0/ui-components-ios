@@ -71,6 +71,8 @@ struct LoginRenderingHostView: View {
 
     private var context: RenderContext {
         RenderContext(
+            pushController: coordinator.pushController,
+            email: coordinator.enteredEmail,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
             dispatch: { send($0) },

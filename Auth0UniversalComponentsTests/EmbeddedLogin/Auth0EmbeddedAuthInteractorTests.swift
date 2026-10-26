@@ -92,7 +92,7 @@ struct Auth0EmbeddedAuthInteractorTests {
 
     @Test func success_storesCredentials() async throws {
         client.verifyOtpResults = [.success(Credentials(accessToken: "at"))]
-        try await makeSUT().verifyOTP(code: "112233")
+        #expect(try await makeSUT().verifyOTP(code: "112233") == .authenticated)
         #expect(store.stored.map(\.accessToken) == ["at"])
         #expect(client.calls == [.verifyOtp(code: "112233", type: .oob)])
     }
@@ -113,10 +113,41 @@ struct Auth0EmbeddedAuthInteractorTests {
         await #expect(throws: AuthFailure.tooManyAttempts) { try await makeSUT().verifyOTP(code: "000000") }
     }
 
-    /// MFA step-up is out of scope: any second-factor request goes full-screen.
-    @Test func stepUpRequested_throwsRequestFailed() async {
+    /// A second factor without Guardian push leaves no device, which the push screen shows as unavailable.
+    @Test func stepUpWithoutPush_offersNoDevice() async throws {
         client.verifyOtpResults = [.failure(F.needs([F.verifyTOTP, F.verifyEmail, F.verifySMS]))]
-        await #expect(throws: Auth0EmbeddedAuthError.self) { try await makeSUT().verifyOTP(code: "112233") }
+        #expect(try await makeSUT().verifyOTP(code: "112233") == .guardianPush([]))
         #expect(store.stored.isEmpty)
+    }
+
+    @Test func stepUpWithPush_offersTheGuardianDevices() async throws {
+        client.verifyOtpResults = [.failure(F.needs([F.verifyTOTP, F.challengePush]))]
+        #expect(try await makeSUT().verifyOTP(code: "112233")
+                == .guardianPush([GuardianPushDevice(index: 0, name: "Sudhanshu's iPhone")]))
+    }
+
+    @Test func pushApproval_storesTheCredentials() async throws {
+        client.verifyOobResults = [.success(Credentials(accessToken: "push"))]
+        let push = makeSUT().makeGuardianPushClient()
+
+        guard case .approved = try await push.checkApproval() else { Issue.record("expected approval"); return }
+        #expect(store.stored.map(\.accessToken) == ["push"])
+    }
+
+    @Test func pushApproval_whenTheKeychainFails_isAFailure() async {
+        client.verifyOobResults = [.success(Credentials())]
+        store.error = NSError(domain: "keychain", code: -25308)
+        let push = makeSUT().makeGuardianPushClient()
+
+        await #expect(throws: GuardianPushFailure.other(message: CredentialsNotSavedError().errorDescription)) {
+            try await push.checkApproval()
+        }
+    }
+
+    /// The server only offers steps this flow can render: Email OTP, then Guardian push.
+    @Test func capabilities_coverEmailAndPushOnly() {
+        #expect(LiveEmbeddedAuthClient.capabilities == [
+            .identifyEmail, .challengeEmail, .verifyOTP, .challengePush, .verifyOob,
+        ])
     }
 }

@@ -4,6 +4,10 @@ import SwiftUI
 
 /// What a screen needs from the host, without knowing about the coordinator.
 struct RenderContext {
+    /// Runs the Guardian push screen; set while the coordinator is on `.guardianPush`.
+    var pushController: GuardianPushApprovalController<Void>?
+    /// Pre-fills email entry, so Back from code entry keeps what the user typed.
+    var email: String?
     var isSubmitting: Bool
     var inputError: AuthFailure?
     let dispatch: (LoginEvent) -> Void
@@ -15,6 +19,7 @@ enum ScreenPlan: Equatable {
     case loading
     case identifier
     case otpCode(identifier: String)
+    case guardianPush
     case authenticated
     case failed(message: String)
     case noMethods
@@ -27,6 +32,7 @@ extension ScreenPlan {
         case .loading:                return "loading"
         case .identifier:             return "identifier"
         case .otpCode:                return "otpCode"
+        case .guardianPush:           return "guardianPush"
         case .authenticated:          return "authenticated"
         case .failed:                 return "failed"
         case .noMethods:              return "noMethods"
@@ -39,7 +45,8 @@ extension ScreenPlan {
         case .loading:                return 0
         case .identifier, .noMethods: return 1
         case .otpCode:                return 2
-        case .authenticated, .failed: return 3
+        case .guardianPush:           return 3
+        case .authenticated, .failed: return 4
         }
     }
 }
@@ -51,6 +58,7 @@ struct LoginRenderer {
         case .loading:                    return .loading
         case .collectOTPIdentifier:       return .identifier
         case let .collectOTPCode(email):  return .otpCode(identifier: email)
+        case .guardianPush:               return .guardianPush
         case .authenticated:              return .authenticated
         case let .failed(message):        return .failed(message: message)
         case .noMethodsAvailable:         return .noMethods
@@ -64,7 +72,7 @@ struct LoginRenderer {
             LoginLoadingScreen()
 
         case .identifier:
-            LoginEmailScreen(isLoading: ctx.isSubmitting, errorMessage: ctx.inputError?.message) {
+            LoginEmailScreen(email: ctx.email ?? "", isLoading: ctx.isSubmitting, errorMessage: ctx.inputError?.message) {
                 ctx.dispatch(.submitIdentifier($0))
             }
 
@@ -77,6 +85,13 @@ struct LoginRenderer {
                 onEdit: ctx.back,
                 onResend: ctx.resend
             )
+
+        case .guardianPush:
+            if let controller = ctx.pushController {
+                GuardianPushApprovalView(controller: controller) { ctx.dispatch(.restart) }
+            } else {
+                LoginLoadingScreen()
+            }
 
         case .authenticated:
             LoginSuccessScreen()

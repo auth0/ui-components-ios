@@ -1,5 +1,19 @@
 # Change Log
 
+## Unreleased
+
+**Added**
+
+- **Embedded Login: Guardian push as a second factor.** When the tenant asks for a second factor after the email code, `EmbeddedLoginView` sends a Guardian push and waits for approval, with a device picker when there are several Guardian devices. No push device, a denied request, an expired request or an ended session show a terminal screen with **Sign in again**.
+- **Standalone Guardian push component:** `GuardianPushApprovalController`, `GuardianPushApprovalView`, `GuardianPushView` and its building blocks, the `GuardianPushClient` protocol, `AnyGuardianPushClient`, and `EmbeddedAuthGuardianPushClient` for Auth0.swift.
+
+**Changed**
+
+- Embedded Login keeps the email when the user comes back to email entry: Back from code entry or Guardian push, **Try again**, or **Sign in again**.
+- Embedded Login now advertises only the steps it can render (Email OTP and Guardian push) in its `authorize` capabilities.
+- Requires Auth0.swift `4.0.0-beta.1` or later 4.x, the first release with the push APIs.
+
+
 ## [1.0.0-beta.1](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.1) (2026-10-14)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.0...1.0.0-beta.1)
 

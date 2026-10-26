@@ -6,6 +6,8 @@ enum LoginStep: Equatable {
     case collectOTPIdentifier
     /// `identifier` is the email the code was sent to.
     case collectOTPCode(identifier: String)
+    /// Second factor: Guardian push, driven by `LoginFlowCoordinator.pushController`.
+    case guardianPush
     case authenticated
     case failed(message: String)
     case noMethodsAvailable
@@ -17,4 +19,6 @@ enum LoginEvent: Equatable {
     case submitIdentifier(String)
     case submitOTP(code: String)
     case retry
+    /// Starts a new sign-in, e.g. after the push was denied.
+    case restart
 }

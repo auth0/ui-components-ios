@@ -1,7 +1,8 @@
 import Combine
 import Foundation
 
-/// Drives the Email OTP flow: `LoginEvent`s in, `LoginStep`s out. UI-agnostic.
+/// Drives the Email OTP flow, then Guardian push when the tenant asks for a second factor:
+/// `LoginEvent`s in, `LoginStep`s out. UI-agnostic.
 @MainActor
 final class LoginFlowCoordinator: ObservableObject {
 
@@ -10,6 +11,10 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private(set) var inputError: AuthFailure?
     /// True while an email submit, resend or verify is in flight. Blocks re-entry and Back.
     @Published private(set) var isSubmitting = false
+    /// Runs the second factor while `step == .guardianPush`.
+    @Published private(set) var pushController: GuardianPushApprovalController<Void>?
+    /// The email last submitted. Pre-fills email entry when the user comes back to it.
+    private(set) var enteredEmail: String?
 
     enum BackOutcome { case movedBack, exitFlow, ignored }
 
@@ -17,12 +22,18 @@ final class LoginFlowCoordinator: ObservableObject {
 
     // Outputs of earlier calls that later calls need.
     private var connection: String?
+    /// The email the code was sent to.
     private var email: String?
     /// Where `retry` returns to; `nil` re-runs discovery.
     private var retryStep: LoginStep?
 
-    init(interactor: AuthInteracting) {
+    /// Waits between push checks; injected so tests don't wait.
+    private let pushSleep: (Int) async throws -> Void
+
+    init(interactor: AuthInteracting,
+         pushSleep: @escaping (Int) async throws -> Void = GuardianPushPollingPolicy.sleep(milliseconds:)) {
         self.interactor = interactor
+        self.pushSleep = pushSleep
     }
 
     func send(_ event: LoginEvent) async {
@@ -35,18 +46,34 @@ final class LoginFlowCoordinator: ObservableObject {
             await verify(code)
         case .retry:
             await retry()
+        case .restart:
+            await restart()
         }
     }
 
-    /// Code entry steps back to email entry; anywhere else leaves the flow.
+    /// Code entry steps back to email entry. From push: back to the device list when there is one, else a
+    /// fresh sign-in at email entry, since the email code is spent. Anywhere else leaves the flow.
     @discardableResult
     func goBack() -> BackOutcome {
         // Leaving now would orphan the in-flight result (e.g. credentials stored, no callback).
         if isSubmitting { return .ignored }
         inputError = nil
-        guard case .collectOTPCode = step else { return .exitFlow }
-        step = .collectOTPIdentifier
-        return .movedBack
+        switch step {
+        case .collectOTPCode:
+            step = .collectOTPIdentifier
+            return .movedBack
+        case .guardianPush:
+            if let pushController, pushController.devices.count > 1, !pushController.isChoosingDevice {
+                pushController.chooseAnotherDevice()
+                return .movedBack
+            }
+            // Stopped now; the next request waits for any check still in flight.
+            pushController?.cancel()
+            step = .collectOTPIdentifier
+            return .movedBack
+        default:
+            return .exitFlow
+        }
     }
 
     func resendOTP() async {
@@ -58,6 +85,7 @@ final class LoginFlowCoordinator: ObservableObject {
     // MARK: Steps
 
     private func discover() async {
+        await endPush()
         step = .loading
         do {
             let options = try await interactor.discover()
@@ -75,6 +103,8 @@ final class LoginFlowCoordinator: ObservableObject {
         guard let connection, !isSubmitting else { return }
         isSubmitting = true
         defer { isSubmitting = false }
+        enteredEmail = email
+        await endPush()
         inputError = nil
         step = .loading
         do {
@@ -98,8 +128,12 @@ final class LoginFlowCoordinator: ObservableObject {
         inputError = nil
         step = .loading
         do {
-            try await interactor.verifyOTP(code: code)
-            step = .authenticated
+            switch try await interactor.verifyOTP(code: code) {
+            case .authenticated:
+                step = .authenticated
+            case let .guardianPush(devices):
+                startPush(devices: devices)
+            }
         } catch let failure as AuthFailure {
             inputError = failure
             step = codeStep
@@ -109,6 +143,32 @@ final class LoginFlowCoordinator: ObservableObject {
         } catch {
             fail(error, returningTo: codeStep)
         }
+    }
+
+    // MARK: Guardian push
+
+    private func startPush(devices: [GuardianPushDevice]) {
+        let controller = GuardianPushApprovalController(client: interactor.makeGuardianPushClient(),
+                                                        devices: devices, policy: .default, sleep: pushSleep) { [weak self] _ in
+            self?.step = .authenticated
+        }
+        pushController = controller
+        step = .guardianPush
+        controller.start()
+    }
+
+    /// Stops push and waits for a check still in flight: the SDK allows one request at a time.
+    private func endPush() async {
+        guard let pushController else { return }
+        await pushController.stop()
+        self.pushController = nil
+    }
+
+    private func restart() async {
+        guard !isSubmitting else { return }
+        inputError = nil
+        retryStep = nil
+        await discover()
     }
 
     private func fail(_ error: Error, returningTo step: LoginStep?) {

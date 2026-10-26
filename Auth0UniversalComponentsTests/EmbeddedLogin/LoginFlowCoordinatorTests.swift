@@ -67,7 +67,7 @@ struct LoginFlowCoordinatorTests {
 
     @Test func happyPath_authenticates() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(()))
+                                                verifyOTP: .success(.authenticated))
         let sut = await atCodeEntry(interactor)
         #expect(sut.step == .collectOTPCode(identifier: email))
 
@@ -154,7 +154,7 @@ struct LoginFlowCoordinatorTests {
         await sut.send(.submitOTP(code: "000000"))
         #expect(sut.inputError == .invalidCode)
 
-        interactor.verifyOTPResult = .success(())
+        interactor.verifyOTPResult = .success(.authenticated)
         await sut.send(.submitOTP(code: "112233"))
         #expect(sut.inputError == nil)
         #expect(sut.step == .authenticated)
@@ -168,6 +168,20 @@ struct LoginFlowCoordinatorTests {
         #expect(sut.step == .collectOTPIdentifier)
     }
 
+    @Test func back_fromCodeEntry_keepsTheEmail() async {
+        let sut = await atCodeEntry(ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(())))
+        sut.goBack()
+        #expect(sut.enteredEmail == email)
+    }
+
+    @Test func failedSubmit_retry_keepsTheTypedEmail() async {
+        let sut = await atCodeEntry(ScriptedAuthInteractor(discover: emailDiscovery(),
+                                                           startOTP: .failure(Scripted.scripted(message: "network down"))))
+        await sut.send(.retry)
+        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.enteredEmail == email)
+    }
+
     @Test func back_fromIdentifier_exitsFlow() async {
         let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: emailDiscovery()))
         await sut.send(.start)
@@ -176,7 +190,7 @@ struct LoginFlowCoordinatorTests {
 
     @Test func back_whileVerifying_isIgnored() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(()))
+                                                verifyOTP: .success(.authenticated))
         let sut = await atCodeEntry(interactor)
         interactor.held = [.verifyOTP]
 
@@ -239,7 +253,7 @@ struct LoginFlowCoordinatorTests {
 
     @Test func doubleSubmitOTP_verifiesOnce() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
-                                                verifyOTP: .success(()))
+                                                verifyOTP: .success(.authenticated))
         let sut = await atCodeEntry(interactor)
         interactor.held = [.verifyOTP]
 

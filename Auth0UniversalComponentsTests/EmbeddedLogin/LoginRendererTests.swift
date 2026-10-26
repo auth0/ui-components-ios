@@ -25,6 +25,12 @@ struct LoginRendererTests {
         #expect(ScreenPlan.identifier.transitionIdentity != ScreenPlan.otpCode(identifier: "a").transitionIdentity)
     }
 
+    @Test func guardianPush_isItsOwnScreen() {
+        #expect(plan(.guardianPush) == .guardianPush)
+        #expect(ScreenPlan.otpCode(identifier: "a").navigationDepth < ScreenPlan.guardianPush.navigationDepth)
+        #expect(ScreenPlan.guardianPush.navigationDepth < ScreenPlan.authenticated.navigationDepth)
+    }
+
     @Test func navigationDepth_ordersTheFlow() {
         #expect(ScreenPlan.loading.navigationDepth < ScreenPlan.identifier.navigationDepth)
         #expect(ScreenPlan.identifier.navigationDepth < ScreenPlan.otpCode(identifier: "a").navigationDepth)

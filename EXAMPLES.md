@@ -127,11 +127,11 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ## Embedded Login
 
-> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.0` or later 4.x**, a pre-release that replaces the earlier Auth0.swift 2.x dependency. Your tenant must have Embedded Login enabled, with Email OTP on the connection you pass in.
+> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.1` or later 4.x**, the first release with the Embedded Authorization MFA APIs that Guardian push uses. Your tenant must have Embedded Login enabled, with Email OTP on the connection you pass in.
 
 ### Display the Embedded Login View
 
-`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, then the one-time code. This flow doesn't support MFA step-up yet: if the tenant asks for a second factor during embedded sign-in, it shows its error screen. The MFA enrollment components above are unaffected. It reads `ClientId` and `Domain` from `Auth0.plist`, stores the credentials in the Keychain, and then calls `onAuthenticated` on the main actor:
+`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, then the one-time code, then Guardian push when the tenant asks for a second factor. It reads `ClientId` and `Domain` from `Auth0.plist`, stores the credentials in the Keychain, and then calls `onAuthenticated` on the main actor:
 
 ```swift
 import SwiftUI
@@ -156,6 +156,57 @@ struct LoginView: View {
 
 `onAuthenticated` fires only once the credentials are saved. If the Keychain write fails, the user sees an error screen, and **Try again** restarts from email entry, because the code has already been used.
 
+### Guardian Push as a Second Factor
+
+When the tenant's MFA policy asks for a second factor after the email code, `EmbeddedLoginView` sends a push to the user's Guardian app and waits for approval. With several Guardian devices, the user picks one first.
+
+- **Approved:** the credentials are saved and `onAuthenticated` fires.
+- **Denied, expired, session ended, or no Guardian device on offer:** a terminal screen with **Sign in again**, which starts a new sign-in with the email filled in.
+- **No connection:** short outages are absorbed silently; after that, **Try again** resumes where it failed, without sending a second push.
+- **Back:** with several devices, returns to the device list; otherwise to email entry.
+
+Other second factors aren't supported in this flow yet.
+
+The push screen is also available on its own, over the same `EmbeddedAuth` instance that ran the first factor. Take the devices from the `insufficient_authorization` answer to the first factor, and store the credentials yourself once the user approves:
+
+```swift
+import Auth0
+import Auth0UniversalComponents
+import SwiftUI
+
+// After the first factor: the tenant wants a second one.
+do {
+    let credentials = try await auth.verifyOtp(code, type: .oob).start()
+} catch let error as EmbeddedAuthError {
+    if case let .insufficientAuthorization(.none, nextActions) = error.reason {
+        // Show PushStep(auth: auth, nextActions: nextActions) { ... }
+    }
+}
+
+struct PushStep: View {
+    @StateObject private var controller: GuardianPushApprovalController<Credentials>
+    private let onSignInAgain: () -> Void
+
+    init(auth: EmbeddedAuth, nextActions: [NextAction],
+         onSignedIn: @escaping (Credentials) -> Void, onSignInAgain: @escaping () -> Void) {
+        _controller = StateObject(wrappedValue: GuardianPushApprovalController(
+            client: EmbeddedAuthGuardianPushClient(auth: auth),
+            devices: EmbeddedAuthGuardianPushClient.devices(in: nextActions),
+            onApproved: onSignedIn // Called once, on the main actor. Store the credentials here.
+        ))
+        self.onSignInAgain = onSignInAgain
+    }
+
+    var body: some View {
+        GuardianPushApprovalView(controller: controller, onSignInAgain: onSignInAgain)
+    }
+}
+```
+
+- **Your own backend:** conform to `GuardianPushClient`, or wrap closures in `AnyGuardianPushClient(sendPush:checkApproval:)`.
+- **Your own state:** `GuardianPushView(state:actions:)` renders a `GuardianPushApprovalState` from plain values. Its screens (`GuardianPushDevicePickerView`, `GuardianPushWaitingView`, `GuardianPushOutcomeView`, `GuardianPushApprovedView`) and `GuardianPushDeviceRow` can also be used on their own.
+- **Polling:** pass a `GuardianPushPollingPolicy` to change the interval bounds or the network failures tolerated.
+
 ### Read the Stored Credentials
 
 The flow saves the credentials with the default `CredentialsManager`, so you can read them back like this:
@@ -175,7 +226,9 @@ if credentialsManager.canRenew() {
 
 - **Recoverable errors appear inline:** an invalid code, a code that couldn't be sent, or too many attempts. The user stays on the current screen; when attempts run out, they can use **Resend Code**.
 - **Other failures go full screen:** network or server errors. **Try again** returns to the step that failed.
-- **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed.
+- **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed. The Guardian push screen is the exception: Back stops checking at once, and an approval that arrives later is ignored.
+- **Email entry keeps the email** when the user comes back to it: Back from code entry or push, **Try again**, or **Sign in again**.
+- **Guardian push checks right away** when the app returns to the foreground, so approving on the same phone signs in without waiting for the next check.
 - **During the initial loading screen,** Back still leaves the flow.
 
 ### Use the Screens Standalone
