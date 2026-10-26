@@ -41,7 +41,8 @@ struct LoginRenderingHostView: View {
         // Horizontal only, so backgrounds still reach under the home indicator.
         .clipShape(HorizontalClip())
         .safeAreaInset(edge: .top, spacing: 0) {
-            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
+            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting && !coordinator.isDrainingPush,
+                               onBack: handleBack)
         }
         .systemNavigationBarHidden()
         .task {

@@ -36,6 +36,21 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
         return false
     }
 
+    /// True when going back to the device list can still lead to an approval.
+    public var canChooseAnotherDevice: Bool {
+        guard devices.count > 1 else { return false }
+        switch state {
+        case .sending, .waiting: return true
+        case let .failed(failure): return failure.isRetryable
+        case .idle, .choosingDevice, .approved: return false
+        }
+    }
+
+    private var isApproved: Bool {
+        if case .approved = state { return true }
+        return false
+    }
+
     private enum ResumePoint { case send, poll }
 
     private let client: AnyGuardianPushClient<Approval>
@@ -57,7 +72,8 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
     ///   - client: Sends the push and checks for approval.
     ///   - devices: The Guardian devices on offer. Empty means push isn't available.
     ///   - policy: How often to check for approval.
-    ///   - onApproved: Called once, on the main actor, when the user approves.
+    ///   - onApproved: Called once, on the main actor, when the user approves. An approval already on its way
+    ///     when the work is cancelled is still reported, since the client may have acted on it.
     public convenience init<Client: GuardianPushClient>(client: Client,
                                                        devices: [GuardianPushDevice],
                                                        policy: GuardianPushPollingPolicy = .default,
@@ -95,7 +111,8 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
 
     /// Sends the push to `device`, then checks for approval.
     public func select(_ device: GuardianPushDevice) {
-        // One push per tap: a second tap while sending is ignored.
+        // Nothing more is sent once approved, and a second tap while sending is ignored.
+        if isApproved { return }
         if case .sending = state { return }
         self.device = device
         state = .sending(device)
@@ -120,14 +137,14 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
         }
     }
 
-    /// Back to the device list, when there's more than one device.
+    /// Back to the device list, when `canChooseAnotherDevice`.
     public func chooseAnotherDevice() {
-        guard devices.count > 1 else { return }
+        guard canChooseAnotherDevice else { return }
         work?.cancel()
         state = .choosingDevice(devices)
     }
 
-    /// Stops checking. A request already in flight still completes, but its result is ignored.
+    /// Stops checking. A request already in flight still completes: an approval is still reported, anything else is ignored.
     public func cancel() {
         work?.cancel()
         isSuspended = false
@@ -168,9 +185,10 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
     private func run(_ operation: @escaping () async -> Void) {
         let previous = work
         previous?.cancel()
-        work = Task {
+        work = Task { [weak self] in
             await previous?.value
-            guard !Task.isCancelled else { return }
+            // The previous work may have finished with an approval.
+            guard !Task.isCancelled, self?.isApproved == false else { return }
             await operation()
         }
     }
@@ -216,13 +234,17 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
                 state = .failed(failure)
                 return
             }
-            // A late answer after Back or another action is dropped.
+            // The client may already have acted on an approval (e.g. stored the credentials), so it's never dropped.
+            if case let .approved(approval) = check {
+                state = .approved
+                onApproved(approval)
+                return
+            }
+            // A late pending answer after Back or another action is dropped.
             guard !Task.isCancelled else { return }
             interval = policy.nextInterval(after: check, current: interval)
             switch check {
-            case let .approved(approval):
-                state = .approved
-                onApproved(approval)
+            case .approved:
                 return
             case let .pending(pending), let .slowDown(pending):
                 networkFailures = 0

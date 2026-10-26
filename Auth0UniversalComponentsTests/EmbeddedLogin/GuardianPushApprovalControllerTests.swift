@@ -262,7 +262,8 @@ struct GuardianPushApprovalControllerTests {
         #expect(client.checks == 0)
     }
 
-    @Test func cancelDuringCheck_dropsALateApproval() async {
+    /// The client may already have acted on the approval (Embedded Login stores the credentials), so it's kept.
+    @Test func cancelDuringCheck_stillDeliversALateApproval() async {
         let approvals = Approvals()
         var inFlight: CheckedContinuation<Void, Never>?
         client.onCheck = { await withCheckedContinuation { inFlight = $0 } }
@@ -275,8 +276,56 @@ struct GuardianPushApprovalControllerTests {
         inFlight?.resume()
         await sut.stop()
 
-        #expect(approvals.values.isEmpty)
-        #expect(sut.state != .approved)
+        #expect(approvals.values == ["late"])
+        #expect(sut.state == .approved)
+    }
+
+    @Test func cancelDuringCheck_dropsALatePendingAnswer() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onCheck = { await withCheckedContinuation { inFlight = $0 } }
+        client.checkResults = [.success(.pending(GuardianPushPending(canResend: true)))]
+        let sut = makeSUT()
+        sut.select(phone)
+        await eventually { inFlight != nil }
+
+        sut.cancel()
+        inFlight?.resume()
+        await sut.stop()
+
+        #expect(sut.state == .waiting(phone, canResend: false))
+    }
+
+    @Test func lateApproval_skipsAQueuedSend() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onCheck = { await withCheckedContinuation { inFlight = $0 } }
+        client.checkResults = [.success(.approved("late"))]
+        let sut = makeSUT(devices: [phone, tablet])
+        sut.start()
+        sut.select(phone)
+        await eventually { inFlight != nil }
+
+        sut.chooseAnotherDevice()
+        sut.select(tablet)
+        inFlight?.resume()
+        await eventually { sut.state == .approved }
+        for _ in 0..<100 { await Task.yield() }
+
+        #expect(sut.state == .approved)
+        #expect(client.sent == [phone])
+    }
+
+    @Test func select_isIgnoredOnceApproved() async {
+        client.checkResults = [.success(.approved("creds"))]
+        let sut = makeSUT(devices: [phone, tablet])
+        sut.start()
+        sut.select(phone)
+        await eventually { sut.state == .approved }
+
+        sut.select(tablet)
+        for _ in 0..<100 { await Task.yield() }
+
+        #expect(sut.state == .approved)
+        #expect(client.sent == [phone])
     }
 
     @Test func returningToTheApp_checksRightAway() async {
@@ -304,6 +353,46 @@ struct GuardianPushApprovalControllerTests {
         await eventually { sleeper.delays.count == 2 }
 
         #expect(sleeper.delays.count == 2)
+        await settle(sut)
+    }
+
+    @Test(arguments: [GuardianPushFailure.denied, .expired, .sessionEnded, .other(message: nil)])
+    func chooseAnotherDevice_isIgnoredAfterATerminalFailure(_ failure: GuardianPushFailure) async {
+        client.checkResults = [.failure(failure)]
+        let sut = makeSUT(devices: [phone, tablet])
+        sut.start()
+        sut.select(phone)
+        await eventually { sut.state == .failed(failure) }
+
+        #expect(!sut.canChooseAnotherDevice)
+        sut.chooseAnotherDevice()
+
+        #expect(sut.state == .failed(failure))
+    }
+
+    @Test func chooseAnotherDevice_isAllowedAfterANetworkFailure() async {
+        client.checkResults = Array(repeating: .failure(GuardianPushFailure.network), count: 4)
+        let sut = makeSUT(devices: [phone, tablet])
+        sut.start()
+        sut.select(phone)
+        await eventually { sut.state == .failed(.network) }
+
+        #expect(sut.canChooseAnotherDevice)
+        sut.chooseAnotherDevice()
+
+        #expect(sut.state == .choosingDevice([phone, tablet]))
+    }
+
+    @Test func chooseAnotherDevice_needsSeveralDevices() async {
+        sleeper.suspends = true
+        let sut = makeSUT()
+        sut.select(phone)
+        await eventually { if case .waiting = sut.state { return true } else { return false } }
+
+        #expect(!sut.canChooseAnotherDevice)
+        sut.chooseAnotherDevice()
+
+        #expect(sut.state == .waiting(phone, canResend: false))
         await settle(sut)
     }
 

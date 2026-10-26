@@ -163,7 +163,7 @@ When the tenant's MFA policy asks for a second factor after the email code, `Emb
 - **Approved:** the credentials are saved and `onAuthenticated` fires.
 - **Denied, expired, session ended, or no Guardian device on offer:** a terminal screen with **Sign in again**, which starts a new sign-in with the email filled in.
 - **No connection:** short outages are absorbed silently; after that, **Try again** resumes where it failed, without sending a second push.
-- **Back:** with several devices, returns to the device list; otherwise to email entry.
+- **Back:** with several devices, returns to the device list while the request can still be approved; otherwise to email entry.
 
 Other second factors aren't supported in this flow yet.
 
@@ -226,7 +226,7 @@ if credentialsManager.canRenew() {
 
 - **Recoverable errors appear inline:** an invalid code, a code that couldn't be sent, or too many attempts. The user stays on the current screen; when attempts run out, they can use **Resend Code**.
 - **Other failures go full screen:** network or server errors. **Try again** returns to the step that failed.
-- **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed. The Guardian push screen is the exception: Back stops checking at once, and an approval that arrives later is ignored.
+- **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed. The Guardian push screen is the exception: Back stops checking at once. An approval already on its way still signs the user in, and Back is ignored until it arrives.
 - **Email entry keeps the email** when the user comes back to it: Back from code entry or push, **Try again**, or **Sign in again**.
 - **Guardian push checks right away** when the app returns to the foreground, so approving on the same phone signs in without waiting for the next check.
 - **During the initial loading screen,** Back still leaves the flow.

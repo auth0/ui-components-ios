@@ -86,6 +86,81 @@ struct LoginFlowCoordinatorGuardianPushTests {
         #expect(sut.step == .collectOTPIdentifier)
     }
 
+    /// Holds the approval check on the wire until `release()`, then approves.
+    @MainActor
+    private final class HeldApproval {
+        private(set) var isInFlight = false
+        private var gate: CheckedContinuation<Void, Never>?
+
+        var client: AnyGuardianPushClient<Void> {
+            AnyGuardianPushClient(sendPush: { _ in GuardianPushPending(retryAfter: 1_000) },
+                                  checkApproval: { [unowned self] in
+                                      isInFlight = true
+                                      await withCheckedContinuation { gate = $0 }
+                                      return .approved(())
+                                  })
+        }
+
+        func release() { gate?.resume() }
+    }
+
+    /// The approval was already on its way at Back: the credentials are stored, so the user is signed in.
+    @Test func back_duringAnApprovingCheck_stillSignsIn() async {
+        let held = HeldApproval()
+        let interactor = ScriptedAuthInteractor()
+        interactor.pushClient = held.client
+        let (sut, _) = await afterEmailCode(.guardianPush([phone]), interactor)
+        await eventually { held.isInFlight }
+
+        #expect(sut.goBack() == .movedBack)
+        #expect(sut.step == .collectOTPIdentifier)
+        // Leaving now would orphan the approval.
+        #expect(sut.isDrainingPush)
+        #expect(sut.goBack() == .ignored)
+
+        held.release()
+        await eventually { sut.step == .authenticated && !sut.isDrainingPush }
+
+        #expect(sut.step == .authenticated)
+        #expect(!sut.isDrainingPush)
+    }
+
+    @Test func emailSubmitted_whileAnApprovingCheckIsInFlight_staysSignedIn() async {
+        let held = HeldApproval()
+        let interactor = ScriptedAuthInteractor()
+        interactor.pushClient = held.client
+        let (sut, _) = await afterEmailCode(.guardianPush([phone]), interactor)
+        await eventually { held.isInFlight }
+        sut.goBack()
+
+        async let submitted: Void = sut.send(.submitIdentifier(email))
+        await eventually { sut.isSubmitting }
+        held.release()
+        await submitted
+
+        #expect(sut.step == .authenticated)
+        #expect(interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", email: email) }.count == 1)
+    }
+
+    @Test func back_afterADenial_withSeveralDevices_goesToEmailEntry() async {
+        final class Sends { var count = 0 }
+        let sends = Sends()
+        let interactor = ScriptedAuthInteractor()
+        interactor.pushClient = AnyGuardianPushClient(sendPush: { _ in
+            sends.count += 1
+            return GuardianPushPending(retryAfter: 1_000)
+        }, checkApproval: { throw GuardianPushFailure.denied })
+        let (sut, _) = await afterEmailCode(.guardianPush([phone, tablet]), interactor)
+        sut.pushController?.select(tablet)
+        await eventually { sut.pushController?.state == .failed(.denied) }
+
+        #expect(sut.goBack() == .movedBack)
+
+        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.pushController?.state == .failed(.denied))
+        #expect(sends.count == 1)
+    }
+
     @Test func restart_opensANewSignIn() async {
         let interactor = ScriptedAuthInteractor()
         interactor.pushClient = AnyGuardianPushClient(sendPush: { _ in GuardianPushPending(retryAfter: 1_000) },

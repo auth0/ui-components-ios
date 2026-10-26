@@ -19,7 +19,7 @@ public struct GuardianPushApprovalView<Approval>: View {
             selectDevice: { controller.select($0) },
             resend: { controller.resend() },
             retry: { controller.retry() },
-            chooseAnotherDevice: controller.devices.count > 1 ? { controller.chooseAnotherDevice() } : nil,
+            chooseAnotherDevice: controller.canChooseAnotherDevice ? { controller.chooseAnotherDevice() } : nil,
             signInAgain: onSignInAgain
         ))
         .onAppear {

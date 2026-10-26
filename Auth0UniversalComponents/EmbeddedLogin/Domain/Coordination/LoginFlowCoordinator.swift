@@ -13,6 +13,9 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private(set) var isSubmitting = false
     /// Runs the second factor while `step == .guardianPush`.
     @Published private(set) var pushController: GuardianPushApprovalController<Void>?
+    /// True from Back on the push screen until the check in flight settles. Blocks Back: leaving now would
+    /// orphan an approval that is already on its way.
+    @Published private(set) var isDrainingPush = false
     /// The email last submitted. Pre-fills email entry when the user comes back to it.
     private(set) var enteredEmail: String?
 
@@ -56,20 +59,21 @@ final class LoginFlowCoordinator: ObservableObject {
     @discardableResult
     func goBack() -> BackOutcome {
         // Leaving now would orphan the in-flight result (e.g. credentials stored, no callback).
-        if isSubmitting { return .ignored }
+        if isSubmitting || isDrainingPush { return .ignored }
         inputError = nil
         switch step {
         case .collectOTPCode:
             step = .collectOTPIdentifier
             return .movedBack
         case .guardianPush:
-            if let pushController, pushController.devices.count > 1, !pushController.isChoosingDevice {
+            if let pushController, pushController.canChooseAnotherDevice {
                 pushController.chooseAnotherDevice()
                 return .movedBack
             }
-            // Stopped now; the next request waits for any check still in flight.
+            // Stopped now; a check still in flight may yet sign the user in.
             pushController?.cancel()
             step = .collectOTPIdentifier
+            drainPush()
             return .movedBack
         default:
             return .exitFlow
@@ -86,6 +90,8 @@ final class LoginFlowCoordinator: ObservableObject {
 
     private func discover() async {
         await endPush()
+        // A check in flight may have completed the sign-in.
+        if step == .authenticated { return }
         step = .loading
         do {
             let options = try await interactor.discover()
@@ -105,6 +111,8 @@ final class LoginFlowCoordinator: ObservableObject {
         defer { isSubmitting = false }
         enteredEmail = email
         await endPush()
+        // A check in flight may have completed the sign-in.
+        if step == .authenticated { return }
         inputError = nil
         step = .loading
         do {
@@ -155,6 +163,16 @@ final class LoginFlowCoordinator: ObservableObject {
         pushController = controller
         step = .guardianPush
         controller.start()
+    }
+
+    /// Waits, after Back, for a check still in flight; an approval it brings signs the user in.
+    private func drainPush() {
+        guard let pushController else { return }
+        isDrainingPush = true
+        Task { [weak self] in
+            await pushController.stop()
+            self?.isDrainingPush = false
+        }
     }
 
     /// Stops push and waits for a check still in flight: the SDK allows one request at a time.
