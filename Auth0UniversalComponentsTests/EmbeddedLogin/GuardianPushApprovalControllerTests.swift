@@ -1,4 +1,5 @@
 @testable import Auth0UniversalComponents
+import Combine
 import Foundation
 import Testing
 
@@ -12,11 +13,15 @@ final class ScriptedGuardianPushClient {
     var checkResults: [Result<GuardianPushCheck<String>, Error>] = []
     /// Runs inside `checkApproval()` before it returns, to hold a check in flight.
     var onCheck: (() async -> Void)?
+    /// Runs inside `sendPush(to:)` before it returns, to hold a send in flight.
+    var onSend: (() async -> Void)?
 
     var erased: AnyGuardianPushClient<String> {
         AnyGuardianPushClient(sendPush: { [unowned self] device in
             sent.append(device)
-            return try (sendResults.isEmpty ? .success(GuardianPushPending(retryAfter: 2_000)) : sendResults.removeFirst()).get()
+            let result = sendResults.isEmpty ? .success(GuardianPushPending(retryAfter: 2_000)) : sendResults.removeFirst()
+            await onSend?()
+            return try result.get()
         }, checkApproval: { [unowned self] in
             checks += 1
             let result = checkResults.isEmpty ? .success(.pending(GuardianPushPending())) : checkResults.removeFirst()
@@ -137,16 +142,25 @@ struct GuardianPushApprovalControllerTests {
         await settle(sut)
     }
 
-    @Test func slowDown_usesTheServerInterval_orDoubles() async {
-        client.checkResults = [.success(.slowDown(GuardianPushPending(retryAfter: 5_000))),
+    /// Each slow down waits at least 2 s longer, whatever interval the server repeats.
+    @Test func slowDown_waitsAtLeastTwoSecondsLonger() async {
+        client.checkResults = [.success(.slowDown(GuardianPushPending(retryAfter: 9_000))),
                                .success(.slowDown(GuardianPushPending())),
+                               .success(.slowDown(GuardianPushPending(retryAfter: 2_000))),
                                .success(.approved("creds"))]
         let sut = makeSUT()
 
         sut.select(phone)
         await eventually { sut.state == .approved }
 
-        #expect(sleeper.delays == [2_000, 5_000, 10_000])
+        // The server's longer interval, then +2 s with none given, then +2 s although it asks for less.
+        #expect(sleeper.delays == [2_000, 9_000, 11_000, 13_000])
+    }
+
+    @Test func slowDown_withTheSameInterval_stillSlowsDown() {
+        let next = GuardianPushPollingPolicy.default.nextInterval(
+            after: GuardianPushCheck<String>.slowDown(GuardianPushPending(retryAfter: 2_000)), current: 2_000)
+        #expect(next == 4_000)
     }
 
     @Test func intervals_areClamped() async {
@@ -394,6 +408,120 @@ struct GuardianPushApprovalControllerTests {
 
         #expect(sut.state == .waiting(phone, canResend: false))
         await settle(sut)
+    }
+
+    // MARK: Leaving while sending
+
+    /// The screen went away during "Sending request": the push still goes out, but nothing checks for it.
+    @Test func suspendWhileSending_doesNotCheckUntilResumed() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onSend = { await withCheckedContinuation { inFlight = $0 } }
+        let sut = makeSUT()
+        sut.select(phone)
+        await eventually { inFlight != nil }
+
+        sut.suspend()
+        inFlight?.resume()
+        await eventually { if case .waiting = sut.state { return true } else { return false } }
+        for _ in 0..<100 { await Task.yield() }
+        #expect(client.checks == 0)
+        #expect(client.sent == [phone])
+
+        client.checkResults = [.success(.approved("creds"))]
+        sut.resume()
+        await eventually { sut.state == .approved }
+        #expect(client.checks == 1)
+        #expect(client.sent == [phone])
+    }
+
+    @Test func suspendWhileSending_releasesTheControllerOnceSent() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onSend = { await withCheckedContinuation { inFlight = $0 } }
+        weak var weakSUT: GuardianPushApprovalController<String>?
+        do {
+            let sut = makeSUT()
+            weakSUT = sut
+            sut.select(phone)
+            await eventually { inFlight != nil }
+            sut.suspend()
+        }
+        inFlight?.resume()
+        await eventually { weakSUT == nil }
+
+        #expect(weakSUT == nil)
+        #expect(client.checks == 0)
+    }
+
+    // MARK: Late terminal failures
+
+    /// The SDK has already cleared its session, so the denial is shown rather than a later "session ended".
+    @Test func lateDenial_afterChoosingAnotherDevice_isShown() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onCheck = { await withCheckedContinuation { inFlight = $0 } }
+        client.checkResults = [.failure(GuardianPushFailure.denied)]
+        let sut = makeSUT(devices: [phone, tablet])
+        sut.start()
+        sut.select(phone)
+        await eventually { inFlight != nil }
+
+        sut.chooseAnotherDevice()
+        sut.select(tablet)
+        inFlight?.resume()
+        await eventually { sut.state == .failed(.denied) }
+        for _ in 0..<100 { await Task.yield() }
+
+        #expect(sut.state == .failed(.denied))
+        #expect(client.sent == [phone])
+    }
+
+    @Test func lateExpiry_afterSuspend_isShownOnResume() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onCheck = { await withCheckedContinuation { inFlight = $0 } }
+        client.checkResults = [.failure(GuardianPushFailure.expired)]
+        let sut = makeSUT()
+        sut.select(phone)
+        await eventually { inFlight != nil }
+
+        sut.suspend()
+        inFlight?.resume()
+        await eventually { sut.state == .failed(.expired) }
+        sut.resume()
+
+        #expect(sut.state == .failed(.expired))
+        #expect(client.checks == 1)
+    }
+
+    @Test func lateNetworkFailure_afterCancel_isStillDropped() async {
+        var inFlight: CheckedContinuation<Void, Never>?
+        client.onCheck = { await withCheckedContinuation { inFlight = $0 } }
+        client.checkResults = [.failure(GuardianPushFailure.network)]
+        let sut = makeSUT()
+        sut.select(phone)
+        await eventually { inFlight != nil }
+
+        sut.cancel()
+        inFlight?.resume()
+        await sut.stop()
+
+        #expect(sut.state == .waiting(phone, canResend: false))
+    }
+
+    // MARK: Publishing
+
+    @Test func unchangedPendingAnswers_doNotRepublish() async {
+        final class Changes { var count = 0; var bag: AnyCancellable? }
+        let changes = Changes()
+        client.checkResults = Array(repeating: .success(.pending(GuardianPushPending())), count: 5)
+            + [.success(.approved("creds"))]
+        let sut = makeSUT()
+        sut.select(phone)
+        await eventually { if case .waiting = sut.state { return true } else { return false } }
+        changes.bag = sut.objectWillChange.sink { changes.count += 1 }
+
+        await eventually { sut.state == .approved }
+
+        // Only the switch to `.approved`, not one per identical "pending".
+        #expect(changes.count == 1)
     }
 
     @Test func chooseAnotherDevice_returnsToTheList() async {

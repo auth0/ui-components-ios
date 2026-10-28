@@ -85,13 +85,21 @@ struct GuardianPushEndToEndTests {
     }
 
     /// GP-03: the second-factor menu has no Guardian push, so the terminal state shows and nothing is sent.
+    /// GP-03: the second-factor menu has no Guardian push (e.g. only an authenticator app or SMS), so the
+    /// "verification method not available" screen shows and nothing is sent.
     @Test func gp03_noPushOnOffer_isTerminal() async {
         let sut = await signIn(secondFactor: menu([F.verifyTOTP, F.verifySMS]))
 
-        #expect(sut.step == .guardianPush)
-        #expect(pushState(sut) == .failed(.unavailable))
+        #expect(sut.step == .secondFactorUnavailable)
+        #expect(sut.pushController == nil)
         #expect(pushCalls.isEmpty)
         #expect(store.stored.isEmpty)
+    }
+
+    /// GP-06: MFA is required but the user has no eligible factor; same screen, not a retry on a dead session.
+    @Test func gp06_noEligibleFactors_isTheSameTerminalState() async {
+        let sut = await signIn(secondFactor: F.terminal("access_denied", description: "no_eligible_factors"))
+        #expect(sut.step == .secondFactorUnavailable)
     }
 
     /// GP-04: no second factor needed, so the user is signed in without the push screen.
@@ -253,7 +261,7 @@ struct GuardianPushEndToEndTests {
         let sut = await signIn(secondFactor: menu([F.challengePush]))
         await eventually { sut.step == .authenticated }
 
-        #expect(sleeper.delays == [2_000, 3_000, 6_000])
+        #expect(sleeper.delays == [2_000, 3_000, 5_000])
     }
 
     // MARK: Credentials and server oddities

@@ -52,7 +52,7 @@ struct LoginRenderingHostView: View {
             displayedPlan = currentPlan
             lastDepth = displayedPlan.navigationDepth
         }
-        .onChange(of: coordinator.step) { newStep in
+        .onChangeCompat(of: coordinator.step) { newStep in
             trackInputStep(newStep)
             if case .authenticated = newStep { onAuthenticated() }
             syncDisplay()

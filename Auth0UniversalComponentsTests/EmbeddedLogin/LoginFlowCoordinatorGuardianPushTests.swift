@@ -161,6 +161,22 @@ struct LoginFlowCoordinatorGuardianPushTests {
         #expect(sends.count == 1)
     }
 
+    @Test func secondFactorUnavailable_isTerminal_andSignInAgainRestarts() async {
+        let (sut, interactor) = await afterEmailCode(.secondFactorUnavailable)
+        #expect(sut.step == .secondFactorUnavailable)
+        #expect(sut.pushController == nil)
+
+        await sut.send(.restart)
+        #expect(sut.step == .collectOTPIdentifier)
+        #expect(interactor.receivedRequests.filter { $0 == .discover }.count == 2)
+    }
+
+    @Test func back_fromSecondFactorUnavailable_goesToEmailEntry() async {
+        let (sut, _) = await afterEmailCode(.secondFactorUnavailable)
+        #expect(sut.goBack() == .movedBack)
+        #expect(sut.step == .collectOTPIdentifier)
+    }
+
     @Test func restart_opensANewSignIn() async {
         let interactor = ScriptedAuthInteractor()
         interactor.pushClient = AnyGuardianPushClient(sendPush: { _ in GuardianPushPending(retryAfter: 1_000) },

@@ -20,6 +20,7 @@ enum ScreenPlan: Equatable {
     case identifier
     case otpCode(identifier: String)
     case guardianPush
+    case secondFactorUnavailable
     case authenticated
     case failed(message: String)
     case noMethods
@@ -33,6 +34,7 @@ extension ScreenPlan {
         case .identifier:             return "identifier"
         case .otpCode:                return "otpCode"
         case .guardianPush:           return "guardianPush"
+        case .secondFactorUnavailable: return "secondFactorUnavailable"
         case .authenticated:          return "authenticated"
         case .failed:                 return "failed"
         case .noMethods:              return "noMethods"
@@ -45,7 +47,7 @@ extension ScreenPlan {
         case .loading:                return 0
         case .identifier, .noMethods: return 1
         case .otpCode:                return 2
-        case .guardianPush:           return 3
+        case .guardianPush, .secondFactorUnavailable: return 3
         case .authenticated, .failed: return 4
         }
     }
@@ -59,6 +61,7 @@ struct LoginRenderer {
         case .collectOTPIdentifier:       return .identifier
         case let .collectOTPCode(email):  return .otpCode(identifier: email)
         case .guardianPush:               return .guardianPush
+        case .secondFactorUnavailable:    return .secondFactorUnavailable
         case .authenticated:              return .authenticated
         case let .failed(message):        return .failed(message: message)
         case .noMethodsAvailable:         return .noMethods
@@ -92,6 +95,9 @@ struct LoginRenderer {
             } else {
                 LoginLoadingScreen()
             }
+
+        case .secondFactorUnavailable:
+            LoginSecondFactorUnavailableScreen { ctx.dispatch(.restart) }
 
         case .authenticated:
             LoginSuccessScreen()

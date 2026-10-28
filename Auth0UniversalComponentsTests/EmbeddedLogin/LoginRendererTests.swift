@@ -31,6 +31,11 @@ struct LoginRendererTests {
         #expect(ScreenPlan.guardianPush.navigationDepth < ScreenPlan.authenticated.navigationDepth)
     }
 
+    @Test func secondFactorUnavailable_isItsOwnScreen() {
+        #expect(plan(.secondFactorUnavailable) == .secondFactorUnavailable)
+        #expect(ScreenPlan.otpCode(identifier: "a").navigationDepth < ScreenPlan.secondFactorUnavailable.navigationDepth)
+    }
+
     @Test func navigationDepth_ordersTheFlow() {
         #expect(ScreenPlan.loading.navigationDepth < ScreenPlan.identifier.navigationDepth)
         #expect(ScreenPlan.identifier.navigationDepth < ScreenPlan.otpCode(identifier: "a").navigationDepth)

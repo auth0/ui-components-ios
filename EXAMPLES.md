@@ -161,7 +161,8 @@ struct LoginView: View {
 When the tenant's MFA policy asks for a second factor after the email code, `EmbeddedLoginView` sends a push to the user's Guardian app and waits for approval. With several Guardian devices, the user picks one first.
 
 - **Approved:** the credentials are saved and `onAuthenticated` fires.
-- **Denied, expired, session ended, or no Guardian device on offer:** a terminal screen with **Sign in again**, which starts a new sign-in with the email filled in.
+- **Denied, expired or session ended:** a terminal screen with **Sign in again**, which starts a new sign-in with the email filled in.
+- **No second factor this flow can run** (e.g. only an authenticator app or SMS, or nothing enrolled): a **Verification method not available.** screen with **Sign in again**.
 - **No connection:** short outages are absorbed silently; after that, **Try again** resumes where it failed, without sending a second push.
 - **Back:** with several devices, returns to the device list while the request can still be approved; otherwise to email entry.
 

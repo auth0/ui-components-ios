@@ -51,11 +51,11 @@ public struct LoginEmailScreen: View {
         }
         .embeddedScreenChrome(theme: theme)
         .onAppear { isFocused = true }
-        .onChange(of: email) { _ in
+        .onChangeCompat(of: email) { _ in
             validationError = nil
             suppressServerError = true
         }
-        .onChange(of: errorMessage) { if $0 != nil { suppressServerError = false } }
+        .onChangeCompat(of: errorMessage) { if $0 != nil { suppressServerError = false } }
     }
 
     private func submit() {

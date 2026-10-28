@@ -63,8 +63,8 @@ public struct LoginCodeScreen: View {
             Spacer()
         }
         .embeddedScreenChrome(theme: theme)
-        .onChange(of: code) { _ in suppressError = true }
-        .onChange(of: errorMessage) { if $0 != nil { suppressError = false } }
+        .onChangeCompat(of: code) { _ in suppressError = true }
+        .onChangeCompat(of: errorMessage) { if $0 != nil { suppressError = false } }
     }
 
     private func verify() {

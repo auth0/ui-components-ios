@@ -85,6 +85,13 @@ struct EmbeddedAuthGuardianPushClientTests {
         }
     }
 
+    @Test func rateLimitedCheck_showsOurCopy_notTheCode() async {
+        stub.verifyOobResults = [.failure(F.terminal("too_many_requests", description: "too_many_attempts", statusCode: 429))]
+        await #expect(throws: GuardianPushFailure.other(message: "Too many attempts. Please try again later.")) {
+            try await sut.checkApproval()
+        }
+    }
+
     @Test func otherDenial_keepsTheServerMessage() async {
         stub.verifyOobResults = [.failure(F.terminal("access_denied", description: "Blocked by policy"))]
         await #expect(throws: GuardianPushFailure.other(message: "Blocked by policy")) { try await sut.checkApproval() }

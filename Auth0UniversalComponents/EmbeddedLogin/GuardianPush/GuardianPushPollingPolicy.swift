@@ -20,6 +20,9 @@ public struct GuardianPushPollingPolicy: Equatable, Sendable {
     /// 1–60 s bounds, 2 s default, 3 network failures tolerated.
     public static let `default` = GuardianPushPollingPolicy()
 
+    /// How much longer each wait gets after `slowDown`, in milliseconds.
+    static let slowDownStep = 2_000
+
     /// The real wait between checks; tests inject their own.
     static func sleep(milliseconds: Int) async throws {
         try await Task.sleep(for: .milliseconds(milliseconds))
@@ -30,12 +33,14 @@ public struct GuardianPushPollingPolicy: Equatable, Sendable {
         clamped(pending.retryAfter ?? defaultInterval)
     }
 
-    /// The next wait: the server's interval when given; after `slowDown`, otherwise twice the current one.
+    /// The next wait: the server's interval when given. After `slowDown`, at least `slowDownStep` (2 s) longer
+    /// than now, even if the server repeats or shortens its interval. RFC 8628 suggests 5 s; 2 s keeps
+    /// approvals quick to show.
     func nextInterval(after check: GuardianPushCheck<some Any>, current: Int) -> Int {
         switch check {
         case .approved: return current
         case let .pending(pending): return clamped(pending.retryAfter ?? current)
-        case let .slowDown(pending): return clamped(pending.retryAfter ?? current * 2)
+        case let .slowDown(pending): return clamped(max(pending.retryAfter ?? 0, current + Self.slowDownStep))
         }
     }
 

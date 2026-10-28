@@ -1,38 +1,34 @@
-import Combine
 import SwiftUI
 
-/// "Resend Code" with a cooldown that starts on appear and after each resend.
+/// "Resend Code" with a cooldown that starts when it appears and after each resend.
 public struct LoginResendButton: View {
-    let cooldown: Int
     /// Disables the row while a verify is in flight.
     let isBusy: Bool
     let onResend: () -> Void
 
     @Environment(\.auth0Theme) private var theme
-    @State private var remaining = 0
-
-    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// Starts with the button, so typing in the code field (which redraws it) can't hold the countdown back.
+    @State private var cooldown: ResendCooldown
 
     public init(cooldown: Int = 60, isBusy: Bool = false, onResend: @escaping () -> Void) {
-        self.cooldown = cooldown
         self.isBusy = isBusy
         self.onResend = onResend
+        _cooldown = State(initialValue: ResendCooldown(seconds: cooldown))
     }
 
-    private var isCoolingDown: Bool { remaining > 0 }
-
     public var body: some View {
-        Button(isCoolingDown ? "Resend in \(remaining) sec…" : "Resend Code") {
-            onResend()
-            remaining = cooldown
+        TimelineView(.periodic(from: cooldown.startedAt, by: 1)) { context in
+            let remaining = cooldown.remaining(at: context.date)
+            Button(remaining > 0 ? "Resend in \(remaining) sec…" : "Resend Code") {
+                onResend()
+                cooldown.restart()
+            }
+            .buttonStyle(.plain)
+            .auth0TextStyle(theme.typography.body)
+            .foregroundStyle(theme.colors.text.regular.opacity(remaining > 0 || isBusy ? 0.7 : 1))
+            .frame(maxWidth: .infinity)
+            .disabled(remaining > 0 || isBusy)
+            .accessibilityLabel(remaining > 0 ? "Resend code, available in \(remaining) seconds" : "Resend code")
         }
-        .buttonStyle(.plain)
-        .auth0TextStyle(theme.typography.body)
-        .foregroundStyle(theme.colors.text.regular.opacity(isCoolingDown || isBusy ? 0.7 : 1))
-        .frame(maxWidth: .infinity)
-        .disabled(isCoolingDown || isBusy)
-        .onAppear { if remaining == 0 { remaining = cooldown } }
-        .onReceive(ticker) { _ in if remaining > 0 { remaining -= 1 } }
-        .accessibilityLabel(isCoolingDown ? "Resend code, available in \(remaining) seconds" : "Resend code")
     }
 }

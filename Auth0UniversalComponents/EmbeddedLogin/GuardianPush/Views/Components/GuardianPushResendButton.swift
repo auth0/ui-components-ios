@@ -1,32 +1,30 @@
 import SwiftUI
-import Combine
 
 /// Filled "Resend Code" button with a cooldown that starts when it appears and after each resend.
 struct GuardianPushResendButton: View {
-    let cooldown: Int
     let isBusy: Bool
     let onResend: () -> Void
 
-    /// Starts at `cooldown`: a new button (e.g. after a resend) waits again.
-    @State private var remaining: Int
-
-    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// Starts with the button: a new button (e.g. after a resend) waits again.
+    @State private var cooldown: ResendCooldown
 
     init(cooldown: Int = 60, isBusy: Bool = false, onResend: @escaping () -> Void) {
-        self.cooldown = cooldown
         self.isBusy = isBusy
         self.onResend = onResend
-        _remaining = State(initialValue: cooldown)
+        _cooldown = State(initialValue: ResendCooldown(seconds: cooldown))
     }
 
     var body: some View {
-        Button(remaining > 0 ? "Resend in \(remaining) sec…" : "Resend Code") {
-            onResend()
-            remaining = cooldown
+        TimelineView(.periodic(from: cooldown.startedAt, by: 1)) { context in
+            let remaining = cooldown.remaining(at: context.date)
+            Button(remaining > 0 ? "Resend in \(remaining) sec…" : "Resend Code") {
+                onResend()
+                cooldown.restart()
+            }
+            .buttonStyle(GuardianPushFilledButtonStyle())
+            .disabled(remaining > 0 || isBusy)
+            .accessibilityLabel(remaining > 0 ? "Resend Code, available in \(remaining) seconds" : "Resend Code")
         }
-        .buttonStyle(GuardianPushFilledButtonStyle())
-        .disabled(remaining > 0 || isBusy)
-        .onReceive(ticker) { _ in if remaining > 0 { remaining -= 1 } }
     }
 }
 

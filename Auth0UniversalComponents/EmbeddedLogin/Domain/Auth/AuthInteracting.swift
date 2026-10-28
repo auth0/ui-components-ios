@@ -13,9 +13,10 @@ enum LoginOption: Equatable {
 enum AuthProgress: Equatable {
     /// The credentials are already in the Keychain.
     case authenticated
-    /// The tenant wants a second factor. Guardian push is the one this flow supports; an empty list means
-    /// push isn't on offer, which the push component shows as a terminal state.
+    /// The tenant wants a second factor: Guardian push, sent to one of these devices.
     case guardianPush([GuardianPushDevice])
+    /// The tenant wants a second factor this flow can't run (e.g. only SMS), or the user has none it accepts.
+    case secondFactorUnavailable
 }
 
 /// Failures shown inline on the current input screen. Any other error goes full-screen.

@@ -62,7 +62,7 @@ final class LoginFlowCoordinator: ObservableObject {
         if isSubmitting || isDrainingPush { return .ignored }
         inputError = nil
         switch step {
-        case .collectOTPCode:
+        case .collectOTPCode, .secondFactorUnavailable:
             step = .collectOTPIdentifier
             return .movedBack
         case .guardianPush:
@@ -141,6 +141,8 @@ final class LoginFlowCoordinator: ObservableObject {
                 step = .authenticated
             case let .guardianPush(devices):
                 startPush(devices: devices)
+            case .secondFactorUnavailable:
+                step = .secondFactorUnavailable
             }
         } catch let failure as AuthFailure {
             inputError = failure

@@ -8,6 +8,8 @@ enum LoginStep: Equatable {
     case collectOTPCode(identifier: String)
     /// Second factor: Guardian push, driven by `LoginFlowCoordinator.pushController`.
     case guardianPush
+    /// A second factor is required, but none this flow can run is on offer. Terminal: only a new sign-in follows.
+    case secondFactorUnavailable
     case authenticated
     case failed(message: String)
     case noMethodsAvailable

@@ -27,7 +27,7 @@ public struct GuardianPushApprovalView<Approval>: View {
             controller.resume()
         }
         .onDisappear { controller.suspend() }
-        .onChange(of: scenePhase) { phase in
+        .onChangeCompat(of: scenePhase) { phase in
             controller.setAppActive(phase == .active)
         }
     }

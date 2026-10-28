@@ -46,9 +46,13 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
         }
     }
 
-    private var isApproved: Bool {
-        if case .approved = state { return true }
-        return false
+    /// Approved, or failed in a way that closed the sign-in: nothing more is sent.
+    private var hasEnded: Bool {
+        switch state {
+        case .approved: return true
+        case let .failed(failure): return !failure.isRetryable
+        default: return false
+        }
     }
 
     private enum ResumePoint { case send, poll }
@@ -111,8 +115,8 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
 
     /// Sends the push to `device`, then checks for approval.
     public func select(_ device: GuardianPushDevice) {
-        // Nothing more is sent once approved, and a second tap while sending is ignored.
-        if isApproved { return }
+        // Nothing more is sent once the push has ended, and a second tap while sending is ignored.
+        if hasEnded { return }
         if case .sending = state { return }
         self.device = device
         state = .sending(device)
@@ -157,11 +161,18 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
         work = nil
     }
 
-    /// The screen went away: stop checking until `resume()`.
+    /// The screen went away: stop checking until `resume()`. A push being sent still goes out (cancelling
+    /// wouldn't stop the request), but checking for its approval waits for `resume()`.
     public func suspend() {
-        guard case .waiting = state else { return }
-        work?.cancel()
-        isSuspended = true
+        switch state {
+        case .waiting:
+            work?.cancel()
+            isSuspended = true
+        case .sending:
+            isSuspended = true
+        default:
+            return
+        }
     }
 
     /// Picks up checking after `suspend()`.
@@ -187,8 +198,8 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
         previous?.cancel()
         work = Task { [weak self] in
             await previous?.value
-            // The previous work may have finished with an approval.
-            guard !Task.isCancelled, self?.isApproved == false else { return }
+            // The previous work may have ended the push (an approval or a terminal failure).
+            guard !Task.isCancelled, self?.hasEnded == false else { return }
             await operation()
         }
     }
@@ -201,11 +212,15 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
             canResend = pending.canResend
             state = .waiting(device, canResend: canResend)
         } catch {
-            guard !Task.isCancelled else { return }
+            let failure = Self.failure(from: error)
+            // A terminal failure closed the sign-in on the server, so, like an approval, it's never dropped.
+            guard !Task.isCancelled || !failure.isRetryable else { return }
             resumePoint = .send
-            state = .failed(Self.failure(from: error))
+            state = .failed(failure)
             return
         }
+        // The screen went away while sending: checking waits for `resume()`.
+        if isSuspended { return }
         await poll()
     }
 
@@ -223,8 +238,9 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
             do {
                 check = try await client.checkApproval()
             } catch {
-                guard !Task.isCancelled else { return }
                 let failure = Self.failure(from: error)
+                // A terminal failure closed the sign-in on the server, so, like an approval, it's never dropped.
+                guard !Task.isCancelled || !failure.isRetryable else { return }
                 if failure == .network {
                     // Failures while backgrounded (e.g. approving in Guardian) don't count.
                     if isAppActive { networkFailures += 1 }
@@ -249,7 +265,9 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
             case let .pending(pending), let .slowDown(pending):
                 networkFailures = 0
                 canResend = pending.canResend
-                state = .waiting(device, canResend: canResend)
+                // An unchanged answer doesn't republish, so the screen isn't redrawn on every check.
+                let waiting = GuardianPushApprovalState.waiting(device, canResend: canResend)
+                if state != waiting { state = waiting }
             }
         }
     }
