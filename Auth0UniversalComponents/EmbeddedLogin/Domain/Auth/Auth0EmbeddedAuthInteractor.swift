@@ -1,8 +1,9 @@
 import Auth0
 import Foundation
 
-// The only file that imports Auth0: authorize → identify → challengeEmail → verifyOtp.
-// Intermediate steps return `insufficient_authorization` with the `nextActions` to take.
+// The Embedded Login adapter over Auth0: authorize → identify → challengeEmail → verifyOtp, then Guardian
+// push when the tenant asks for a second factor. Intermediate steps return `insufficient_authorization`
+// with the `nextActions` to take. `EmbeddedAuthGuardianPushClient` is the only other Auth0-aware file.
 
 enum Auth0EmbeddedAuthError: LocalizedError {
     case discoveryConnectionMissing
@@ -20,10 +21,23 @@ enum Auth0EmbeddedAuthError: LocalizedError {
 extension EmbeddedAuthError {
     /// The cause's own description (e.g. "The Internet connection appears to be offline."), else the
     /// server's `error_description`. The SDK's `errorDescription` is debug text and isn't shown.
+    /// Reasons the SDK recognises by their `error_description` code get our own copy instead, since that
+    /// code (e.g. `too_many_attempts`) isn't user-facing text.
     var displayMessage: String? {
         if let cause { return cause.localizedDescription }
-        if let description = info["error_description"] as? String, !description.isEmpty { return description }
-        return nil
+        switch reason {
+        case .tooManyWrongOtpAttempts, .tooManyAttempts, .tooManyLogins:
+            return "Too many attempts. Please try again later."
+        case .ipBlocked:
+            return "Sign-in is temporarily blocked. Please try again later."
+        case .consentRequired:
+            return "This sign-in needs consent that can't be given in the app."
+        case .insufficientAuthorization, .noEligibleFactors, .challengeExpired, .authorizationRejected:
+            return nil
+        default:
+            if let description = info["error_description"] as? String, !description.isEmpty { return description }
+            return nil
+        }
     }
 }
 
@@ -34,17 +48,36 @@ protocol EmbeddedAuthClient {
     func identify(email: String) async throws
     func challengeEmail(index: Int) async throws
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials
+    func challengePush(index: Int) async throws
+    func verifyOob() async throws -> Credentials
 }
 
 struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
+    /// The steps this flow has screens for, so the server never routes to one it can't render:
+    /// Email OTP, then Guardian push.
+    static let capabilities: [EmbeddedCapability] = [
+        .identifyEmail, .challengeEmail, .verifyOTP,
+        .challengePush, .verifyOob
+    ]
+
+    /// Auth0.swift's default scope.
+    static let scope = "openid profile email offline_access"
+
     let auth: EmbeddedAuth
 
-    func authorize(connection: String) async throws { try await auth.authorize(connection: connection).start() }
+    func authorize(connection: String) async throws {
+        try await auth.authorize(connection: connection,
+                                 capabilities: Self.capabilities,
+                                 scope: Self.scope,
+                                 audience: nil).start()
+    }
     func identify(email: String) async throws { try await auth.identify(email, type: .email).start() }
     func challengeEmail(index: Int) async throws { try await auth.challengeEmail(index: index).start() }
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials {
         try await auth.verifyOtp(code, type: type).start()
     }
+    func challengePush(index: Int) async throws { try await auth.challengePush(index: index).start() }
+    func verifyOob() async throws -> Credentials { try await auth.verifyOob().start() }
 }
 
 protocol CredentialsStoring {
@@ -102,7 +135,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         }
     }
 
-    func verifyOTP(code: String) async throws {
+    func verifyOTP(code: String) async throws -> AuthProgress {
         do {
             let credentials = try await client.verifyOtp(code, type: .oob)
             do {
@@ -110,7 +143,10 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             } catch {
                 throw CredentialsNotSavedError()
             }
+            return .authenticated
         } catch let error as EmbeddedAuthError {
+            // MFA is required, but none of the user's factors can be used here.
+            if case .noEligibleFactors = error.reason { return .secondFactorUnavailable }
             guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else {
                 throw Self.failure(for: error)
             }
@@ -118,8 +154,22 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             if subReason == .invalidCode || subReason == .invalidIdentifierOrCode {
                 throw AuthFailure.invalidCode
             }
-            // Includes MFA step-up, which is out of scope.
-            throw Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
+            // Only a plain continuation means the email code is accepted and a second factor is next.
+            guard subReason == .none else { throw Auth0EmbeddedAuthError.requestFailed(message: nil) }
+            let devices = EmbeddedAuthGuardianPushClient.devices(in: nextActions)
+            return devices.isEmpty ? .secondFactorUnavailable : .guardianPush(devices)
+        }
+    }
+
+    func makeGuardianPushClient() -> AnyGuardianPushClient<Void> {
+        AnyGuardianPushClient(EmbeddedAuthGuardianPushClient(client: client)).mapApproval { [weak self] credentials in
+            // The login screen that owned this sign-in is gone, so nobody can finish it: store nothing.
+            guard let self else { return }
+            do {
+                try credentialsStore.store(credentials: credentials)
+            } catch {
+                throw GuardianPushFailure.other(message: CredentialsNotSavedError().errorDescription)
+            }
         }
     }
 
@@ -151,7 +201,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
     /// Rate limits stay inline (Resend reopens the loop); anything else goes full-screen.
     private static func failure(for error: EmbeddedAuthError) -> Error {
         switch error.reason {
-        case .tooManyWrongOtpAttempts, .tooManyAttempts: return AuthFailure.tooManyAttempts
+        case .tooManyWrongOtpAttempts, .tooManyAttempts, .tooManyLogins: return AuthFailure.tooManyAttempts
         default: return Auth0EmbeddedAuthError.requestFailed(message: error.displayMessage)
         }
     }

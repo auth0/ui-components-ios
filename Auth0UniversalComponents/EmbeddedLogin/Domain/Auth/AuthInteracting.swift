@@ -9,6 +9,16 @@ enum LoginOption: Equatable {
     case unsupported(String)
 }
 
+/// Where the sign-in stands after the email code.
+enum AuthProgress: Equatable {
+    /// The credentials are already in the Keychain.
+    case authenticated
+    /// The tenant wants a second factor: Guardian push, sent to one of these devices.
+    case guardianPush([GuardianPushDevice])
+    /// The tenant wants a second factor this flow can't run (e.g. only SMS), or the user has none it accepts.
+    case secondFactorUnavailable
+}
+
 /// Failures shown inline on the current input screen. Any other error goes full-screen.
 enum AuthFailure: Error, Equatable {
     case tooManyAttempts
@@ -36,6 +46,8 @@ protocol AuthInteracting {
     func discover() async throws -> [LoginOption]
     /// Sends a one-time code to `email`.
     func startOTP(connection: String, email: String) async throws
-    /// On return the credentials are already in the Keychain.
-    func verifyOTP(code: String) async throws
+    /// `.authenticated` means the credentials are already in the Keychain.
+    func verifyOTP(code: String) async throws -> AuthProgress
+    /// A push client for the current sign-in; approval stores the credentials before reporting success.
+    func makeGuardianPushClient() -> AnyGuardianPushClient<Void>
 }

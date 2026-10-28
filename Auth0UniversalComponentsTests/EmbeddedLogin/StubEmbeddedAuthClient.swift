@@ -12,6 +12,8 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         case identify(email: String)
         case challengeEmail(index: Int)
         case verifyOtp(code: String, type: OtpType)
+        case challengePush(index: Int)
+        case verifyOob
     }
 
     private(set) var calls: [Call] = []
@@ -20,6 +22,8 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     var identifyResults: [Error?] = []
     var challengeEmailResults: [Error?] = []
     var verifyOtpResults: [Result<Credentials, Error>] = []
+    var challengePushResults: [Error?] = []
+    var verifyOobResults: [Result<Credentials, Error>] = []
 
     func authorize(connection: String) async throws {
         calls.append(.authorize(connection: connection))
@@ -39,6 +43,16 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials {
         calls.append(.verifyOtp(code: code, type: type))
         return try (verifyOtpResults.popFirst() ?? .success(Credentials())).get()
+    }
+
+    func challengePush(index: Int) async throws {
+        calls.append(.challengePush(index: index))
+        if let error = challengePushResults.popFirst() ?? nil { throw error }
+    }
+
+    func verifyOob() async throws -> Credentials {
+        calls.append(.verifyOob)
+        return try (verifyOobResults.popFirst() ?? .success(Credentials())).get()
     }
 }
 
@@ -62,6 +76,12 @@ enum EmbeddedAuthFixtures {
     static let verifyTOTP: [String: Any] = ["action": "action:verify:otp:v1", "channel": "totp"]
     static let verifySMS: [String: Any] = ["action": "action:verify:otp:v1", "channel": "sms",
                                            "identifier": "+1***99"]
+    static let challengePush: [String: Any] = ["action": "action:challenge:push:v1", "index": 0,
+                                               "name": "Sudhanshu's iPhone"]
+
+    static func verifyOob(pollInMs: Int = 2_000) -> [String: Any] {
+        ["action": "action:verify:oob:v1", "poll_in_ms": pollInMs]
+    }
 
     /// `insufficient_authorization` advertising `next`, optionally with a sub-reason.
     static func needs(_ next: [[String: Any]], subReason: String? = nil) -> EmbeddedAuthError {
@@ -72,6 +92,16 @@ enum EmbeddedAuthFixtures {
 
     static func terminal(_ code: String, description: String, statusCode: Int = 403) -> EmbeddedAuthError {
         EmbeddedAuthError(info: ["error": code, "error_description": description], statusCode: statusCode)
+    }
+
+    /// The request never reached the server.
+    static var network: EmbeddedAuthError {
+        EmbeddedAuthError(info: ["cause": URLError(.notConnectedToInternet)], statusCode: 0)
+    }
+
+    /// The SDK's local guard when no flow is active.
+    static var noActiveSession: EmbeddedAuthError {
+        EmbeddedAuthError(info: ["error": "no_active_session"], statusCode: 0)
     }
 }
 

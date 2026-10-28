@@ -41,7 +41,8 @@ struct LoginRenderingHostView: View {
         // Horizontal only, so backgrounds still reach under the home indicator.
         .clipShape(HorizontalClip())
         .safeAreaInset(edge: .top, spacing: 0) {
-            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
+            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting && !coordinator.isDrainingPush,
+                               onBack: handleBack)
         }
         .systemNavigationBarHidden()
         .task {
@@ -51,7 +52,7 @@ struct LoginRenderingHostView: View {
             displayedPlan = currentPlan
             lastDepth = displayedPlan.navigationDepth
         }
-        .onChange(of: coordinator.step) { newStep in
+        .onChangeCompat(of: coordinator.step) { newStep in
             trackInputStep(newStep)
             if case .authenticated = newStep { onAuthenticated() }
             syncDisplay()
@@ -71,6 +72,8 @@ struct LoginRenderingHostView: View {
 
     private var context: RenderContext {
         RenderContext(
+            pushController: coordinator.pushController,
+            email: coordinator.enteredEmail,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
             dispatch: { send($0) },
