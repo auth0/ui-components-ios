@@ -9,8 +9,11 @@ public struct LoginSecondFactorUnavailableScreen: View {
     }
 
     public var body: some View {
-        GuardianPushStatusLayout(title: "Verification method not available.",
-                                 message: "Your account doesn't have a verification method this app can use. Contact your administrator for help.") {
+        GuardianPushStatusLayout(
+            title: "Verification method not available.",
+            message: "Your account doesn't have a verification method this app can use. "
+                + "Contact your administrator for help."
+        ) {
             LoginPrimaryButton("Sign in again", action: onSignInAgain)
         }
     }

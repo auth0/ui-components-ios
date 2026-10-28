@@ -159,7 +159,9 @@ final class LoginFlowCoordinator: ObservableObject {
 
     private func startPush(devices: [GuardianPushDevice]) {
         let controller = GuardianPushApprovalController(client: interactor.makeGuardianPushClient(),
-                                                        devices: devices, policy: .default, sleep: pushSleep) { [weak self] _ in
+                                                        devices: devices,
+                                                        policy: .default,
+                                                        sleep: pushSleep) { [weak self] _ in
             self?.step = .authenticated
         }
         pushController = controller

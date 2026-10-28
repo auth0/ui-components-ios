@@ -9,7 +9,7 @@ import Testing
 @MainActor
 struct GuardianPushEndToEndTests {
 
-    private typealias F = EmbeddedAuthFixtures
+    private typealias Fix = EmbeddedAuthFixtures
 
     private let email = "sudhanshu.vohra@okta.com"
     private let client = StubEmbeddedAuthClient()
@@ -18,13 +18,15 @@ struct GuardianPushEndToEndTests {
 
     private let phone = GuardianPushDevice(index: 0, name: "Sudhanshu's iPhone")
     private let secondPhone = GuardianPushDevice(index: 1, name: "Sudhanshu's iPhone")
-    private let secondPush: [String: Any] = ["action": "action:challenge:push:v1", "index": 1, "name": "Sudhanshu's iPhone"]
+    private let secondPush: [String: Any] = [
+        "action": "action:challenge:push:v1", "index": 1, "name": "Sudhanshu's iPhone"
+    ]
 
     /// Scripts discovery → email → challenge, then answers the email code with `secondFactor`.
     private func signIn(secondFactor: EmbeddedAuthError) async -> LoginFlowCoordinator {
-        client.authorizeResults = [F.needs([F.identifyEmail])]
-        client.identifyResults = [F.needs([F.challengeEmail])]
-        client.challengeEmailResults = [F.needs([F.verifyEmail])]
+        client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
+        client.identifyResults = [Fix.needs([Fix.challengeEmail])]
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         client.verifyOtpResults = [.failure(secondFactor)]
         let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store, connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor, pushSleep: sleeper.sleep)
@@ -35,7 +37,7 @@ struct GuardianPushEndToEndTests {
     }
 
     /// The tenant asks for a second factor and offers `menu`.
-    private func menu(_ entries: [[String: Any]]) -> EmbeddedAuthError { F.needs(entries) }
+    private func menu(_ entries: [[String: Any]]) -> EmbeddedAuthError { Fix.needs(entries) }
 
     private func eventually(_ condition: () -> Bool) async {
         for _ in 0..<10_000 where !condition() { await Task.yield() }
@@ -58,11 +60,13 @@ struct GuardianPushEndToEndTests {
 
     /// GP-01: one Guardian device, so the push goes out straight away.
     @Test func gp01_singleDevice_sendsThePushAtOnce() async {
-        client.challengePushResults = [F.needs([F.verifyOob(pollInMs: 2_000)])]
-        client.verifyOobResults = [.failure(F.needs([F.verifyOob(pollInMs: 2_000)], subReason: "authorization_pending")),
-                                   .success(Credentials(accessToken: "push"))]
+        client.challengePushResults = [Fix.needs([Fix.verifyOob(pollInMs: 2_000)])]
+        client.verifyOobResults = [
+            .failure(Fix.needs([Fix.verifyOob(pollInMs: 2_000)], subReason: "authorization_pending")),
+            .success(Credentials(accessToken: "push"))
+        ]
 
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { sut.step == .authenticated }
 
         #expect(sut.step == .authenticated)
@@ -72,9 +76,9 @@ struct GuardianPushEndToEndTests {
 
     /// GP-02: several Guardian devices, so the user picks one and the push goes to that index.
     @Test func gp02_severalDevices_sendToThePickedOne() async {
-        client.challengePushResults = [F.needs([F.verifyOob()])]
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
 
-        let sut = await signIn(secondFactor: menu([F.challengePush, secondPush]))
+        let sut = await signIn(secondFactor: menu([Fix.challengePush, secondPush]))
         #expect(pushState(sut) == .choosingDevice([phone, secondPhone]))
         #expect(pushCalls.isEmpty)
 
@@ -88,7 +92,7 @@ struct GuardianPushEndToEndTests {
     /// GP-03: the second-factor menu has no Guardian push (e.g. only an authenticator app or SMS), so the
     /// "verification method not available" screen shows and nothing is sent.
     @Test func gp03_noPushOnOffer_isTerminal() async {
-        let sut = await signIn(secondFactor: menu([F.verifyTOTP, F.verifySMS]))
+        let sut = await signIn(secondFactor: menu([Fix.verifyTOTP, Fix.verifySMS]))
 
         #expect(sut.step == .secondFactorUnavailable)
         #expect(sut.pushController == nil)
@@ -98,15 +102,15 @@ struct GuardianPushEndToEndTests {
 
     /// GP-06: MFA is required but the user has no eligible factor; same screen, not a retry on a dead session.
     @Test func gp06_noEligibleFactors_isTheSameTerminalState() async {
-        let sut = await signIn(secondFactor: F.terminal("access_denied", description: "no_eligible_factors"))
+        let sut = await signIn(secondFactor: Fix.terminal("access_denied", description: "no_eligible_factors"))
         #expect(sut.step == .secondFactorUnavailable)
     }
 
     /// GP-04: no second factor needed, so the user is signed in without the push screen.
     @Test func gp04_noMFA_signsInDirectly() async {
-        client.authorizeResults = [F.needs([F.identifyEmail])]
-        client.identifyResults = [F.needs([F.challengeEmail])]
-        client.challengeEmailResults = [F.needs([F.verifyEmail])]
+        client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
+        client.identifyResults = [Fix.needs([Fix.challengeEmail])]
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         client.verifyOtpResults = [.success(Credentials(accessToken: "email"))]
         let sut = LoginFlowCoordinator(interactor: Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store,
                                                                                connection: "email"))
@@ -120,7 +124,7 @@ struct GuardianPushEndToEndTests {
 
     /// GP-05: a wrong email code stays on the code screen; no push is involved.
     @Test func gp05_wrongEmailCode_staysInline() async {
-        let sut = await signIn(secondFactor: F.needs([F.verifyEmail], subReason: "invalid_identifier_or_code"))
+        let sut = await signIn(secondFactor: Fix.needs([Fix.verifyEmail], subReason: "invalid_identifier_or_code"))
 
         #expect(sut.step == .collectOTPCode(identifier: email))
         #expect(sut.inputError == .invalidCode)
@@ -132,15 +136,15 @@ struct GuardianPushEndToEndTests {
     /// GP-09 / GP-10 / GP-11: terminal answers end the push with their own outcome.
     @Test func gp09_gp10_gp11_terminalAnswers() async {
         let cases: [(EmbeddedAuthError, GuardianPushFailure)] = [
-            (F.terminal("access_denied", description: "authorization_rejected"), .denied),
-            (F.terminal("access_denied", description: "challenge_expired"), .expired),
-            (F.noActiveSession, .sessionEnded),
+            (Fix.terminal("access_denied", description: "authorization_rejected"), .denied),
+            (Fix.terminal("access_denied", description: "challenge_expired"), .expired),
+            (Fix.noActiveSession, .sessionEnded)
         ]
         for (error, failure) in cases {
-            client.challengePushResults = [F.needs([F.verifyOob()])]
+            client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
             client.verifyOobResults = [.failure(error)]
 
-            let sut = await signIn(secondFactor: menu([F.challengePush]))
+            let sut = await signIn(secondFactor: menu([Fix.challengePush]))
             await eventually { pushState(sut) == .failed(failure) }
 
             #expect(pushState(sut) == .failed(failure))
@@ -150,12 +154,12 @@ struct GuardianPushEndToEndTests {
 
     /// GP-09: after a denial, Sign in again opens a new loop at email entry.
     @Test func gp09_signInAgain_opensANewLoop() async {
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        client.verifyOobResults = [.failure(F.terminal("access_denied", description: "authorization_rejected"))]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        client.verifyOobResults = [.failure(Fix.terminal("access_denied", description: "authorization_rejected"))]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { pushState(sut) == .failed(.denied) }
 
-        client.authorizeResults = [F.needs([F.identifyEmail])]
+        client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         await sut.send(.restart)
 
         #expect(sut.step == .collectOTPIdentifier)
@@ -165,8 +169,8 @@ struct GuardianPushEndToEndTests {
 
     /// GP-12: the push can't be sent offline; Try again sends it again.
     @Test func gp12_offlineWhenSending_retrySendsAgain() async {
-        client.challengePushResults = [F.network, F.needs([F.verifyOob()])]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.network, Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { pushState(sut) == .failed(.network) }
 
         sut.pushController?.retry()
@@ -177,10 +181,10 @@ struct GuardianPushEndToEndTests {
 
     /// GP-13: a short outage while waiting is absorbed silently.
     @Test func gp13_shortOutageWhileWaiting_isAbsorbed() async {
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        client.verifyOobResults = [.failure(F.network), .failure(F.network), .success(Credentials())]
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        client.verifyOobResults = [.failure(Fix.network), .failure(Fix.network), .success(Credentials())]
 
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { sut.step == .authenticated }
 
         #expect(sut.step == .authenticated)
@@ -188,9 +192,9 @@ struct GuardianPushEndToEndTests {
 
     /// GP-14: a long outage while waiting shows No connection; Try again resumes checking without a new push.
     @Test func gp14_longOutageWhileWaiting_retryResumesChecking() async {
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        client.verifyOobResults = Array(repeating: .failure(F.network), count: 4) + [.success(Credentials())]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        client.verifyOobResults = Array(repeating: .failure(Fix.network), count: 4) + [.success(Credentials())]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { pushState(sut) == .failed(.network) }
 
         sut.pushController?.retry()
@@ -204,17 +208,17 @@ struct GuardianPushEndToEndTests {
     /// GP-15: Back while waiting stops checking and returns to email entry; a new email opens a new loop.
     @Test func gp15_backWhileWaiting_stopsAndRestarts() async {
         sleeper.suspends = true
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { pushState(sut) == .waiting(phone, canResend: false) }
 
         #expect(sut.goBack() == .movedBack)
         #expect(sut.step == .collectOTPIdentifier)
 
         sleeper.suspends = false
-        client.authorizeResults = [F.needs([F.identifyEmail])]
-        client.identifyResults = [F.needs([F.challengeEmail])]
-        client.challengeEmailResults = [F.needs([F.verifyEmail])]
+        client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
+        client.identifyResults = [Fix.needs([Fix.challengeEmail])]
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         await sut.send(.submitIdentifier(email))
 
         #expect(!pushCalls.contains(.verifyOob))
@@ -224,8 +228,8 @@ struct GuardianPushEndToEndTests {
     /// GP-16 / GP-17: with several devices, Back from waiting returns to the list, and Back again restarts.
     @Test func gp16_backWithSeveralDevices_returnsToTheList() async {
         sleeper.suspends = true
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        let sut = await signIn(secondFactor: menu([F.challengePush, secondPush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush, secondPush]))
         sut.pushController?.select(phone)
         await eventually { pushState(sut) == .waiting(phone, canResend: false) }
 
@@ -241,8 +245,8 @@ struct GuardianPushEndToEndTests {
     /// GP-20: Resend shows only when the server still offers the push, and sends it again.
     @Test func gp20_resend_whenOffered() async {
         sleeper.suspends = true
-        client.challengePushResults = [F.needs([F.verifyOob(), F.challengePush]), F.needs([F.verifyOob()])]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob(), Fix.challengePush]), Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { pushState(sut) == .waiting(phone, canResend: true) }
 
         sut.pushController?.resend()
@@ -253,12 +257,14 @@ struct GuardianPushEndToEndTests {
 
     /// GP-22: the wait follows the server's interval, and grows after slow down.
     @Test func gp22_intervalsFollowTheServer() async {
-        client.challengePushResults = [F.needs([F.verifyOob(pollInMs: 2_000)])]
-        client.verifyOobResults = [.failure(F.needs([F.verifyOob(pollInMs: 3_000)], subReason: "authorization_pending")),
-                                   .failure(F.needs([], subReason: "slow_down")),
-                                   .success(Credentials())]
+        client.challengePushResults = [Fix.needs([Fix.verifyOob(pollInMs: 2_000)])]
+        client.verifyOobResults = [
+            .failure(Fix.needs([Fix.verifyOob(pollInMs: 3_000)], subReason: "authorization_pending")),
+            .failure(Fix.needs([], subReason: "slow_down")),
+            .success(Credentials())
+        ]
 
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { sut.step == .authenticated }
 
         #expect(sleeper.delays == [2_000, 3_000, 5_000])
@@ -269,8 +275,8 @@ struct GuardianPushEndToEndTests {
     /// GP-23: if the credentials can't be saved, approval ends on an error instead of signing in.
     @Test func gp23_keychainFailure_isAnError() async {
         store.error = NSError(domain: "keychain", code: -25308)
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { if case .failed = pushState(sut) { return true } else { return false } }
 
         #expect(pushState(sut) == .failed(.other(message: CredentialsNotSavedError().errorDescription)))
@@ -279,8 +285,8 @@ struct GuardianPushEndToEndTests {
 
     /// GP-29: the server answers the push without an approval step; that's an error, not a hang.
     @Test func gp29_pushWithoutApprovalStep_isAnError() async {
-        client.challengePushResults = [F.needs([F.verifyTOTP])]
-        let sut = await signIn(secondFactor: menu([F.challengePush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyTOTP])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush]))
         await eventually { if case .failed = pushState(sut) { return true } else { return false } }
 
         #expect(pushState(sut) == .failed(.other(message: nil)))
@@ -289,8 +295,8 @@ struct GuardianPushEndToEndTests {
 
     /// GP-28: a double tap on a device sends one push.
     @Test func gp28_doubleTap_sendsOnePush() async {
-        client.challengePushResults = [F.needs([F.verifyOob()])]
-        let sut = await signIn(secondFactor: menu([F.challengePush, secondPush]))
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(secondFactor: menu([Fix.challengePush, secondPush]))
 
         sut.pushController?.select(secondPhone)
         sut.pushController?.select(secondPhone)

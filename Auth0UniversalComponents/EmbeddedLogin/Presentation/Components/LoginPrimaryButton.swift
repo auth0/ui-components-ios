@@ -18,7 +18,9 @@ public struct LoginPrimaryButton: View {
 
     public var body: some View {
         let shape = RoundedRectangle(cornerRadius: theme.radius.inputField, style: .continuous)
-        Button(action: { if !isLoading { action() } }) {
+        Button {
+            if !isLoading { action() }
+        } label: {
             ZStack {
                 if isLoading {
                     Auth0Loader(tintColor: theme.colors.text.onPrimary)

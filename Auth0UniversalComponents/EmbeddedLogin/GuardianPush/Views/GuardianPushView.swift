@@ -43,7 +43,8 @@ private let sampleDevice = GuardianPushDevice(index: 0, name: "Sudhanshu's iPhon
 }
 
 #Preview("Unavailable") {
-    GuardianPushView(state: .failed(.unavailable), actions: GuardianPushActions(selectDevice: { _ in }, signInAgain: {}))
+    GuardianPushView(state: .failed(.unavailable),
+                     actions: GuardianPushActions(selectDevice: { _ in }, signInAgain: {}))
 }
 
 #Preview("Denied") {

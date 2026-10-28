@@ -12,7 +12,8 @@ struct GuardianPushOutcomeContent: Equatable {
                       message: "This account doesn't have a Guardian device that can approve this sign-in.")
         case .denied:
             self.init(title: "Sign-in request denied.",
-                      message: "The request was denied in Guardian. If you didn't try to sign in, change your password.")
+                      message: "The request was denied in Guardian. "
+                          + "If you didn't try to sign in, change your password.")
         case .expired:
             self.init(title: "Request expired.",
                       message: "The request wasn't approved in time. Sign in again to send a new one.")

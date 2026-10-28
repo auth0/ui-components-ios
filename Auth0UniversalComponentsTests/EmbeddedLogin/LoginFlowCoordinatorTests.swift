@@ -175,8 +175,9 @@ struct LoginFlowCoordinatorTests {
     }
 
     @Test func failedSubmit_retry_keepsTheTypedEmail() async {
-        let sut = await atCodeEntry(ScriptedAuthInteractor(discover: emailDiscovery(),
-                                                           startOTP: .failure(Scripted.scripted(message: "network down"))))
+        let failing = ScriptedAuthInteractor(discover: emailDiscovery(),
+                                             startOTP: .failure(Scripted.scripted(message: "network down")))
+        let sut = await atCodeEntry(failing)
         await sut.send(.retry)
         #expect(sut.step == .collectOTPIdentifier)
         #expect(sut.enteredEmail == email)

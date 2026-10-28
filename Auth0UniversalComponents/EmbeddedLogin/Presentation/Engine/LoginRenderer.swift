@@ -75,7 +75,9 @@ struct LoginRenderer {
             LoginLoadingScreen()
 
         case .identifier:
-            LoginEmailScreen(email: ctx.email ?? "", isLoading: ctx.isSubmitting, errorMessage: ctx.inputError?.message) {
+            LoginEmailScreen(email: ctx.email ?? "",
+                             isLoading: ctx.isSubmitting,
+                             errorMessage: ctx.inputError?.message) {
                 ctx.dispatch(.submitIdentifier($0))
             }
 

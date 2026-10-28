@@ -79,9 +79,9 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
     ///   - onApproved: Called once, on the main actor, when the user approves. An approval already on its way
     ///     when the work is cancelled is still reported, since the client may have acted on it.
     public convenience init<Client: GuardianPushClient>(client: Client,
-                                                       devices: [GuardianPushDevice],
-                                                       policy: GuardianPushPollingPolicy = .default,
-                                                       onApproved: @escaping (Approval) -> Void)
+                                                        devices: [GuardianPushDevice],
+                                                        policy: GuardianPushPollingPolicy = .default,
+                                                        onApproved: @escaping (Approval) -> Void)
     where Client.Approval == Approval {
         self.init(client: AnyGuardianPushClient(client), devices: devices, policy: policy,
                   sleep: GuardianPushPollingPolicy.sleep(milliseconds:),
@@ -148,7 +148,8 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
         state = .choosingDevice(devices)
     }
 
-    /// Stops checking. A request already in flight still completes: an approval is still reported, anything else is ignored.
+    /// Stops checking. A request already in flight still completes: an approval is still reported, anything
+    /// else is ignored.
     public func cancel() {
         work?.cancel()
         isSuspended = false
@@ -238,38 +239,50 @@ public final class GuardianPushApprovalController<Approval>: ObservableObject {
             do {
                 check = try await client.checkApproval()
             } catch {
-                let failure = Self.failure(from: error)
-                // A terminal failure closed the sign-in on the server, so, like an approval, it's never dropped.
-                guard !Task.isCancelled || !failure.isRetryable else { return }
-                if failure == .network {
-                    // Failures while backgrounded (e.g. approving in Guardian) don't count.
-                    if isAppActive { networkFailures += 1 }
-                    if networkFailures <= policy.maxConsecutiveNetworkFailures { continue }
-                    resumePoint = .poll
-                }
-                state = .failed(failure)
-                return
+                guard keepChecking(after: error, networkFailures: &networkFailures) else { return }
+                continue
             }
-            // The client may already have acted on an approval (e.g. stored the credentials), so it's never dropped.
-            if case let .approved(approval) = check {
-                state = .approved
-                onApproved(approval)
-                return
-            }
-            // A late pending answer after Back or another action is dropped.
-            guard !Task.isCancelled else { return }
-            interval = policy.nextInterval(after: check, current: interval)
-            switch check {
-            case .approved:
-                return
-            case let .pending(pending), let .slowDown(pending):
-                networkFailures = 0
-                canResend = pending.canResend
-                // An unchanged answer doesn't republish, so the screen isn't redrawn on every check.
-                let waiting = GuardianPushApprovalState.waiting(device, canResend: canResend)
-                if state != waiting { state = waiting }
-            }
+            guard apply(check, for: device) else { return }
+            networkFailures = 0
         }
+    }
+
+    /// Applies one answer. Returns whether to keep checking.
+    private func apply(_ check: GuardianPushCheck<Approval>, for device: GuardianPushDevice) -> Bool {
+        // The client may already have acted on an approval (e.g. stored the credentials), so it's never dropped.
+        if case let .approved(approval) = check {
+            state = .approved
+            onApproved(approval)
+            return false
+        }
+        // A late pending answer after Back or another action is dropped.
+        guard !Task.isCancelled else { return false }
+        interval = policy.nextInterval(after: check, current: interval)
+        switch check {
+        case .approved:
+            return false
+        case let .pending(pending), let .slowDown(pending):
+            canResend = pending.canResend
+            // An unchanged answer doesn't republish, so the screen isn't redrawn on every check.
+            let waiting = GuardianPushApprovalState.waiting(device, canResend: canResend)
+            if state != waiting { state = waiting }
+            return true
+        }
+    }
+
+    /// Handles a failed check. Returns whether to keep checking: only for network failures within the allowance.
+    private func keepChecking(after error: Error, networkFailures: inout Int) -> Bool {
+        let failure = Self.failure(from: error)
+        // A terminal failure closed the sign-in on the server, so, like an approval, it's never dropped.
+        guard !Task.isCancelled || !failure.isRetryable else { return false }
+        if failure == .network {
+            // Failures while backgrounded (e.g. approving in Guardian) don't count.
+            if isAppActive { networkFailures += 1 }
+            if networkFailures <= policy.maxConsecutiveNetworkFailures { return true }
+            resumePoint = .poll
+        }
+        state = .failed(failure)
+        return false
     }
 
     private func wait(milliseconds: Int) async throws {

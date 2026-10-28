@@ -14,7 +14,7 @@ struct BrandGradient: View {
                         .init(color: theme.colors.background.accent.opacity(0.35), location: 0.25),
                         .init(color: theme.colors.background.primary.opacity(0.25), location: 0.52),
                         .init(color: theme.colors.background.accent.opacity(0.20), location: 0.75),
-                        .init(color: theme.colors.background.layerBase, location: 1.00),
+                        .init(color: theme.colors.background.layerBase, location: 1.00)
                     ],
                     startPoint: UnitPoint(x: 0.24, y: 0.22),
                     endPoint: UnitPoint(x: 0.95, y: 0.24)
