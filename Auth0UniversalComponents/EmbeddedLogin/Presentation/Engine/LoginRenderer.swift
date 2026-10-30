@@ -4,8 +4,8 @@ import SwiftUI
 
 /// What a screen needs from the host, without knowing about the coordinator.
 struct RenderContext {
-    /// Runs the Guardian push screen; set while the coordinator is on `.guardianPush`.
-    var pushController: GuardianPushApprovalController<Void>?
+    /// What the additional step shows; set while the coordinator is on `.additionalStep`.
+    var additionalStepView: AnyView?
     /// Pre-fills email entry, so Back from code entry keeps what the user typed.
     var email: String?
     var isSubmitting: Bool
@@ -19,8 +19,8 @@ enum ScreenPlan: Equatable {
     case loading
     case identifier
     case otpCode(identifier: String)
-    case guardianPush
-    case secondFactorUnavailable
+    case additionalStep
+    case additionalStepUnavailable
     case authenticated
     case failed(message: String)
     case noMethods
@@ -33,8 +33,8 @@ extension ScreenPlan {
         case .loading:                return "loading"
         case .identifier:             return "identifier"
         case .otpCode:                return "otpCode"
-        case .guardianPush:           return "guardianPush"
-        case .secondFactorUnavailable: return "secondFactorUnavailable"
+        case .additionalStep:             return "additionalStep"
+        case .additionalStepUnavailable: return "additionalStepUnavailable"
         case .authenticated:          return "authenticated"
         case .failed:                 return "failed"
         case .noMethods:              return "noMethods"
@@ -47,7 +47,7 @@ extension ScreenPlan {
         case .loading:                return 0
         case .identifier, .noMethods: return 1
         case .otpCode:                return 2
-        case .guardianPush, .secondFactorUnavailable: return 3
+        case .additionalStep, .additionalStepUnavailable: return 3
         case .authenticated, .failed: return 4
         }
     }
@@ -60,8 +60,8 @@ struct LoginRenderer {
         case .loading:                    return .loading
         case .collectOTPIdentifier:       return .identifier
         case let .collectOTPCode(email):  return .otpCode(identifier: email)
-        case .guardianPush:               return .guardianPush
-        case .secondFactorUnavailable:    return .secondFactorUnavailable
+        case .additionalStep:                 return .additionalStep
+        case .additionalStepUnavailable:    return .additionalStepUnavailable
         case .authenticated:              return .authenticated
         case let .failed(message):        return .failed(message: message)
         case .noMethodsAvailable:         return .noMethods
@@ -91,15 +91,11 @@ struct LoginRenderer {
                 onResend: ctx.resend
             )
 
-        case .guardianPush:
-            if let controller = ctx.pushController {
-                GuardianPushApprovalView(controller: controller) { ctx.dispatch(.restart) }
-            } else {
-                LoginLoadingScreen()
-            }
+        case .additionalStep:
+            if let view = ctx.additionalStepView { view } else { LoginLoadingScreen() }
 
-        case .secondFactorUnavailable:
-            LoginSecondFactorUnavailableScreen { ctx.dispatch(.restart) }
+        case .additionalStepUnavailable:
+            LoginAdditionalStepUnavailableScreen { ctx.dispatch(.restart) }
 
         case .authenticated:
             LoginSuccessScreen()

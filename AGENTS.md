@@ -36,6 +36,15 @@ ui-components-ios/
 │   ├── SaveAuthenticators/             # Manage saved factors
 │   │   ├── Domain/                     # DeleteAuthMethodUseCase
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
+│   ├── EmbeddedLogin/                  # Native Email OTP sign-in; hands over to MFA when the tenant asks for more
+│   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
+│   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
+│   │   └── Presentation/               # EmbeddedLoginView, login screens, shared factor-screen pieces
+│   ├── MFA/                            # Multi-factor engine (no login, no Auth0, no factor names)
+│   │   ├── Core/                       # MfaFlowReducer, MfaController, MfaStep, MfaError, factor contract
+│   │   ├── Configuration/              # MfaConfiguration, MfaMessages, MfaScreens, .onMfaError
+│   │   ├── Presentation/               # MfaHostView and the standard screens
+│   │   └── Factors/Push/               # Guardian push: state machine, session, model, screen, transport protocol
 │   ├── Core/Utils/                     # Shared utilities
 │   │   ├── OTPTextField.swift          # OTP code input component
 │   │   ├── CountryCodePicker/          # Phone number country selection
@@ -175,6 +184,23 @@ let client = Auth0.myAccount(token: token, domain: domain, session: session)
 ```
 
 ---
+
+## MFA in Embedded Login: Layering Rules
+
+Embedded Login (email code) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
+
+| Layer | May know | Must not know |
+|---|---|---|
+| Login (`EmbeddedLogin/Domain`, `Presentation`) | Its own `AdditionalStep` contract, Auth0.swift | Any MFA type, any factor |
+| MFA engine (`MFA/Core`, `Configuration`, `Presentation`) | Itself, SwiftUI | The login, Auth0.swift, any factor by name |
+| A factor (`MFA/Factors/<Name>`) | The engine's contract | The login, Auth0.swift, how requests are sent (it uses its own transport protocol) |
+| Adapter (`EmbeddedLogin/Mfa`) | Everything above | — |
+
+- **Screens only render the current step.** Decisions live in pure state machines (`MfaFlowReducer`, `PushApprovalMachine`); a screen renders a model and calls its actions.
+- **Adding a factor never edits the engine or the login:** an id, a model, a session, a transport protocol, words (`MfaFactorMessages` + an extension on `MfaMessages`), a screen, and a binding listed in `EmbeddedMfaStep`. `AddingAFactorTests` shows the shape.
+- **Credentials are staged, then stored once by the engine** (`EmbeddedMfaStager`). A factor never writes to the Keychain.
+- **Public API is the app's contract:** `MfaConfiguration`, `MfaStep`, `MfaError`, the standard screens and `.onMfaError`. The factor contract is internal.
+- Use "additional step" for what the login hands over, and "eligible factors" for what the user can choose from. Don't call MFA the "second" step or factor.
 
 ## Key Technical Decisions
 

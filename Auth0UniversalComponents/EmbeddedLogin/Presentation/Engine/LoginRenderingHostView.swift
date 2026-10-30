@@ -25,8 +25,11 @@ struct LoginRenderingHostView: View {
     /// Called once credentials are stored in the Keychain.
     private let onAuthenticated: () -> Void
 
-    init(interactor: any AuthInteracting, onAuthenticated: @escaping () -> Void = {}) {
-        _coordinator = StateObject(wrappedValue: LoginFlowCoordinator(interactor: interactor))
+    /// `interactor` is built once, with the coordinator: a parent re-rendering doesn't build another.
+    init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil,
+         onAuthenticated: @escaping () -> Void = {}) {
+        _coordinator = StateObject(
+            wrappedValue: LoginFlowCoordinator(interactor: interactor(), additionalStep: additionalStep))
         self.onAuthenticated = onAuthenticated
     }
 
@@ -41,8 +44,7 @@ struct LoginRenderingHostView: View {
         // Horizontal only, so backgrounds still reach under the home indicator.
         .clipShape(HorizontalClip())
         .safeAreaInset(edge: .top, spacing: 0) {
-            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting && !coordinator.isDrainingPush,
-                               onBack: handleBack)
+            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
         }
         .systemNavigationBarHidden()
         .task {
@@ -72,7 +74,7 @@ struct LoginRenderingHostView: View {
 
     private var context: RenderContext {
         RenderContext(
-            pushController: coordinator.pushController,
+            additionalStepView: coordinator.additionalStep?.view,
             email: coordinator.enteredEmail,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,

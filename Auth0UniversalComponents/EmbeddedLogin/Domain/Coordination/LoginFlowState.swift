@@ -6,10 +6,12 @@ enum LoginStep: Equatable {
     case collectOTPIdentifier
     /// `identifier` is the email the code was sent to.
     case collectOTPCode(identifier: String)
-    /// Second factor: Guardian push, driven by `LoginFlowCoordinator.pushController`.
-    case guardianPush
-    /// A second factor is required, but none this flow can run is on offer. Terminal: only a new sign-in follows.
-    case secondFactorUnavailable
+    /// More than the first factor is required, and an additional step is running it
+    /// (`LoginFlowCoordinator.additionalStep`).
+    case additionalStep
+    /// More is required, but nothing this flow can run is on offer, and the app wasn't told. Terminal: only a new
+    /// sign-in follows.
+    case additionalStepUnavailable
     case authenticated
     case failed(message: String)
     case noMethodsAvailable
@@ -21,6 +23,6 @@ enum LoginEvent: Equatable {
     case submitIdentifier(String)
     case submitOTP(code: String)
     case retry
-    /// Starts a new sign-in, e.g. after the push was denied.
+    /// Starts a new sign-in, e.g. after the additional step failed.
     case restart
 }
