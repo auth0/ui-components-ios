@@ -46,7 +46,7 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 
 | Universal Components | Auth0.swift | Notes |
 |---|---|---|
-| Unreleased | 4.0.0-beta.1+ (< 5.0.0) | Adds Guardian push as an Embedded Login second factor. Not released yet |
+| Unreleased | 4.0.0-beta.1+ (< 5.0.0) | Adds multi-factor authentication (Guardian push) to Embedded Login. Not released yet |
 | 1.0.0-beta.1 | 4.0.0-beta.0+ (< 5.0.0) | Adds Embedded Login. Breaking: needs the Auth0.swift 4 beta |
 | 1.0.0-beta.0 | 2.21.0+ (< 3.0.0) | First beta |
 

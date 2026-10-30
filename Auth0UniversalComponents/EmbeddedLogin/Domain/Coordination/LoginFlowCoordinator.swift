@@ -1,8 +1,8 @@
 import Combine
 import Foundation
 
-/// Drives the Email OTP flow, then Guardian push when the tenant asks for a second factor:
-/// `LoginEvent`s in, `LoginStep`s out. UI-agnostic.
+/// Drives the Email OTP flow, then hands over to an additional step when the tenant asks for more:
+/// `LoginEvent`s in, `LoginStep`s out. UI-agnostic. It knows nothing about what the additional step is.
 @MainActor
 final class LoginFlowCoordinator: ObservableObject {
 
@@ -11,11 +11,9 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private(set) var inputError: AuthFailure?
     /// True while an email submit, resend or verify is in flight. Blocks re-entry and Back.
     @Published private(set) var isSubmitting = false
-    /// Runs the second factor while `step == .guardianPush`.
-    @Published private(set) var pushController: GuardianPushApprovalController<Void>?
-    /// True from Back on the push screen until the check in flight settles. Blocks Back: leaving now would
-    /// orphan an approval that is already on its way.
-    @Published private(set) var isDrainingPush = false
+    /// Runs the additional step while `step == .additionalStep`. Kept after it ends until the request it had in flight
+    /// settles, because the SDK allows one request at a time.
+    @Published private(set) var additionalStep: AdditionalStepSession?
     /// The email last submitted. Pre-fills email entry when the user comes back to it.
     private(set) var enteredEmail: String?
 
@@ -30,13 +28,12 @@ final class LoginFlowCoordinator: ObservableObject {
     /// Where `retry` returns to; `nil` re-runs discovery.
     private var retryStep: LoginStep?
 
-    /// Waits between push checks; injected so tests don't wait.
-    private let pushSleep: (Int) async throws -> Void
+    /// What runs after the first factor. Without one, a tenant that asks for more can't be served.
+    private let additionalStepProvider: AdditionalStepProviding?
 
-    init(interactor: AuthInteracting,
-         pushSleep: @escaping (Int) async throws -> Void = GuardianPushPollingPolicy.sleep(milliseconds:)) {
+    init(interactor: AuthInteracting, additionalStep: AdditionalStepProviding? = nil) {
         self.interactor = interactor
-        self.pushSleep = pushSleep
+        self.additionalStepProvider = additionalStep
     }
 
     func send(_ event: LoginEvent) async {
@@ -54,27 +51,28 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
-    /// Code entry steps back to email entry. From push: back to the device list when there is one, else a
-    /// fresh sign-in at email entry, since the email code is spent. Anywhere else leaves the flow.
+    /// Code entry steps back to email entry. From the additional step, Back cancels it: a fresh sign-in at email entry,
+    /// since the email code is spent. Anywhere else leaves the flow.
     @discardableResult
     func goBack() -> BackOutcome {
         // Leaving now would orphan the in-flight result (e.g. credentials stored, no callback).
-        if isSubmitting || isDrainingPush { return .ignored }
+        if isSubmitting { return .ignored }
         inputError = nil
         switch step {
-        case .collectOTPCode, .secondFactorUnavailable:
+        case .collectOTPCode, .additionalStepUnavailable:
             step = .collectOTPIdentifier
             return .movedBack
-        case .guardianPush:
-            if let pushController, pushController.canChooseAnotherDevice {
-                pushController.chooseAnotherDevice()
+        case .additionalStep:
+            // Over: an error screen, or no screen at all. Nothing left to cancel, but the step is told it was left.
+            guard let additionalStep, !additionalStep.isFinished else {
+                self.additionalStep?.cancel()
+                step = .collectOTPIdentifier
                 return .movedBack
             }
-            // Stopped now; a check still in flight may yet sign the user in.
-            pushController?.cancel()
-            step = .collectOTPIdentifier
-            drainPush()
-            return .movedBack
+            // The login moves to email entry once the additional step reports the cancel. While it is storing an
+            // approved sign-in it ignores the cancel, and so do we.
+            additionalStep.cancel()
+            return step == .additionalStep ? .ignored : .movedBack
         default:
             return .exitFlow
         }
@@ -89,7 +87,7 @@ final class LoginFlowCoordinator: ObservableObject {
     // MARK: Steps
 
     private func discover() async {
-        await endPush()
+        await endAdditionalStep()
         // A check in flight may have completed the sign-in.
         if step == .authenticated { return }
         step = .loading
@@ -110,7 +108,7 @@ final class LoginFlowCoordinator: ObservableObject {
         isSubmitting = true
         defer { isSubmitting = false }
         enteredEmail = email
-        await endPush()
+        await endAdditionalStep()
         // A check in flight may have completed the sign-in.
         if step == .authenticated { return }
         inputError = nil
@@ -139,10 +137,8 @@ final class LoginFlowCoordinator: ObservableObject {
             switch try await interactor.verifyOTP(code: code) {
             case .authenticated:
                 step = .authenticated
-            case let .guardianPush(devices):
-                startPush(devices: devices)
-            case .secondFactorUnavailable:
-                step = .secondFactorUnavailable
+            case let .additionalStepRequired(context):
+                startAdditionalStep(context)
             }
         } catch let failure as AuthFailure {
             inputError = failure
@@ -155,35 +151,25 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
-    // MARK: Guardian push
+    // MARK: Additional step
 
-    private func startPush(devices: [GuardianPushDevice]) {
-        let controller = GuardianPushApprovalController(client: interactor.makeGuardianPushClient(),
-                                                        devices: devices,
-                                                        policy: .default,
-                                                        sleep: pushSleep) { [weak self] _ in
-            self?.step = .authenticated
+    private func startAdditionalStep(_ context: AdditionalStepContext) {
+        guard let additionalStepProvider else {
+            step = .additionalStepUnavailable
+            return
         }
-        pushController = controller
-        step = .guardianPush
-        controller.start()
+        let session = additionalStepProvider.makeSession(context: context, delegate: self)
+        additionalStep = session
+        step = .additionalStep
+        session.start()
     }
 
-    /// Waits, after Back, for a check still in flight; an approval it brings signs the user in.
-    private func drainPush() {
-        guard let pushController else { return }
-        isDrainingPush = true
-        Task { [weak self] in
-            await pushController.stop()
-            self?.isDrainingPush = false
-        }
-    }
-
-    /// Stops push and waits for a check still in flight: the SDK allows one request at a time.
-    private func endPush() async {
-        guard let pushController else { return }
-        await pushController.stop()
-        self.pushController = nil
+    /// Ends the additional step, if it is still going, and waits for a request still in flight: the SDK allows one at a
+    /// time, and a reply that arrives after it ended is dropped.
+    private func endAdditionalStep() async {
+        guard let additionalStep else { return }
+        await additionalStep.cancelAndWait()
+        self.additionalStep = nil
     }
 
     private func restart() async {
@@ -207,5 +193,25 @@ final class LoginFlowCoordinator: ObservableObject {
         } else {
             await discover()
         }
+    }
+}
+
+extension LoginFlowCoordinator: AdditionalStepDelegate {
+    func additionalStepDidFinish(_ result: AdditionalStepResult) {
+        switch result {
+        case .completed:
+            step = .authenticated
+        case .cancelled:
+            step = .collectOTPIdentifier                        // the first screen; the email code is spent
+        case let .unavailable(reported):
+            // If the app was told it routes the user itself. Otherwise say so rather than leave a spinner.
+            if !reported { step = .additionalStepUnavailable }
+        case .failed:
+            break                                               // the additional step shows its own error and way out
+        }
+    }
+
+    func additionalStepRequestedRestart() {
+        Task { await send(.restart) }
     }
 }

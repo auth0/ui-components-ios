@@ -13,10 +13,9 @@ enum LoginOption: Equatable {
 enum AuthProgress: Equatable {
     /// The credentials are already in the Keychain.
     case authenticated
-    /// The tenant wants a second factor: Guardian push, sent to one of these devices.
-    case guardianPush([GuardianPushDevice])
-    /// The tenant wants a second factor this flow can't run (e.g. only SMS), or the user has none it accepts.
-    case secondFactorUnavailable
+    /// The tenant wants more than the first factor. The context carries what an additional step needs to continue the
+    /// same sign-in; whatever runs it decides what is usable.
+    case additionalStepRequired(AdditionalStepContext)
 }
 
 /// Failures shown inline on the current input screen. Any other error goes full-screen.
@@ -48,6 +47,4 @@ protocol AuthInteracting {
     func startOTP(connection: String, email: String) async throws
     /// `.authenticated` means the credentials are already in the Keychain.
     func verifyOTP(code: String) async throws -> AuthProgress
-    /// A push client for the current sign-in; approval stores the credentials before reporting success.
-    func makeGuardianPushClient() -> AnyGuardianPushClient<Void>
 }
