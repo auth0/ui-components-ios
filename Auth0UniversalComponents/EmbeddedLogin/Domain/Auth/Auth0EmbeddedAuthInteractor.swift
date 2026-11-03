@@ -1,9 +1,9 @@
 import Auth0
 import Foundation
 
-// The Embedded Login adapter over Auth0: authorize → identify → challengeEmail → verifyOtp, then Guardian
-// push when the tenant asks for a second factor. Intermediate steps return `insufficient_authorization`
-// with the `nextActions` to take. `EmbeddedAuthGuardianPushClient` is the only other Auth0-aware file.
+// The Embedded Login adapter over Auth0: authorize → identify → challengeEmail → verifyOtp. When the tenant asks for
+// more, it hands the server's next actions on in an `AdditionalStepContext` and goes no further. Intermediate steps
+// return `insufficient_authorization` with the `nextActions` to take.
 
 enum Auth0EmbeddedAuthError: LocalizedError {
     case discoveryConnectionMissing
@@ -53,21 +53,19 @@ protocol EmbeddedAuthClient {
 }
 
 struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
-    /// The steps this flow has screens for, so the server never routes to one it can't render:
-    /// Email OTP, then Guardian push.
-    static let capabilities: [EmbeddedCapability] = [
-        .identifyEmail, .challengeEmail, .verifyOTP,
-        .challengePush, .verifyOob
-    ]
+    /// The steps this flow itself has screens for: Email OTP.
+    static let firstFactorCapabilities: [EmbeddedCapability] = [.identifyEmail, .challengeEmail, .verifyOTP]
 
     /// Auth0.swift's default scope.
     static let scope = "openid profile email offline_access"
 
     let auth: EmbeddedAuth
+    /// What to advertise to `authorize`, so the server never routes to a step nothing can render.
+    var capabilities: [EmbeddedCapability] = LiveEmbeddedAuthClient.firstFactorCapabilities
 
     func authorize(connection: String) async throws {
         try await auth.authorize(connection: connection,
-                                 capabilities: Self.capabilities,
+                                 capabilities: capabilities,
                                  scope: Self.scope,
                                  audience: nil).start()
     }
@@ -80,34 +78,39 @@ struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
     func verifyOob() async throws -> Credentials { try await auth.verifyOob().start() }
 }
 
-protocol CredentialsStoring {
-    func store(credentials: Credentials) throws
+/// Where a finished sign-in's credentials go. The SDK keeps nothing: the app that embeds the login receives them.
+@MainActor
+protocol CredentialsDelivering {
+    /// Throws when the app can't take them; the sign-in then ends as "couldn't be saved".
+    func deliver(credentials: Credentials) throws
 }
-
-extension CredentialsManager: CredentialsStoring {}
 
 /// One instance per login flow — `EmbeddedAuth` is stateful.
 final class Auth0EmbeddedAuthInteractor: AuthInteracting {
 
     private let client: EmbeddedAuthClient
-    private let credentialsStore: CredentialsStoring
+    private let credentialsDelivery: CredentialsDelivering
     private let connection: String?
 
     private var lastNextActions: [NextAction] = []
     /// Lets the first `startOTP` reuse the loop `discover()` opened.
     private var hasFreshLoop = false
 
-    init(client: EmbeddedAuthClient, credentialsStore: CredentialsStoring, connection: String? = nil) {
+    init(client: EmbeddedAuthClient, credentialsDelivery: CredentialsDelivering, connection: String? = nil) {
         self.client = client
-        self.credentialsStore = credentialsStore
+        self.credentialsDelivery = credentialsDelivery
         self.connection = connection
     }
 
-    /// Reads `clientId`/`domain` from `Auth0.plist`.
-    convenience init(session: URLSession = .shared, bundle: Bundle = .main, connection: String? = nil) {
+    /// Reads `clientId`/`domain` from `Auth0.plist`. `additionalStepCapabilities` are the extra steps whatever runs the
+    /// additional step can render; without any, a tenant that asks for more can't be served.
+    convenience init(credentialsDelivery: CredentialsDelivering, session: URLSession = .shared, bundle: Bundle = .main,
+                     connection: String? = nil, additionalStepCapabilities: [EmbeddedCapability] = []) {
         self.init(
-            client: LiveEmbeddedAuthClient(auth: Auth0.embeddedAuth(session: session, bundle: bundle)),
-            credentialsStore: CredentialsManager(authentication: Auth0.authentication(session: session, bundle: bundle)),
+            client: LiveEmbeddedAuthClient(
+                auth: Auth0.embeddedAuth(session: session, bundle: bundle),
+                capabilities: LiveEmbeddedAuthClient.firstFactorCapabilities + additionalStepCapabilities),
+            credentialsDelivery: credentialsDelivery,
             connection: connection
         )
     }
@@ -139,14 +142,14 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         do {
             let credentials = try await client.verifyOtp(code, type: .oob)
             do {
-                try credentialsStore.store(credentials: credentials)
+                try credentialsDelivery.deliver(credentials: credentials)
             } catch {
                 throw CredentialsNotSavedError()
             }
             return .authenticated
         } catch let error as EmbeddedAuthError {
-            // MFA is required, but none of the user's factors can be used here.
-            if case .noEligibleFactors = error.reason { return .secondFactorUnavailable }
+            // More is required, but none of the user's factors can be used here: an empty menu says so.
+            if case .noEligibleFactors = error.reason { return .additionalStepRequired(additionalStepContext([])) }
             guard case let .insufficientAuthorization(subReason, nextActions) = error.reason else {
                 throw Self.failure(for: error)
             }
@@ -154,23 +157,15 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             if subReason == .invalidCode || subReason == .invalidIdentifierOrCode {
                 throw AuthFailure.invalidCode
             }
-            // Only a plain continuation means the email code is accepted and a second factor is next.
+            // Only a plain continuation means the email code is accepted and more is needed next.
             guard subReason == .none else { throw Auth0EmbeddedAuthError.requestFailed(message: nil) }
-            let devices = EmbeddedAuthGuardianPushClient.devices(in: nextActions)
-            return devices.isEmpty ? .secondFactorUnavailable : .guardianPush(devices)
+            return .additionalStepRequired(additionalStepContext(nextActions))
         }
     }
 
-    func makeGuardianPushClient() -> AnyGuardianPushClient<Void> {
-        AnyGuardianPushClient(EmbeddedAuthGuardianPushClient(client: client)).mapApproval { [weak self] credentials in
-            // The login screen that owned this sign-in is gone, so nobody can finish it: store nothing.
-            guard let self else { return }
-            do {
-                try credentialsStore.store(credentials: credentials)
-            } catch {
-                throw GuardianPushFailure.other(message: CredentialsNotSavedError().errorDescription)
-            }
-        }
+    /// The same sign-in session, for whatever continues it.
+    private func additionalStepContext(_ nextActions: [NextAction]) -> AdditionalStepContext {
+        AdditionalStepContext(nextActions: nextActions, client: client, credentialsDelivery: credentialsDelivery)
     }
 
     // MARK: Loop helpers

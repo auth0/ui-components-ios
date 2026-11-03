@@ -11,10 +11,10 @@ struct Auth0EmbeddedAuthInteractorTests {
 
     private let email = "sarah.doe@atko.email"
     private let client = StubEmbeddedAuthClient()
-    private let store = StubCredentialsStore()
+    private let store = StubCredentialsDelivery()
 
     private func makeSUT(connection: String? = "email") -> Auth0EmbeddedAuthInteractor {
-        Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store, connection: connection)
+        Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: store, connection: connection)
     }
 
     /// Scripts discovery → identify → challenge so `startOTP` lands on code entry.
@@ -90,15 +90,15 @@ struct Auth0EmbeddedAuthInteractorTests {
 
     // MARK: Verify
 
-    @Test func success_storesCredentials() async throws {
+    @Test func success_handsTheCredentialsToTheApp() async throws {
         client.verifyOtpResults = [.success(Credentials(accessToken: "at"))]
         #expect(try await makeSUT().verifyOTP(code: "112233") == .authenticated)
-        #expect(store.stored.map(\.accessToken) == ["at"])
+        #expect(store.delivered.map(\.accessToken) == ["at"])
         #expect(client.calls == [.verifyOtp(code: "112233", type: .oob)])
     }
 
-    @Test func storeFailure_throwsCredentialsNotSaved() async {
-        store.error = NSError(domain: "keychain", code: -25308)
+    @Test func appFailure_throwsCredentialsNotSaved() async {
+        store.error = NSError(domain: "app", code: -25308)
         await #expect(throws: CredentialsNotSavedError()) { try await makeSUT().verifyOTP(code: "112233") }
     }
 
@@ -113,21 +113,44 @@ struct Auth0EmbeddedAuthInteractorTests {
         await #expect(throws: AuthFailure.tooManyAttempts) { try await makeSUT().verifyOTP(code: "000000") }
     }
 
-    /// A second factor without Guardian push leaves no device, which the push screen shows as unavailable.
-    /// A second factor without Guardian push (e.g. only TOTP or SMS) isn't one this flow can run.
-    @Test func stepUpWithoutPush_isUnavailable() async throws {
-        client.verifyOtpResults = [.failure(Fix.needs([Fix.verifyTOTP, Fix.verifyEmail, Fix.verifySMS]))]
-        #expect(try await makeSUT().verifyOTP(code: "112233") == .secondFactorUnavailable)
-        #expect(store.stored.isEmpty)
+    /// Whatever the server offers goes on to the additional step untouched: the interactor doesn't judge what is
+    /// usable.
+    @Test func stepUp_handsTheServersMenuOn_andStoresNothing() async throws {
+        let menu = [Fix.verifyTOTP, Fix.verifyEmail, Fix.verifySMS, Fix.challengePush]
+        client.verifyOtpResults = [.failure(Fix.needs(menu))]
+        let progress = try await makeSUT().verifyOTP(code: "112233")
+        guard case let .additionalStepRequired(context) = progress else {
+            Issue.record("expected an additional step")
+            return
+        }
+        #expect(context.nextActions.count == 4)
+        #expect(store.delivered.isEmpty)
     }
 
-    /// MFA is required but the user has no eligible factor: the same outcome, not a full-screen retry.
-    @Test func noEligibleFactors_isUnavailable() async throws {
+    /// The additional step continues the same sign-in: same client, same credentials delivery.
+    @Test func theContext_carriesTheSameSignIn() async throws {
+        client.verifyOtpResults = [.failure(Fix.needs([Fix.challengePush]))]
+        let progress = try await makeSUT().verifyOTP(code: "112233")
+        guard case let .additionalStepRequired(context) = progress else {
+            Issue.record("expected an additional step")
+            return
+        }
+        #expect((context.client as AnyObject) === client)
+        #expect((context.credentialsDelivery as AnyObject) === store)
+    }
+
+    /// More is required but the user has no eligible factor: an empty menu, not a full-screen retry.
+    @Test func noEligibleFactors_isAnEmptyMenu() async throws {
         client.verifyOtpResults = [.failure(Fix.terminal("access_denied", description: "no_eligible_factors"))]
-        #expect(try await makeSUT().verifyOTP(code: "112233") == .secondFactorUnavailable)
+        let progress = try await makeSUT().verifyOTP(code: "112233")
+        guard case let .additionalStepRequired(context) = progress else {
+            Issue.record("expected an additional step")
+            return
+        }
+        #expect(context.nextActions.isEmpty)
     }
 
-    /// Only a plain continuation is a second factor; a pending or slow-down answer here is unexpected.
+    /// Only a plain continuation means more is needed; a pending or slow-down answer here is unexpected.
     @Test(arguments: ["authorization_pending", "slow_down"])
     func unexpectedContinuation_isAnErrorWithoutRawText(_ subReason: String) async {
         client.verifyOtpResults = [.failure(Fix.needs([Fix.challengePush], subReason: subReason))]
@@ -146,52 +169,8 @@ struct Auth0EmbeddedAuthInteractorTests {
         await #expect(throws: AuthFailure.tooManyAttempts) { try await makeSUT().verifyOTP(code: "000000") }
     }
 
-    /// The login screen was dismissed: an approval that still arrives stores nothing.
-    @Test func pushApproval_afterTheInteractorIsGone_storesNothing() async throws {
-        client.verifyOobResults = [.success(Credentials(accessToken: "push"))]
-        var interactor: Auth0EmbeddedAuthInteractor? = makeSUT()
-        let push = interactor!.makeGuardianPushClient()
-        weak var weakInteractor = interactor
-        interactor = nil
-        #expect(weakInteractor == nil)
-
-        guard case .approved = try await push.checkApproval() else { Issue.record("expected approval"); return }
-        #expect(store.stored.isEmpty)
-    }
-
-    @Test func stepUpWithPush_offersTheGuardianDevices() async throws {
-        client.verifyOtpResults = [.failure(Fix.needs([Fix.verifyTOTP, Fix.challengePush]))]
-        #expect(try await makeSUT().verifyOTP(code: "112233")
-                == .guardianPush([GuardianPushDevice(index: 0, name: "Sudhanshu's iPhone")]))
-    }
-
-    @Test func pushApproval_storesTheCredentials() async throws {
-        client.verifyOobResults = [.success(Credentials(accessToken: "push"))]
-        // The coordinator keeps its interactor alive for the whole sign-in.
-        let interactor = makeSUT()
-        let push = interactor.makeGuardianPushClient()
-
-        guard case .approved = try await push.checkApproval() else { Issue.record("expected approval"); return }
-        #expect(store.stored.map(\.accessToken) == ["push"])
-        withExtendedLifetime(interactor) {}
-    }
-
-    @Test func pushApproval_whenTheKeychainFails_isAFailure() async {
-        client.verifyOobResults = [.success(Credentials())]
-        store.error = NSError(domain: "keychain", code: -25308)
-        let interactor = makeSUT()
-        let push = interactor.makeGuardianPushClient()
-
-        await #expect(throws: GuardianPushFailure.other(message: CredentialsNotSavedError().errorDescription)) {
-            try await push.checkApproval()
-        }
-        withExtendedLifetime(interactor) {}
-    }
-
-    /// The server only offers steps this flow can render: Email OTP, then Guardian push.
-    @Test func capabilities_coverEmailAndPushOnly() {
-        #expect(LiveEmbeddedAuthClient.capabilities == [
-            .identifyEmail, .challengeEmail, .verifyOTP, .challengePush, .verifyOob
-        ])
+    /// On its own the login advertises only the step it renders itself. Whatever plugs in adds its own.
+    @Test func capabilities_onTheirOwn_coverEmailOnly() {
+        #expect(LiveEmbeddedAuthClient.firstFactorCapabilities == [.identifyEmail, .challengeEmail, .verifyOTP])
     }
 }

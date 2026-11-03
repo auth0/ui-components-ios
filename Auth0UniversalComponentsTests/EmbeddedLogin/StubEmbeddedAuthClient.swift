@@ -56,13 +56,13 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     }
 }
 
-final class StubCredentialsStore: CredentialsStoring {
+final class StubCredentialsDelivery: CredentialsDelivering {
     var error: Error?
-    private(set) var stored: [Credentials] = []
+    private(set) var delivered: [Credentials] = []
 
-    func store(credentials: Credentials) throws {
+    func deliver(credentials: Credentials) throws {
         if let error { throw error }
-        stored.append(credentials)
+        delivered.append(credentials)
     }
 }
 

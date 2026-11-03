@@ -2,18 +2,26 @@
 
 ## Unreleased
 
+**⚠️ Breaking** (beta)
+
+- **`EmbeddedLoginView` no longer stores the credentials.** `onAuthenticated` now receives the `Credentials` and may throw: `{ credentials in try credentialsManager.store(credentials: credentials) }`. The SDK keeps nothing, so where the credentials go is the app's decision, and the app can no longer end up with two copies, one of them in a Keychain location it never chose. It runs once, as soon as the user is signed in and after any multi-factor step. If it throws, the user sees the "couldn't save" screen and can start again. The closure has no default, so a sign-in can't complete without the app taking the credentials. Call `clear()` before `store` when replacing an earlier session, because Auth0.swift keeps the previous session's pinned expiry until then. See "Embedded Login" in `EXAMPLES.md`.
+
 **Added**
 
-- **Embedded Login: Guardian push as a second factor.** When the tenant asks for a second factor after the email code, `EmbeddedLoginView` sends a Guardian push and waits for approval, with a device picker when there are several Guardian devices. A denied request, an expired request or an ended session show a terminal screen with **Sign in again**. A second factor this flow can't run, or none enrolled, shows **Verification method not available.** (`LoginSecondFactorUnavailableScreen`).
-- **Standalone Guardian push component:** `GuardianPushApprovalController`, `GuardianPushApprovalView`, `GuardianPushView` and its building blocks, the `GuardianPushClient` protocol, `AnyGuardianPushClient`, and `EmbeddedAuthGuardianPushClient` for Auth0.swift.
+- **Embedded Login: multi-factor authentication (MFA).** When the tenant's policy asks for more than the email code, `EmbeddedLoginView` continues in place with MFA. Guardian push is the first factor: with several Guardian devices the user picks one from a list, and **Verify another way** returns to it. A policy that needs another factor shows the list again with **One more step**. Back cancels MFA and returns to email entry, and a push approved after that is discarded and never signs the user in. A denied, expired or ended request, too many attempts or no connection shows a screen with its own message and **Start over**. An account with no factor this flow can run shows **Verification method not available.** (`LoginAdditionalStepUnavailableScreen`), or, with `.onMfaError`, your app is told and can fall back to Universal Login. The handler answers with `MfaErrorHandling`: `.handled` when your app routes the user itself, `.notHandled` when it only observes (logging), so the screen still shows and the user is never left on a spinner with no way out.
+- **A separate MFA engine.** MFA runs on its own engine whose decisions are pure logic with no UI, so the login no longer drives push itself. The engine is factor-agnostic: a factor is an id, a session, a model and screen, its own words and a transport protocol, so adding one needs no change to the engine or to the login. The login only has a small `AdditionalStep` contract ("an additional step runs here") and knows nothing about MFA. New public API: `MfaConfiguration` (`MfaMessages` words, extended per factor; `MfaScreens` with per-factor replacement; `MfaPresentation`, including `.headless(MfaStepStream)`), `MfaStep` (`.loading`, `.authenticatorList`, `.factor`, `.error`), `PushChallengeModel`, the standard screens (`MfaAuthenticatorListScreen`, `MfaPushChallengeScreen`, `MfaErrorScreen`, `MfaLoadingScreen`), the typed `MfaError`, `MfaFactorID`, `EmbeddedLoginView(connection:mfa:onAuthenticated:)` and `.onMfaError { }`. Existing `EmbeddedLoginView` call sites compile unchanged.
+- **Multi-step sign-in.** Every factor a policy needs runs inside one MFA session, and the credentials go to the app once, at the end. The server decides how many steps a sign-in needs and the flow follows it, with no limit of its own; `AuthenticatorListModel.round` and `MfaFactorStep.round` number the steps.
+- **A resend wait that every screen gets.** The 60 second wait before a push can be resent belongs to the flow, not to the standard button. `PushChallengeModel.resendAvailableIn` counts it down, and `resend()` does nothing until it reaches 0, so replaced and headless screens are held to the same wait.
+- **Documentation.** A DocC article set for multi-factor authentication (getting started, errors, customizing, headless, multi-step, how it is structured, adding a factor), with diagrams that follow light and dark mode, and doc comments on every public MFA symbol.
 
 **Changed**
 
-- Embedded Login keeps the email when the user comes back to email entry: Back from code entry or Guardian push, **Try again**, or **Sign in again**.
+- Embedded Login keeps the email when the user comes back to email entry: Back from code entry or MFA, **Try again**, **Start over** or **Sign in again**.
 - Embedded Login now advertises only the steps it can render (Email OTP and Guardian push) in its `authorize` capabilities.
 - Requires Auth0.swift `4.0.0-beta.1` or later 4.x, the first release with the push APIs.
 - Error screens never show the SDK's internal codes (e.g. `too_many_attempts`); rate limits, IP blocks and consent errors get their own copy.
-- The **Resend Code** countdowns keep time while the screen redraws, and announce the time left to VoiceOver.
+- The **Resend** countdowns keep time while the screen redraws, and announce the time left to VoiceOver.
+- The push screen no longer names the Guardian app (customers may ship their own authenticator), says **Resend notification** instead of **Resend Code**, and has its own sentence for a device with no name.
 
 
 ## [1.0.0-beta.1](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.1) (2026-10-14)
