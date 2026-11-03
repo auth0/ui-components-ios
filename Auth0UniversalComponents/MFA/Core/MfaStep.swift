@@ -158,6 +158,10 @@ public struct MfaFactorStep: Equatable {
     public let model: any MfaFactorModel
     /// Which step of a multi-step sign-in this is, starting at 1.
     public let round: Int
+    /// Which running session produced the step. Actions never affect equality, so two sessions can show equal models
+    /// (two devices with the same name) while their actions belong to different sessions. This keeps such steps
+    /// apart, so a step is never mistaken for one that is unchanged.
+    let sessionToken: Int
 
     /// Creates a step.
     ///
@@ -166,14 +170,21 @@ public struct MfaFactorStep: Equatable {
     ///   - model: What that factor's screen renders.
     ///   - round: Which step of the sign-in this is, starting at 1.
     public init(factor: MfaFactorID, model: any MfaFactorModel, round: Int = 1) {
+        self.init(factor: factor, model: model, round: round, sessionToken: 0)
+    }
+
+    init(factor: MfaFactorID, model: any MfaFactorModel, round: Int, sessionToken: Int) {
         self.factor = factor
         self.model = model
         self.round = round
+        self.sessionToken = sessionToken
     }
 
-    /// Two steps are equal when they are the same factor's screen, in the same round, with equal models.
+    /// Two steps are equal when they are the same factor's screen, in the same round, from the same session, with
+    /// equal models.
     public static func == (lhs: MfaFactorStep, rhs: MfaFactorStep) -> Bool {
-        lhs.factor == rhs.factor && lhs.round == rhs.round && lhs.model.isEqual(to: rhs.model)
+        lhs.factor == rhs.factor && lhs.round == rhs.round && lhs.sessionToken == rhs.sessionToken
+            && lhs.model.isEqual(to: rhs.model)
     }
 }
 

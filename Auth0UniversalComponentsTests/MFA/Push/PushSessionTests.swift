@@ -45,8 +45,14 @@ struct PushSessionTests {
     private let clock = ManualMfaClock()
     private let host = FakeHost()
 
-    private func session(_ transport: ScriptedPushTransport) -> PushSession {
-        PushSession(offer: offer, transport: transport, policy: .default, clock: clock, host: host)
+    /// `cooldown` is the resend wait in seconds; the tests that are not about it use none.
+    private func session(_ transport: ScriptedPushTransport, cooldown: Int = 0) -> PushSession {
+        PushSession(offer: offer, transport: transport, policy: PushPollingPolicy(resendCooldownSeconds: cooldown),
+                    clock: clock, host: host)
+    }
+
+    private func sends(_ transport: ScriptedPushTransport) -> Int {
+        transport.log.filter { $0 == "send push:0" }.count
     }
 
     private func model(_ session: PushSession) -> PushChallengeModel? { session.model as? PushChallengeModel }
@@ -94,6 +100,56 @@ struct PushSessionTests {
         #expect(model(sut)?.canResend == false, "and offers no second resend meanwhile")
         await eventually { model(sut)?.canResend == true }
         #expect(model(sut)?.canResend == true, "once it is out, resend is possible again")
+    }
+
+    // MARK: Resend wait
+
+    @Test func theModelCountsTheResendWaitDown_onTheClock() async {
+        let sut = session(ScriptedPushTransport(), cooldown: 3)
+        sut.start()
+        await eventually { model(sut) != nil }
+        #expect(model(sut)?.resendAvailableIn == 3)
+        for expected in [2, 1, 0] {
+            await settle()                                  // the poll and the tick register their sleeps
+            await clock.advance()
+            await eventually { model(sut)?.resendAvailableIn == expected }
+            #expect(model(sut)?.resendAvailableIn == expected)
+        }
+        #expect(model(sut)?.canResend == true, "the server's permission is a separate fact")
+    }
+
+    /// A replaced screen has no countdown of its own, so the flow must hold it to the wait.
+    @Test func aCustomScreenCannotResendBeforeTheWaitIsOver() async {
+        let transport = ScriptedPushTransport()
+        let sut = session(transport, cooldown: 2)
+        sut.start()
+        await eventually { model(sut) != nil }
+        model(sut)?.resend()
+        await settle()
+        #expect(sends(transport) == 1, "ignored: the wait is not over")
+        #expect(model(sut)?.canResend == true)
+
+        for expected in [1, 0] {
+            await settle()
+            await clock.advance()
+            await eventually { model(sut)?.resendAvailableIn == expected }
+        }
+        model(sut)?.resend()
+        await eventually { sends(transport) == 2 }
+        #expect(sends(transport) == 2)
+        await eventually { model(sut)?.resendAvailableIn == 2 }
+        #expect(model(sut)?.resendAvailableIn == 2, "and the wait starts again for the new push")
+    }
+
+    @Test func deactivated_theResendWaitStops() async {
+        let sut = session(ScriptedPushTransport(), cooldown: 3)
+        sut.start()
+        await eventually { model(sut) != nil }
+        sut.deactivate()
+        await settle()
+        await clock.advance()
+        await settle()
+        #expect(model(sut)?.resendAvailableIn == 3)
     }
 
     @Test func theModelsActions_reachTheCore() async {

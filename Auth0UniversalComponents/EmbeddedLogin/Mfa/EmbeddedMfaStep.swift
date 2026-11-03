@@ -15,7 +15,7 @@ final class EmbeddedMfaStep: ObservableObject, AdditionalStepProviding {
     private let bindings: [EmbeddedFactorBinding]
     /// The app's `onMfaError`, if it set one. Told how a flow ended without signing in (a cancel isn't one: the user is
     /// still in the login).
-    var errorHandler: ((MfaError) -> Void)?
+    var errorHandler: ((MfaError) -> MfaErrorHandling)?
 
     /// - Parameter bindings: The factors this login can run. Defaults to the ones that ship.
     init(configuration: MfaConfiguration = MfaConfiguration(), clock: MfaClock = SystemMfaClock(),
@@ -53,7 +53,7 @@ final class EmbeddedMfaSession: AdditionalStepSession {
 
     init(offers: [MfaFactorOffer], registry: MfaFactorRegistry, stager: EmbeddedMfaStager,
          configuration: MfaConfiguration, clock: MfaClock, delegate: AdditionalStepDelegate,
-         errorHandler: @escaping () -> ((MfaError) -> Void)?) {
+         errorHandler: @escaping () -> ((MfaError) -> MfaErrorHandling)?) {
         self.configuration = configuration
         self.delegate = delegate
         var finish: ((MfaError?) -> Void)?
@@ -69,11 +69,13 @@ final class EmbeddedMfaSession: AdditionalStepSession {
             case .cancelled:
                 delegate?.additionalStepDidFinish(.cancelled)
             case .noEligibleFactors:
-                let handler = errorHandler()
-                handler?(error)
-                delegate?.additionalStepDidFinish(.unavailable(reported: handler != nil))
+                // Nothing else is on screen for this error, so the app says whether it took over. A handler that only
+                // observes (logging) must not remove the SDK's own screen and leave the user on a spinner.
+                let handling = errorHandler()?(error) ?? .notHandled
+                delegate?.additionalStepDidFinish(.unavailable(reported: handling == .handled))
             default:
-                errorHandler()?(error)
+                // The engine's error screen is already showing, with a way out: the answer changes nothing.
+                _ = errorHandler()?(error)
                 delegate?.additionalStepDidFinish(.failed)
             }
         }

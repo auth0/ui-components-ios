@@ -163,7 +163,7 @@ When the tenant's MFA policy asks for more than the email code, `EmbeddedLoginVi
 - **Approved:** the credentials are saved and `onAuthenticated` fires. If the policy asks for another factor, the list returns with **One more step**.
 - **Denied, expired, session ended, too many attempts or no connection:** a screen with its own message and **Start over**, which begins a new sign-in with the email filled in.
 - **Verify another way** (several devices) returns to the list. **Back** cancels MFA and returns to email entry; a push approved after that is discarded and never signs the user in.
-- **No factor this flow can run** (e.g. only an authenticator app or SMS, or nothing enrolled): without a handler, a **Verification method not available.** screen with **Sign in again** shows. With `.onMfaError`, your app is told and decides what happens next.
+- **No factor this flow can run** (e.g. only an authenticator app or SMS, or nothing enrolled): without a handler, a **Verification method not available.** screen with **Sign in again** shows. With `.onMfaError`, your app is told. Return `.handled` when it takes over and routes the user itself, or `.notHandled` when it only observes (logging), so the screen still shows.
 
 #### Fall back to Universal Login
 
@@ -177,10 +177,12 @@ struct SignInScreen: View {
         EmbeddedLoginView(connection: "email") {
             session.didSignIn()          // the flow is complete and the credentials are in the Keychain
         }
-        .onMfaError { error in
-            guard case .noEligibleFactors = error else { return }   // the other endings show their own screen
+        .onMfaError { error -> MfaErrorHandling in
+            // Log or measure the error here: that alone does not take the screen away.
+            guard case .noEligibleFactors = error else { return .notHandled }   // the other endings show their own screen
             // This account has no factor the native flow can run. Universal Login supports every factor.
             Task { await session.signInWithUniversalLogin() }
+            return .handled
         }
     }
 }
@@ -200,11 +202,11 @@ extension SessionStore {
 }
 ```
 
-While your app moves on, the user sees a spinner, not an error. To react to every case, switch over `MfaError` and include `@unknown default`; later releases may add cases. See "Handling MFA errors" in the documentation for what each case means.
+While your app moves on, the user sees a spinner, not an error. Return `.handled` only when your app really takes over: if a handler that only logs said `.handled`, the user would be left on a spinner with no way to cancel. The answer matters only for `noEligibleFactors`; every other ending has its own screen with a way out. To react to every case, switch over `MfaError` and include `@unknown default`; later releases may add cases. See "Handling MFA errors" in the documentation for what each case means.
 
 #### Change the words
 
-Pass an `MfaConfiguration` to change the words, replace a screen, or draw everything yourself. `MfaMessages` is a typed tree: change only the lines you care about and the rest keep their defaults. Text that depends on a value, such as the device name, is a function.
+Pass an `MfaConfiguration` to change the words, replace a screen, or draw everything yourself. `MfaMessages` is a typed tree: change only the lines you care about and the rest keep their defaults. Text that depends on a value, such as the device name, is a function. A device with no name uses `pushChallenge.descriptionUnnamed`.
 
 ```swift
 let mfa = MfaConfiguration(
@@ -231,7 +233,12 @@ struct BrandedPushScreen: View {
         VStack(spacing: 16) {
             Text("Approve on \(model.deviceName)").font(.title2)
             ProgressView()
-            if model.canResend { Button("Send again") { model.resend() } }
+            if model.canResend {
+                Button(model.resendAvailableIn > 0 ? "Send again in \(model.resendAvailableIn)s" : "Send again") {
+                    model.resend()
+                }
+                .disabled(model.resendAvailableIn > 0)
+            }
             if model.canSwitch { Button("Use another way") { model.switchFactor() } }
             Button("Cancel", role: .cancel) { model.cancel() }
         }
@@ -243,7 +250,7 @@ let mfa = MfaConfiguration(
 )
 ```
 
-`canResend` says whether the server still allows another push, not when. The standard screen makes the user wait 60 seconds before it enables **Resend**; do the same in a replacement, or a quick double tap sends two pushes. A replacement is also responsible for its own accessibility.
+`canResend` says whether the server still allows another push. `resendAvailableIn` is the seconds left before it may be sent, and 0 when it can be tapped now. The flow owns that countdown, so calling `resend()` early does nothing; a replacement only has to show it (the model is published again each second while it counts down). A replacement is also responsible for its own accessibility.
 
 The factor list and the error screen are replaced the same way, through `MfaScreens(authenticatorList:error:)`. The general form, `MfaScreens().replacing(.push) { (model: PushChallengeModel) in … }`, works for any factor whose model type is public.
 

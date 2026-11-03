@@ -154,8 +154,8 @@ final class ScriptedSession: MfaFactorSession {
     }
 
     // What the test makes the factor do.
-    func becomeReady() {
-        model = ScriptedModel(name: offer.id,
+    func becomeReady(named name: String? = nil) {
+        model = ScriptedModel(name: name ?? offer.id,
                               switchFactor: MfaAction<Void> { [weak self] in self?.host?.switchFactor() },
                               cancel: MfaAction<Void> { [weak self] in self?.host?.cancel() })
         host?.modelDidChange()

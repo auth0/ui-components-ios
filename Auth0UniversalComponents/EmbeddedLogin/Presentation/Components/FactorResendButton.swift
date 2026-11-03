@@ -21,15 +21,29 @@ struct FactorResendButton: View {
 
     var body: some View {
         TimelineView(.periodic(from: cooldown.startedAt, by: 1)) { context in
-            let remaining = cooldown.remaining(at: context.date)
-            Button(remaining > 0 ? cooldownTitle(remaining) : title) {
+            FactorCountdownResendButton(remaining: cooldown.remaining(at: context.date), title: title,
+                                        cooldownTitle: cooldownTitle) {
                 onResend()
                 cooldown.restart()
             }
-            .buttonStyle(FactorFilledButtonStyle())
-            .disabled(remaining > 0 || isBusy)
-            .accessibilityLabel(remaining > 0 ? "\(title), available in \(remaining) seconds" : title)
+            .disabled(isBusy)
         }
+    }
+}
+
+/// The same button with the countdown owned by the caller, for a countdown that belongs to the flow (the push
+/// factor's model) rather than to the button: it survives the button being recreated, and a replaced screen sees it.
+struct FactorCountdownResendButton: View {
+    let remaining: Int
+    let title: String
+    let cooldownTitle: (Int) -> String
+    let onResend: () -> Void
+
+    var body: some View {
+        Button(remaining > 0 ? cooldownTitle(remaining) : title, action: onResend)
+            .buttonStyle(FactorFilledButtonStyle())
+            .disabled(remaining > 0)
+            .accessibilityLabel(remaining > 0 ? "\(title), available in \(remaining) seconds" : title)
     }
 }
 

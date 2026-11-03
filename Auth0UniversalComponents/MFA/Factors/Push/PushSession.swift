@@ -11,6 +11,8 @@ final class PushSession: MfaFactorSession {
     private let clock: MfaClock
     private weak var host: MfaFactorHost?
     private var poll: Task<Void, Never>?
+    /// Counts the resend cooldown down, one second at a time, on the injected clock.
+    private var tick: Task<Void, Never>?
     private var inFlight: Task<Void, Never>?
     /// Set when the flow is over: nothing more is reported or sent.
     private var isStopped = false
@@ -30,14 +32,19 @@ final class PushSession: MfaFactorSession {
         let isResending = state.phase == .sending && state.epoch > 1
         guard state.phase == .waiting || isResending else { return nil }
         return PushChallengeModel(
-            deviceName: offer.label ?? "", canResend: state.canResend, canSwitch: host?.canSwitch ?? false,
+            deviceName: offer.label ?? "", canResend: state.canResend, resendAvailableIn: state.resendAvailableIn,
+            canSwitch: host?.canSwitch ?? false,
             resend: MfaAction<Void> { [weak self] in self?.send(.resend) },
             switchFactor: MfaAction<Void> { [weak self] in self?.host?.switchFactor() },
             cancel: MfaAction<Void> { [weak self] in self?.host?.cancel() })
     }
 
     func start() { send(.start) }
-    func deactivate() { send(.deactivate) }
+    func deactivate() {
+        send(.deactivate)
+        tick?.cancel()
+        tick = nil
+    }
     func appBecameActive() { send(.appBecameActive) }
     func appBecameInactive() { send(.appBecameInactive) }
 
@@ -45,6 +52,8 @@ final class PushSession: MfaFactorSession {
         isStopped = true
         poll?.cancel()
         poll = nil
+        tick?.cancel()
+        tick = nil
         await inFlight?.value
     }
 
@@ -70,6 +79,8 @@ final class PushSession: MfaFactorSession {
                 do { try await clock.sleep(milliseconds: milliseconds) } catch { return }       // cancelled: no tick
                 self?.send(.pollDue(epoch: epoch))
             }
+        case let .scheduleCooldownTick(milliseconds, epoch):
+            scheduleCooldownTick(afterMs: milliseconds, epoch: epoch)
         case .cancelPoll:
             poll?.cancel()
             poll = nil
@@ -79,6 +90,18 @@ final class PushSession: MfaFactorSession {
             case let .anotherFactor(offers): host?.needsAnotherFactor(offers)
             case let .failed(error): host?.failed(error)
             }
+        }
+    }
+
+    private func scheduleCooldownTick(afterMs milliseconds: Int, epoch: Int) {
+        tick?.cancel()
+        let startedAt = Date()
+        tick = Task { [weak self, clock] in
+            do { try await clock.sleep(milliseconds: milliseconds) } catch { return }           // cancelled: no tick
+            // The whole seconds that really passed, at least the one asked for: an app that was suspended meanwhile
+            // catches up instead of making the user wait the countdown out again.
+            let elapsed = Int(Date().timeIntervalSince(startedAt).rounded())
+            self?.send(.cooldownTick(seconds: max(1, elapsed), epoch: epoch))
         }
     }
 

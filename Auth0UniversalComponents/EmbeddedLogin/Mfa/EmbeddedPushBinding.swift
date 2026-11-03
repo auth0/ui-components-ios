@@ -4,6 +4,9 @@ import Foundation
 /// Guardian push over Embedded Login.
 @MainActor
 struct EmbeddedPushBinding: EmbeddedFactorBinding {
+    /// How the push is polled and resent. Tests shorten it.
+    var policy = PushPollingPolicy.default
+
     var capabilities: [EmbeddedCapability] { [.challengePush, .verifyOob] }
 
     func offers(in nextActions: [NextAction]) -> [MfaFactorOffer] {
@@ -15,7 +18,7 @@ struct EmbeddedPushBinding: EmbeddedFactorBinding {
 
     func makeFactor(_ services: EmbeddedFactorServices) -> any MfaFactor {
         PushFactor(transport: EmbeddedPushTransport(client: services.client, stager: services.stager,
-                                                    menu: services.menu))
+                                                    menu: services.menu), policy: policy)
     }
 }
 

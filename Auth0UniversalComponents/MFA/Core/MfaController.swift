@@ -153,7 +153,8 @@ final class MfaController: ObservableObject {
         case .inFactor:
             guard let offer = state.current else { return .loading(LoadingModel(cancel: cancel)) }
             if let model = sessions[state.token]?.model {
-                return .factor(MfaFactorStep(factor: offer.factor, model: model, round: state.round))
+                return .factor(MfaFactorStep(factor: offer.factor, model: model, round: state.round,
+                                             sessionToken: state.token))
             }
             // The factor is still preparing. With somewhere else to go the list stays, with progress on the row.
             return state.canSwitch ? list(for: state, pending: offer.id, cancel: cancel)

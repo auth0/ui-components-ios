@@ -287,10 +287,20 @@ struct EmbeddedMfaStepTests {
         #expect(stores.map { $0.stored.map(\.accessToken) } == [["one"], ["two"]])
     }
 
+    /// The modifier takes a closure that answers; a closure that only logs must say so (`.notHandled`).
+    @Test func onMfaError_takesAClosureThatAnswers() {
+        let view = EmbeddedLoginView(connection: "email").onMfaError { error in
+            if case .noEligibleFactors = error { return .handled }
+            return .notHandled
+        }
+        _ = view
+        #expect(MfaErrorHandling.handled != MfaErrorHandling.notHandled)
+    }
+
     @Test func theAppsErrorHandler_isSharedByEveryRun() async {
         let provider = EmbeddedMfaStep(clock: clock)
         var reported: [MfaError] = []
-        provider.errorHandler = { reported.append($0) }
+        provider.errorHandler = { reported.append($0); return .notHandled }
         for _ in 0..<2 {
             let client = StubEmbeddedAuthClient()
             client.challengePushResults = [Fix.network]

@@ -1,4 +1,5 @@
 @testable import Auth0UniversalComponents
+// swiftlint:disable file_length
 import Auth0
 import Foundation
 import Testing
@@ -21,14 +22,17 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         "action": "action:challenge:push:v1", "index": 1, "name": "Sudhanshu's iPad"
     ]
 
+    /// The push policy for tests that are not about the resend wait: resend is allowed as soon as the push is out.
+    private let noResendWait = PushPollingPolicy(resendCooldownSeconds: 0)
+
     /// Scripts discovery → email → challenge, then answers the email code with `afterTheCode`.
-    private func signIn(afterTheCode: EmbeddedAuthError,
-                        handler: ((MfaError) -> Void)? = nil) async -> LoginFlowCoordinator {
+    private func signIn(afterTheCode: EmbeddedAuthError, policy: PushPollingPolicy? = nil,
+                        handler: ((MfaError) -> MfaErrorHandling)? = nil) async -> LoginFlowCoordinator {
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         client.verifyOtpResults = [.failure(afterTheCode)]
-        let provider = EmbeddedMfaStep(clock: clock)
+        let provider = EmbeddedMfaStep(clock: clock, bindings: [EmbeddedPushBinding(policy: policy ?? noResendWait)])
         provider.errorHandler = handler
         let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store, connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: provider)
@@ -117,14 +121,40 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         #expect(store.stored.isEmpty)
     }
 
-    /// The same, when the app set `onMfaError`: it is told, and routes the user (say, to Universal Login).
-    @Test func gp03_withAHandler_theAppIsToldInstead() async {
+    /// The same, when the app set `onMfaError` and takes over: it is told, and routes the user (say, to Universal
+    /// Login). The SDK shows nothing more.
+    @Test func gp03_withAHandlerThatTakesOver_theAppRoutesTheUser() async {
         var reported: [MfaError] = []
-        let sut = await signIn(afterTheCode: menu([Fix.verifyTOTP]), handler: { reported.append($0) })
+        let sut = await signIn(afterTheCode: menu([Fix.verifyTOTP]), handler: { reported.append($0); return .handled })
 
         #expect(reported == [.noEligibleFactors])
         #expect(sut.step == .additionalStep)
         #expect(pushCalls.isEmpty)
+    }
+
+    /// A handler that only observes (logging, analytics) must not remove the SDK's screen: without it the user would
+    /// be left on a spinner with no way to cancel.
+    @Test func gp03_withAHandlerThatOnlyObserves_theUnavailableScreenStillShows() async {
+        var reported: [MfaError] = []
+        let sut = await signIn(afterTheCode: menu([Fix.verifyTOTP]),
+                               handler: { reported.append($0); return .notHandled })
+
+        #expect(reported == [.noEligibleFactors], "it is still told")
+        #expect(sut.step == .additionalStepUnavailable)
+        #expect(pushCalls.isEmpty)
+    }
+
+    /// Every other error already has its own screen with a way out, so the app's answer changes nothing.
+    @Test(arguments: [MfaErrorHandling.handled, MfaErrorHandling.notHandled])
+    func otherErrors_keepTheirOwnScreen_whateverTheHandlerAnswers(answer: MfaErrorHandling) async {
+        client.challengePushResults = [Fix.network]
+        var reported: [MfaError] = []
+        let sut = await signIn(afterTheCode: menu([Fix.challengePush]), handler: { reported.append($0); return answer })
+        await eventually { error(sut) == .network }
+
+        #expect(error(sut) == .network)
+        #expect(reported == [.network])
+        #expect(sut.step == .additionalStep)
     }
 
     /// GP-06: more is required but the user has no eligible factor; same outcome, not a retry on a dead session.
@@ -283,6 +313,19 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
         #expect(pushCalls.filter { $0 == .challengePush(index: 0) }.count == 2)
         #expect(pushModel(sut)?.canResend == false, "the server no longer offers it, so the button stays gone")
+    }
+
+    /// The wait before a resend belongs to the flow, so every screen sees it through the model and none can skip it.
+    @Test func resend_waitsForTheFlowsCountdown() async {
+        clock.suspends = true                               // time never moves
+        client.challengePushResults = [Fix.needs([Fix.verifyOob(), Fix.challengePush])]
+        let sut = await signIn(afterTheCode: menu([Fix.challengePush]), policy: PushPollingPolicy())
+        await eventually { pushModel(sut)?.canResend == true }
+
+        #expect(pushModel(sut)?.resendAvailableIn == 60)
+        pushModel(sut)?.resend()
+        await settle()
+        #expect(pushCalls.filter { $0 == .challengePush(index: 0) }.count == 1, "not sent again")
     }
 
     /// GP-22: the wait follows the server's interval, and grows after slow down.

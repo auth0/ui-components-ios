@@ -20,6 +20,7 @@ struct PushApprovalSearchTests {
         let inFlight: Bool
         let appActive: Bool
         let active: Bool
+        let cooldown: Int
 
         init(_ state: PushApprovalState) {
             phase = "\(state.phase)"
@@ -32,8 +33,13 @@ struct PushApprovalSearchTests {
             inFlight = state.checkInFlight
             appActive = state.isAppActive
             active = state.isActive
+            // The search runs with a cooldown of two seconds, so every value is kept: 2, 1 and 0.
+            cooldown = state.resendAvailableIn
         }
     }
+
+    /// A short countdown keeps the search small while still crossing every value down to zero.
+    private let policy = PushPollingPolicy(resendCooldownSeconds: 2)
 
     private func invariantViolations(_ state: PushApprovalState) -> [String] {
         var found: [String] = []
@@ -42,6 +48,8 @@ struct PushApprovalSearchTests {
         if state.canResend, state.phase != .waiting { found.append("I3 resend offered outside waiting") }
         if state.networkFailures > PushPollingPolicy.default.maxNetworkFailures { found.append("I4 failures beyond the allowance") }
         if state.phase == .waiting, state.epoch == 0 { found.append("I5 waiting before anything was sent") }
+        if state.resendAvailableIn < 0 || state.resendAvailableIn > policy.resendCooldownSeconds { found.append("I6 countdown out of range") }
+        if state.resendAvailableIn > 0, state.phase != .waiting { found.append("I7 counting down outside waiting") }
         return found
     }
 
@@ -59,6 +67,8 @@ struct PushApprovalSearchTests {
             for check in checks { out.append((stale + "checked \(check)", .checked(check, epoch: epoch))) }
             for error in [MfaError.network, .rejected] { out.append((stale + "failed \(error)", .failed(error, epoch: epoch))) }
             out.append((stale + "pollDue", .pollDue(epoch: epoch)))
+            out.append((stale + "tick", .cooldownTick(seconds: 1, epoch: epoch)))
+            out.append((stale + "long tick", .cooldownTick(seconds: 100, epoch: epoch)))
         }
         return out
     }
@@ -67,6 +77,7 @@ struct PushApprovalSearchTests {
     private func isCheck(_ effect: PushApprovalEffect) -> Bool { if case .check = effect { return true } else { return false } }
     private func isSend(_ effect: PushApprovalEffect) -> Bool { if case .send = effect { return true } else { return false } }
     private func isPoll(_ effect: PushApprovalEffect) -> Bool { if case .schedulePoll = effect { return true } else { return false } }
+    private func isTick(_ effect: PushApprovalEffect) -> Bool { if case .scheduleCooldownTick = effect { return true } else { return false } }
 
     private func transitionViolations(from old: PushApprovalState, to new: PushApprovalState,
                                       effects: [PushApprovalEffect], event: PushApprovalEvent, context: String) -> [String] {
@@ -80,7 +91,7 @@ struct PushApprovalSearchTests {
         // T3 a check is never sent while another is in flight.
         if old.checkInFlight, effects.contains(where: isCheck), !isForeground(event) { found.append("T3 \(context): second check in flight") }
         // T4 a deactivated push starts nothing.
-        if !old.isActive, effects.contains(where: { isCheck($0) || isSend($0) || isPoll($0) }) {
+        if !old.isActive, effects.contains(where: { isCheck($0) || isSend($0) || isPoll($0) || isTick($0) }) {
             found.append("T4 \(context): deactivated push started work")
         }
         // T5 leaving waiting always cancels the timer.
@@ -89,8 +100,16 @@ struct PushApprovalSearchTests {
         if isStale(event, in: old), !isApproval(event), old.phase != .finished, new != old || !effects.isEmpty {
             found.append("T6 \(context): stale answer had an effect")
         }
+        // T7 resend does nothing while the countdown runs.
+        if event == .resend, old.resendAvailableIn > 0, new != old || !effects.isEmpty { found.append("T7 \(context): resent during the countdown") }
+        // T8 the countdown only goes up when a push is sent.
+        if new.resendAvailableIn > old.resendAvailableIn, !isSent(event) { found.append("T8 \(context): countdown rose without a send") }
+        // T9 a tick schedules the next one only while there is something left to count.
+        if case .cooldownTick = event, effects.contains(where: isTick), new.resendAvailableIn == 0 { found.append("T9 \(context): ticking an empty countdown") }
         return found
     }
+
+    private func isSent(_ event: PushApprovalEvent) -> Bool { if case .sent = event { return true } else { return false } }
 
     private func isForeground(_ event: PushApprovalEvent) -> Bool { event == .appBecameActive }
 
@@ -104,7 +123,7 @@ struct PushApprovalSearchTests {
 
     private func isStale(_ event: PushApprovalEvent, in state: PushApprovalState) -> Bool {
         switch event {
-        case let .sent(_, epoch), let .checked(_, epoch), let .failed(_, epoch), let .pollDue(epoch): return epoch != state.epoch
+        case let .sent(_, epoch), let .checked(_, epoch), let .failed(_, epoch), let .pollDue(epoch), let .cooldownTick(_, epoch): return epoch != state.epoch
         default: return false
         }
     }
@@ -120,7 +139,7 @@ struct PushApprovalSearchTests {
             next += 1
             violations += invariantViolations(state).map { "state \(StateKey(state)): \($0)" }
             for (label, event) in alphabet(state) {
-                let (after, effects) = PushApprovalMachine.reduce(state, event)
+                let (after, effects) = PushApprovalMachine.reduce(state, event, policy: policy)
                 violations += transitionViolations(from: state, to: after, effects: effects, event: event,
                                                    context: "\(state.phase) + \(label)")
                 if seen.insert(StateKey(after)).inserted { queue.append(after) }

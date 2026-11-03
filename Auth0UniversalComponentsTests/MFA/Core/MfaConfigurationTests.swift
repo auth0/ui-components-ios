@@ -36,7 +36,7 @@ struct MfaConfigurationTests {
         let messages = MfaMessages.default
         #expect(messages.pushChallenge.title == "Check your device")
         #expect(messages.pushChallenge.waiting == "Waiting for approval")
-        #expect(messages.pushChallenge.resend.button == "Resend Code")
+        #expect(messages.pushChallenge.resend.button == "Resend notification")
         #expect(messages.errors.rejected.title == "Sign-in request denied.")
         #expect(messages.errors.tokenExpired.title == "Request expired.")
         #expect(messages.errors.tokenInvalid.title == "Sign-in session ended.")
@@ -44,6 +44,28 @@ struct MfaConfigurationTests {
         #expect(messages.errors.noEligibleFactors.title == "Verification method not available.")
         #expect(messages.errors.credentialsNotSaved.description
                 == "We couldn't save your sign-in on this device. Please try again.")
+    }
+
+    @Test func thePushWords_nameNoProduct_andNoCode() {
+        let copy = MfaMessages.default.pushChallenge
+        #expect(!copy.description("iPhone").contains("Guardian"), "customers may ship their own authenticator app")
+        #expect(!copy.descriptionUnnamed.contains("Guardian"))
+        #expect(!copy.resend.button.contains("Code"), "a push has no code")
+    }
+
+    @Test func aDeviceWithoutAName_isNeverPrintedAsAnEmptyName() {
+        let copy = MfaMessages.default.pushChallenge
+        let sentence = copy.subtitle(device: "")
+        #expect(sentence == copy.descriptionUnnamed)
+        #expect(!sentence.contains(" ."), "no \"sent a sign-in request to .\"")
+        #expect(copy.subtitle(device: "iPhone") == copy.description("iPhone"))
+        #expect(copy.waitingLabel(device: "") == copy.waiting, "no dangling comma for VoiceOver")
+        #expect(copy.waitingLabel(device: "iPhone") == "Waiting for approval, iPhone")
+    }
+
+    @Test func theUnnamedDeviceSentence_canBeOverridden() {
+        let custom = MfaMessages.default.with { $0.pushChallenge.descriptionUnnamed = "Check your phone." }
+        #expect(custom.pushChallenge.subtitle(device: "") == "Check your phone.")
     }
 
     @Test func everyErrorHasItsOwnWording() {

@@ -23,7 +23,7 @@ public struct MfaPushChallengeScreen: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                MfaHeader(title: copy.title, subtitle: copy.description(model.deviceName),
+                MfaHeader(title: copy.title, subtitle: copy.subtitle(device: model.deviceName),
                                    subtitleStyle: MfaStyle.waitingSubtitle,
                                    spacing: MfaStyle.waitingTitleGap)
 
@@ -36,12 +36,13 @@ public struct MfaPushChallengeScreen: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, MfaStyle.spinnerTop)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(copy.waiting), \(model.deviceName)")
+                .accessibilityLabel(copy.waitingLabel(device: model.deviceName))
 
                 if model.canResend || model.canSwitch {
                     VStack(spacing: theme.spacing.md) {
                         if model.canResend {
-                            MfaResendButton(title: copy.resend.button, cooldownTitle: copy.resend.cooldown) {
+                            MfaResendButton(remaining: model.resendAvailableIn, title: copy.resend.button,
+                                            cooldownTitle: copy.resend.cooldown) {
                                 model.resend()
                             }
                         }
@@ -62,6 +63,11 @@ public struct MfaPushChallengeScreen: View {
 #Preview("Waiting") {
     MfaPushChallengeScreen(model: PushChallengeModel(deviceName: "Sudhanshu's iPhone", canResend: true,
                                                      canSwitch: true))
+}
+
+#Preview("Waiting, resend counting down") {
+    MfaPushChallengeScreen(model: PushChallengeModel(deviceName: "Sudhanshu's iPhone", canResend: true,
+                                                     resendAvailableIn: 42, canSwitch: true))
 }
 
 #Preview("Waiting, single device") {

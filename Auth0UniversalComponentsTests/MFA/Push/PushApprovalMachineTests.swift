@@ -16,6 +16,8 @@ struct PushApprovalMachineTests {
         case checked(PushCheck)
         case failed(MfaError)
         case pollDue
+        /// The resend countdown moved on by this many seconds, in the epoch in force.
+        case tick(Int)
         /// An answer to a request issued `behind` epochs ago.
         case lateCheck(PushCheck, behind: Int)
     }
@@ -32,6 +34,7 @@ struct PushApprovalMachineTests {
             case let .checked(check): event = .checked(check, epoch: current.epoch)
             case let .failed(error): event = .failed(error, epoch: current.epoch)
             case .pollDue: event = .pollDue(epoch: current.epoch)
+            case let .tick(seconds): event = .cooldownTick(seconds: seconds, epoch: current.epoch)
             case let .lateCheck(check, behind): event = .checked(check, epoch: current.epoch - behind)
             }
             let (next, effects) = PushApprovalMachine.reduce(current, event, policy: policy)
@@ -40,6 +43,9 @@ struct PushApprovalMachineTests {
         }
         return (current, all)
     }
+
+    /// Resend allowed as soon as the push is out, for the tests that are not about the countdown.
+    private let noCooldown = PushPollingPolicy(resendCooldownSeconds: 0)
 
     private let pending = PushPending(retryAfterMs: 2_000, canResend: true)
     /// Pushed and waiting, with the timer running.
@@ -57,7 +63,7 @@ struct PushApprovalMachineTests {
         let (state, effects) = fold([.event(.start), .sent(PushPending(retryAfterMs: 500, canResend: false))])
         #expect(state.phase == .waiting)
         #expect(state.intervalMs == 1_000)
-        #expect(effects.last == .schedulePoll(afterMs: 1_000, epoch: 1))
+        #expect(effects.contains(.schedulePoll(afterMs: 1_000, epoch: 1)))
         #expect(fold([.event(.start), .sent(PushPending(retryAfterMs: 600_000, canResend: false))]).state.intervalMs == 60_000)
         #expect(fold([.event(.start), .sent(PushPending(retryAfterMs: nil, canResend: false))]).state.intervalMs == 2_000)
     }
@@ -150,7 +156,7 @@ struct PushApprovalMachineTests {
     // MARK: Resend
 
     @Test func resend_sendsAgain_inANewEpoch() {
-        let (state, effects) = fold(waiting + [.event(.resend)])
+        let (state, effects) = fold(waiting + [.event(.resend)], policy: noCooldown)
         #expect(state.phase == .sending)
         #expect(state.epoch == 2)
         #expect(effects.suffix(2) == [.cancelPoll, .send(epoch: 2)])
@@ -163,7 +169,7 @@ struct PushApprovalMachineTests {
 
     @Test func anAnswerToAReplacedPush_isIgnored_butAnApprovalOnItsWayStillCounts() {
         let resent = waiting + [.pollDue, .event(.resend)]
-        #expect(fold(resent + [.lateCheck(.pending(retryAfterMs: nil), behind: 1)]).effects.last == .send(epoch: 2))
+        #expect(fold(resent + [.lateCheck(.pending(retryAfterMs: nil), behind: 1)], policy: noCooldown).effects.last == .send(epoch: 2))
         let (state, effects) = fold(resent + [.lateCheck(.approved, behind: 1)])
         #expect(state.phase == .finished)
         #expect(effects.last == .report(.completed))
@@ -204,6 +210,75 @@ struct PushApprovalMachineTests {
                     == .report(.anotherFactor([iPad])))
     }
 
+    // MARK: Resend cooldown
+
+    @Test func aSentPush_startsTheResendCountdown() {
+        let (state, effects) = fold(waiting)
+        #expect(state.resendAvailableIn == 60)
+        #expect(effects.contains(.scheduleCooldownTick(afterMs: 1_000, epoch: 1)))
+        #expect(effects.contains(.schedulePoll(afterMs: 2_000, epoch: 1)), "the poll timer is unaffected")
+    }
+
+    @Test func aZeroCooldown_startsNoCountdown() {
+        let (state, effects) = fold(waiting, policy: noCooldown)
+        #expect(state.resendAvailableIn == 0)
+        #expect(!effects.contains(where: { if case .scheduleCooldownTick = $0 { return true } else { return false } }))
+    }
+
+    @Test func eachTick_lowersTheCountdown_andAsksForTheNext() {
+        let (state, effects) = fold(waiting + [.tick(1)])
+        #expect(state.resendAvailableIn == 59)
+        #expect(effects.last == .scheduleCooldownTick(afterMs: 1_000, epoch: 1))
+    }
+
+    @Test func aTickThatCoversSeveralSeconds_catchesUp_andStopsAtZero() {
+        #expect(fold(waiting + [.tick(45)]).state.resendAvailableIn == 15, "an app that was suspended catches up")
+        let (state, effects) = PushApprovalMachine.reduce(fold(waiting + [.tick(45)]).state,
+                                                          .cooldownTick(seconds: 100, epoch: 1))
+        #expect(state.resendAvailableIn == 0, "never below zero")
+        #expect(effects.isEmpty, "and nothing more is scheduled")
+    }
+
+    @Test func aTickOfZeroSeconds_stillMovesItOneForward() {
+        #expect(fold(waiting + [.tick(0)]).state.resendAvailableIn == 59)
+    }
+
+    @Test func resend_isIgnoredWhileCountingDown_andAcceptedAtZero() {
+        let counting = fold(waiting + [.tick(59), .event(.resend)]).state
+        #expect(counting.epoch == 1, "one second left: still ignored")
+        #expect(counting.phase == .waiting)
+        let ready = fold(waiting + [.tick(60), .event(.resend)])
+        #expect(ready.state.epoch == 2)
+        #expect(ready.effects.suffix(2) == [.cancelPoll, .send(epoch: 2)])
+    }
+
+    @Test func aResend_startsTheCountdownAgain_whenItsPushIsSent() {
+        let policy = PushPollingPolicy(resendCooldownSeconds: 5)
+        let resent = fold(waiting + [.tick(5), .event(.resend)], policy: policy).state
+        #expect(resent.resendAvailableIn == 0, "while the new push goes out there is nothing to count")
+        #expect(fold([.sent(pending)], from: resent, policy: policy).state.resendAvailableIn == 5)
+    }
+
+    @Test func aTickOfAReplacedPush_isIgnored() {
+        let policy = PushPollingPolicy(resendCooldownSeconds: 5)
+        let resent = fold(waiting + [.tick(5), .event(.resend), .sent(pending)], policy: policy).state
+        #expect(resent.epoch == 2)
+        let (after, effects) = PushApprovalMachine.reduce(resent, .cooldownTick(seconds: 1, epoch: 1), policy: policy)
+        #expect(after == resent)
+        #expect(effects.isEmpty)
+    }
+
+    @Test func deactivated_theCountdownStops() {
+        let deactivated = fold(waiting + [.event(.deactivate)]).state
+        let (after, effects) = PushApprovalMachine.reduce(deactivated, .cooldownTick(seconds: 1, epoch: 1))
+        #expect(after == deactivated)
+        #expect(effects.isEmpty)
+    }
+
+    @Test func aFinishedPush_hasNoCountdown() {
+        #expect(fold(waiting + [.pollDue, .checked(.approved)]).state.resendAvailableIn == 0)
+    }
+
     // MARK: Resend offered or withdrawn
 
     @Test func everyAnswer_updatesWhetherThePushCanBeResent() {
@@ -211,7 +286,7 @@ struct PushApprovalMachineTests {
         #expect(fold(offered).state.canResend)
         let withdrawn = fold(offered + [.pollDue, .checked(.pending(retryAfterMs: nil, canResend: false))]).state
         #expect(!withdrawn.canResend, "the server stopped offering the push")
-        #expect(fold([.event(.resend)], from: withdrawn).state.epoch == 1, "so resend does nothing")
+        #expect(fold([.event(.resend)], from: withdrawn, policy: noCooldown).state.epoch == 1, "so resend does nothing")
         let slowed = fold(offered + [.pollDue, .checked(.slowDown(retryAfterMs: nil, canResend: false))]).state
         #expect(!slowed.canResend)
         let unsaid = fold(offered + [.pollDue, .checked(.pending(retryAfterMs: nil))]).state

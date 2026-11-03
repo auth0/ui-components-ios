@@ -10,6 +10,8 @@ struct PushPollingPolicy: Sendable {
     var slowDownStep = 2_000
     /// Consecutive network failures tolerated while waiting for an approval.
     var maxNetworkFailures = 3
+    /// Seconds after a push is sent before it can be sent again.
+    var resendCooldownSeconds = 60
 
     static let `default` = PushPollingPolicy()
 
@@ -26,6 +28,9 @@ struct PushApprovalState: Equatable {
     /// (by resending) can be recognised and dropped. The checks of one push share an epoch.
     var epoch = 0
     var canResend = false
+    /// Seconds until resend is allowed; 0 when it can be used now. Starts when a push is sent and is lowered by
+    /// `cooldownTick`. `canResend` says whether the server allows a resend at all.
+    var resendAvailableIn = 0
     var intervalMs = 2_000
     var networkFailures = 0
     /// A check has been sent and not yet answered.
@@ -44,6 +49,8 @@ enum PushApprovalEvent: Equatable {
     case failed(MfaError, epoch: Int)
     /// The wait between two checks is over.
     case pollDue(epoch: Int)
+    /// The resend countdown moved on by `seconds`: one, or more when the app was suspended and caught up.
+    case cooldownTick(seconds: Int, epoch: Int)
     case resend
     case appBecameActive
     case appBecameInactive
@@ -59,6 +66,8 @@ enum PushApprovalReport: Equatable {
 enum PushApprovalEffect: Equatable {
     case send(epoch: Int)
     case schedulePoll(afterMs: Int, epoch: Int)
+    /// Wake the resend countdown after `afterMs`; it asks for the next tick itself while it is above 0.
+    case scheduleCooldownTick(afterMs: Int, epoch: Int)
     case check(epoch: Int)
     case cancelPoll
     case report(PushApprovalReport)
@@ -93,8 +102,11 @@ extension PushApprovalState {
             guard phase == .waiting, epoch == self.epoch, !checkInFlight, isActive else { return [] }
             checkInFlight = true
             return [.check(epoch: self.epoch)]
+        case let .cooldownTick(seconds, epoch):
+            return cooldownTicked(seconds: seconds, epoch: epoch)
         case .resend:
-            guard phase == .waiting, canResend, isActive else { return [] }
+            // The countdown is the machine's, not the screen's, so a replaced screen can't resend any faster.
+            guard phase == .waiting, canResend, resendAvailableIn == 0, isActive else { return [] }
             epoch += 1
             phase = .sending
             canResend = false
@@ -123,7 +135,18 @@ extension PushApprovalState {
         networkFailures = 0
         checkInFlight = false
         intervalMs = policy.clamp(pending.retryAfterMs ?? policy.defaultInterval)
-        return isActive ? [.schedulePoll(afterMs: intervalMs, epoch: self.epoch)] : []
+        guard isActive else { return [] }
+        resendAvailableIn = max(0, policy.resendCooldownSeconds)
+        var effects: [PushApprovalEffect] = [.schedulePoll(afterMs: intervalMs, epoch: self.epoch)]
+        if resendAvailableIn > 0 { effects.append(.scheduleCooldownTick(afterMs: 1_000, epoch: self.epoch)) }
+        return effects
+    }
+
+    private mutating func cooldownTicked(seconds: Int, epoch: Int) -> [PushApprovalEffect] {
+        // A tick of a replaced push, or one that arrives after the user left, does nothing.
+        guard phase == .waiting, epoch == self.epoch, isActive, resendAvailableIn > 0 else { return [] }
+        resendAvailableIn = max(0, resendAvailableIn - max(1, seconds))
+        return resendAvailableIn > 0 ? [.scheduleCooldownTick(afterMs: 1_000, epoch: self.epoch)] : []
     }
 
     private mutating func checked(_ check: PushCheck, epoch: Int, policy: PushPollingPolicy) -> [PushApprovalEffect] {
@@ -174,6 +197,7 @@ extension PushApprovalState {
         phase = .finished
         checkInFlight = false
         canResend = false
+        resendAvailableIn = 0
     }
 }
 
