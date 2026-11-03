@@ -24,12 +24,10 @@ final class MfaController: ObservableObject {
 
     /// - Parameters:
     ///   - initialOffers: What the server said when it asked for MFA.
-    ///   - maximumRounds: How many menus the flow may show; a policy that needs several factors shows several.
     ///   - onFinish: Called once, when the flow ends. `nil` means the user is signed in and the credentials are stored.
     ///   - onLeave: The error screen's "Start over" or "Close".
     init(initialOffers: [MfaFactorOffer], registry: MfaFactorRegistry, committer: MfaCommitter,
          messages: MfaMessages = .default, clock: MfaClock = SystemMfaClock(), exit: MfaExit = .startOver,
-         maximumRounds: Int = MfaFlowReducer.defaultMaxRounds,
          onFinish: @escaping (MfaError?) -> Void, onLeave: @escaping () -> Void = {}) {
         self.initialOffers = initialOffers
         self.registry = registry
@@ -39,7 +37,6 @@ final class MfaController: ObservableObject {
         self.exit = exit
         self.onFinish = onFinish
         self.onLeave = onLeave
-        state.maxRounds = max(1, maximumRounds)
     }
 
     /// Whether the flow has ended, one way or the other.

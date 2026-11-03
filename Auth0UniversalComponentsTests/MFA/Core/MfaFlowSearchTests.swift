@@ -24,7 +24,9 @@ struct MfaFlowSearchTests {
 
         init(_ state: MfaFlowState) {
             phase = "\(state.phase)"
-            round = state.round
+            // The reducer only counts rounds and never branches on the count, so telling round 2 from round 9 would
+            // make the search endless without finding anything new.
+            round = min(state.round, 2)
             offers = state.offers.map(\.id)
             current = state.current?.id
             // The reducer only compares a token with the current one and with the start of the round, never its
@@ -46,9 +48,8 @@ struct MfaFlowSearchTests {
             found.append("I4 idle means nothing has happened yet")
         }
         if state.roundStartToken > state.token { found.append("I6 a round can't start after its sessions") }
-        if state.round > state.maxRounds + 1 { found.append("I5 round beyond the cap") }
-        if state.round == state.maxRounds + 1, state.failure != .maxChallengesExceeded {
-            found.append("I5 a 4th round must fail")
+        if state.phase == .choosing || state.phase == .inFactor, state.round < 1 {
+            found.append("I5 a factor list or a running factor means a menu was shown")
         }
         return found
     }
@@ -86,6 +87,7 @@ struct MfaFlowSearchTests {
             found.append("T4 \(context): moved while credentials were being stored")
         }
         if effects.startCount > 1 { found.append("T5 \(context): more than one session started at once") }
+        found += roundViolations(from: old, to: new, event: event, context: context)
         if new.token < old.token { found.append("T6 \(context): token went backwards") }
         if case let .menu(_, token) = event, token > 0, token <= old.roundStartToken, !unchanged {
             found.append("T8 \(context): a session of an earlier round moved the flow")
@@ -96,6 +98,14 @@ struct MfaFlowSearchTests {
             }
         }
         return found
+    }
+
+    /// The count only numbers the steps: one more per accepted menu, never a reason for anything else.
+    private func roundViolations(from old: MfaFlowState, to new: MfaFlowState, event: MfaFlowEvent,
+                                 context: String) -> [String] {
+        guard new.round != old.round else { return [] }
+        if case .menu = event, new.round == old.round + 1 { return [] }
+        return ["T9 \(context): the round count changed without an accepted menu"]
     }
 
     private func isCommitFailure(_ event: MfaFlowEvent) -> Bool {

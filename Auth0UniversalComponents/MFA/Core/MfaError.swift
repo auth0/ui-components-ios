@@ -10,9 +10,6 @@ public enum MfaError: Error, Equatable, Sendable {
     case tokenExpired
     /// The session or token is invalid or was already used.
     case tokenInvalid
-    /// The server asked for more rounds of verification than ``MfaConfiguration/maximumRounds`` allows (a fourth, by
-    /// default).
-    case maxChallengesExceeded
     /// The user denied the push.
     case rejected
     /// The server locked the challenge after repeated wrong codes.

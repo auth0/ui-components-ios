@@ -53,16 +53,19 @@ struct MfaFlowReducerTests {
         #expect(run([.menu([], token: 0)]).0.failure == .noEligibleFactors)
     }
 
-    @Test func aFourthRound_failsWithMaxChallengesExceeded() {
-        var events: [MfaFlowEvent] = [.menu([offerA0, offerB0], token: 0)]
-        var state = run(events).0
-        for _ in 0..<3 {
+    @Test func anyNumberOfRounds_isFollowed_becauseTheServerDecidesHowManyStepsASignInNeeds() {
+        var state = run([.menu([offerA0, offerB0], token: 0)]).0
+        for _ in 0..<5 {
             state = run([.select(id: "alpha:0")], from: state).0
             state = run([.menu([offerA0, offerB0], token: state.token)], from: state).0
         }
-        events = []
-        #expect(state.failure == .maxChallengesExceeded)
-        #expect(state.round == 4)
+        #expect(state.round == 6)
+        #expect(state.phase == .choosing)
+        #expect(state.failure == nil, "a round count never ends a flow; only the server, the user or an error does")
+
+        let (running, _) = run([.select(id: "alpha:0")], from: state)
+        let (_, effects) = run([.completed(token: running.token)], from: running)
+        #expect(effects.contains(.commit), "and the sixth step still signs the user in")
     }
 
     @Test func aMenuFromTheRunningSession_startsTheNextRound_andRetiresIt() {
@@ -92,29 +95,6 @@ struct MfaFlowReducerTests {
         let (after, effects) = run([.menu([offerA0, offerB0], token: roundOne)], from: second)
         #expect(after == second)
         #expect(effects.isEmpty)
-    }
-
-    @Test func theCap_isConfigurable() {
-        var strict = MfaFlowState()
-        strict.maxRounds = 1
-        let (once, _) = run([.menu([offerA0, offerB0], token: 0), .select(id: "alpha:0")], from: strict)
-        #expect(run([.menu([offerA0, offerB0], token: once.token)], from: once).0.failure == .maxChallengesExceeded)
-
-        var generous = MfaFlowState()
-        generous.maxRounds = 5
-        var state = run([.menu([offerA0, offerB0], token: 0)], from: generous).0
-        for _ in 0..<4 {
-            state = run([.select(id: "alpha:0")], from: state).0
-            state = run([.menu([offerA0, offerB0], token: state.token)], from: state).0
-        }
-        #expect(state.round == 5)
-        #expect(state.failure == nil, "five rounds fit under a cap of five")
-        #expect(run([.select(id: "alpha:0")], from: state).0.phase == .inFactor)
-    }
-
-    @Test func theDefaultCap_isTheSpecsThree() {
-        #expect(MfaFlowState().maxRounds == 3)
-        #expect(MfaConfiguration.defaultMaximumRounds == MfaFlowReducer.defaultMaxRounds)
     }
 
     @Test func aFactorUsedInAnEarlierRound_mayBeOfferedAgain() {

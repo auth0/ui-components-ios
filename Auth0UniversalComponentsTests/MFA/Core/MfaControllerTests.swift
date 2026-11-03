@@ -198,24 +198,21 @@ struct MfaControllerTests { // swiftlint:disable:this type_body_length
         #expect(finish.results == [nil])
     }
 
-    @Test func theNumberOfRounds_isConfigurable() {
-        let sut = MfaController(initialOffers: [offerA0], registry: MfaFactorRegistry([alpha, beta]),
-                                committer: committer, maximumRounds: 1, onFinish: { [finish] in finish.record($0) })
-        sut.start()
-        alpha.last.becomeReady()
-        alpha.last.askForMenu([offerA0, offerB0])
-        #expect(finish.results == [.maxChallengesExceeded])
-    }
-
-    @Test func aFourthMenu_endsTheFlow() {
+    /// The server decides how many steps a sign-in needs. The Core follows it and never ends a flow by counting.
+    @Test func aSignInThatNeedsManySteps_isFollowedToTheEnd() {
         let sut = controller([offerA0])
         sut.start()
-        for _ in 0..<3 {
+        for round in 2...6 {
             alpha.last.becomeReady()
             alpha.last.askForMenu([offerA0, offerB0])
-            if list(sut) != nil { list(sut)?.select("alpha:0") }
+            #expect(list(sut)?.round == round, "the server asked again, so the Core shows the next step")
+            list(sut)?.select("alpha:0")
         }
-        #expect(finish.results == [.maxChallengesExceeded])
+        #expect(finish.results.isEmpty, "five more steps than the first, and the flow is still running")
+        alpha.last.becomeReady()
+        alpha.last.complete()
+        #expect(finish.results == [nil], "the flow ends when the server is satisfied, not before")
+        #expect(committer.stored == 1)
     }
 
     @Test func noSupportedFactor_showsNoScreen_andIsReported() {

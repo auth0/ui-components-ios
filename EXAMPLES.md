@@ -307,7 +307,7 @@ struct MyMfaScreens: View {
 
 #### Multi-step sign-in
 
-A policy that needs several factors shows the list again for each step, headed **One more step**, all inside one MFA run. The step number is on the models (`AuthenticatorListModel.round`, `MfaFactorStep.round`), and the limit is `MfaConfiguration(maximumRounds:)` (default 3). The credentials are stored once, at the end.
+A policy that needs several factors shows the list again for each step, headed **One more step**, all inside one MFA run, for as many steps as the server asks for. The step number is on the models (`AuthenticatorListModel.round`, `MfaFactorStep.round`). The credentials are stored once, at the end.
 
 #### How the pieces fit
 

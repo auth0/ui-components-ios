@@ -77,13 +77,6 @@ public struct MfaConfiguration {
     public var screens: MfaScreens
     /// Who draws the flow: the SDK, or your app.
     public var presentation: MfaPresentation
-    /// How many steps a sign-in may take. Each time the server asks for another factor, the flow starts a new round
-    /// with a fresh list; one more than this ends the flow with ``MfaError/maxChallengesExceeded``. The default, 3,
-    /// is what the specification sets.
-    public var maximumRounds: Int
-
-    /// The number of steps the specification allows by default.
-    public static let defaultMaximumRounds = 3
 
     /// Creates a configuration. Every parameter is optional, and the defaults need no setup.
     ///
@@ -91,12 +84,10 @@ public struct MfaConfiguration {
     ///   - messages: The words on every screen.
     ///   - screens: The screens you replace.
     ///   - presentation: Who draws the flow.
-    ///   - maximumRounds: How many steps a sign-in may take.
     public init(messages: MfaMessages = .default, screens: MfaScreens = MfaScreens(),
-                presentation: MfaPresentation = .standard, maximumRounds: Int = MfaConfiguration.defaultMaximumRounds) {
+                presentation: MfaPresentation = .standard) {
         self.messages = messages
         self.screens = screens
         self.presentation = presentation
-        self.maximumRounds = maximumRounds
     }
 }

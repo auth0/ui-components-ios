@@ -47,9 +47,9 @@ struct MfaConfigurationTests {
     }
 
     @Test func everyErrorHasItsOwnWording() {
-        let all: [MfaError] = [.cancelled, .tokenExpired, .tokenInvalid, .maxChallengesExceeded, .rejected,
-                               .tooManyAttempts, .noEligibleFactors, .presentationUnavailable, .network,
-                               .credentialsNotSaved, .unexpected(nil)]
+        let all: [MfaError] = [.cancelled, .tokenExpired, .tokenInvalid, .rejected, .tooManyAttempts,
+                               .noEligibleFactors, .presentationUnavailable, .network, .credentialsNotSaved,
+                               .unexpected(nil)]
         let titles = all.map { MfaMessages.default.errors.message(for: $0).title }
         #expect(titles.allSatisfy { !$0.isEmpty })
         // Only the generic cases may share wording.
@@ -81,11 +81,6 @@ struct MfaConfigurationTests {
         let screens = MfaScreens(pushChallenge: .custom { (model: PushChallengeModel) in Text(model.deviceName) })
         #expect(screens.factorViews[.push] != nil)
         #expect(screens.authenticatorList.isStandard)
-    }
-
-    @Test func maximumRounds_defaultsToThree_andCanBeChanged() {
-        #expect(MfaConfiguration().maximumRounds == 3)
-        #expect(MfaConfiguration(maximumRounds: 5).maximumRounds == 5)
     }
 
     @Test func presentation_defaultsToStandard() {

@@ -60,7 +60,7 @@ final class EmbeddedMfaSession: AdditionalStepSession {
         controller = MfaController(
             initialOffers: offers, registry: registry, committer: stager, messages: configuration.messages,
             clock: clock,
-            exit: .startOver, maximumRounds: configuration.maximumRounds, onFinish: { finish?($0) },
+            exit: .startOver, onFinish: { finish?($0) },
             onLeave: { [weak delegate] in delegate?.additionalStepRequestedRestart() })
         if case let .headless(stream) = configuration.presentation { controller.publish(to: stream) }
         finish = { [weak delegate] error in

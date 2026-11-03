@@ -122,11 +122,6 @@ extension MfaMessages {
             title: text("mfa.errors.tokenInvalid.title", "Sign-in session ended."),
             description: text("mfa.errors.tokenInvalid.description",
                               "Your sign-in session ended. Please sign in again."))
-        /// The server asked for more steps than the flow allows.
-        public var maxChallengesExceeded = MfaHeaderMessage(
-            title: text("mfa.errors.maxChallengesExceeded.title", "Too many verification steps."),
-            description: text("mfa.errors.maxChallengesExceeded.description",
-                              "We couldn't finish verifying you. Please sign in again."))
         /// The user denied the request on their device.
         public var rejected = MfaHeaderMessage(
             title: text("mfa.errors.rejected.title", "Sign-in request denied."),
@@ -171,7 +166,6 @@ extension MfaMessages {
             case .cancelled: return cancelled
             case .tokenExpired: return tokenExpired
             case .tokenInvalid: return tokenInvalid
-            case .maxChallengesExceeded: return maxChallengesExceeded
             case .rejected: return rejected
             case .tooManyAttempts: return tooManyAttempts
             case .noEligibleFactors: return noEligibleFactors

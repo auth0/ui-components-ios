@@ -7,10 +7,9 @@ struct MfaFlowState: Equatable {
 
     var phase = Phase.idle
     /// How many menus the server has shown. The primary factor isn't a round. Each round is one step of a
-    /// multi-step sign-in: a policy that needs two factors shows two menus.
+    /// multi-step sign-in: a policy that needs two factors shows two menus. It only numbers the steps. The Core never
+    /// ends a flow because of it: how many steps a sign-in needs is the server's call.
     var round = 0
-    /// A flow ends with `maxChallengesExceeded` when the server asks for more menus than this.
-    var maxRounds = MfaFlowReducer.defaultMaxRounds
     var offers: [MfaFactorOffer] = []
     var current: MfaFactorOffer?
     /// Identifies the session that is running. Bumped on every start, so a report from an older one can be recognised.
@@ -48,9 +47,6 @@ enum MfaFlowEffect: Equatable {
 
 /// Every decision the Core makes. Pure: no UI, no network, no clock, and no knowledge of any factor.
 enum MfaFlowReducer {
-    /// The cap the spec sets: a flow may show this many menus before a further one ends it.
-    static let defaultMaxRounds = 3
-
     @MainActor
     static func reduce(_ old: MfaFlowState, _ event: MfaFlowEvent,
                        registry: MfaFactorRegistry) -> (MfaFlowState, [MfaFlowEffect]) {
@@ -113,7 +109,6 @@ extension MfaFlowState {
         let finished = isFirst ? [] : [MfaFlowEffect.deactivateAll]
         roundStartToken = self.token
         round += 1
-        guard round <= maxRounds else { return finished + failing(.maxChallengesExceeded) }
         offers = registry.eligible(raw)
         current = nil
         switch offers.count {
