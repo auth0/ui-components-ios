@@ -1,6 +1,7 @@
 # Change Log
 
-## Unreleased
+## [1.0.0-beta.2](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.2) (2026-11-03)
+[Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.1...1.0.0-beta.2)
 
 **⚠️ Breaking** (beta)
 
@@ -13,6 +14,8 @@
 - **Multi-step sign-in.** Every factor a policy needs runs inside one MFA session, and the credentials go to the app once, at the end. The server decides how many steps a sign-in needs and the flow follows it, with no limit of its own; `AuthenticatorListModel.round` and `MfaFactorStep.round` number the steps.
 - **A resend wait that every screen gets.** The 60 second wait before a push can be resent belongs to the flow, not to the standard button. `PushChallengeModel.resendAvailableIn` counts it down, and `resend()` does nothing until it reaches 0, so replaced and headless screens are held to the same wait.
 - **Documentation.** A DocC article set for multi-factor authentication (getting started, errors, customizing, headless, multi-step, how it is structured, adding a factor), with diagrams that follow light and dark mode, and doc comments on every public MFA symbol.
+- Guardian Push implement via MFA [\#76](https://github.com/auth0/ui-components-ios/pull/76) ([Sudhanshu96](https://github.com/Sudhanshu96))
+- MFA Core functionality implemented making it a stand alone feature [\#79](https://github.com/auth0/ui-components-ios/pull/79) ([Sudhanshu96](https://github.com/Sudhanshu96))
 
 **Changed**
 
@@ -22,7 +25,6 @@
 - Error screens never show the SDK's internal codes (e.g. `too_many_attempts`); rate limits, IP blocks and consent errors get their own copy.
 - The **Resend** countdowns keep time while the screen redraws, and announce the time left to VoiceOver.
 - The push screen no longer names the Guardian app (customers may ship their own authenticator), says **Resend notification** instead of **Resend Code**, and has its own sentence for a device with no name.
-
 
 ## [1.0.0-beta.1](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.1) (2026-10-14)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.0...1.0.0-beta.1)
