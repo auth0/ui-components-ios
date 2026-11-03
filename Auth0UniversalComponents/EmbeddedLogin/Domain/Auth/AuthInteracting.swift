@@ -11,7 +11,7 @@ enum LoginOption: Equatable {
 
 /// Where the sign-in stands after the email code.
 enum AuthProgress: Equatable {
-    /// The credentials are already in the Keychain.
+    /// The credentials are already with the app.
     case authenticated
     /// The tenant wants more than the first factor. The context carries what an additional step needs to continue the
     /// same sign-in; whatever runs it decides what is usable.
@@ -33,7 +33,7 @@ enum AuthFailure: Error, Equatable {
     }
 }
 
-/// Sign-in succeeded but the credentials couldn't be saved to the Keychain.
+/// Sign-in succeeded but the app couldn't take the credentials (its handler threw).
 struct CredentialsNotSavedError: LocalizedError, Equatable {
     var errorDescription: String? { "We couldn't save your sign-in on this device. Please try again." }
 }
@@ -45,6 +45,6 @@ protocol AuthInteracting {
     func discover() async throws -> [LoginOption]
     /// Sends a one-time code to `email`.
     func startOTP(connection: String, email: String) async throws
-    /// `.authenticated` means the credentials are already in the Keychain.
+    /// `.authenticated` means the credentials are already with the app.
     func verifyOTP(code: String) async throws -> AuthProgress
 }

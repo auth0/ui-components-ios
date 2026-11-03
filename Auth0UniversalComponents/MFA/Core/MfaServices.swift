@@ -1,6 +1,6 @@
 import Foundation
 
-/// Stores or discards the credentials a factor has verified. The Core, not the factor, decides when.
+/// Delivers or discards the credentials a factor has verified. The Core, not the factor, decides when.
 ///
 /// A factor only stages credentials when the server accepts it. `commit` runs when the Core accepts the sign-in while
 /// the flow is still live; `abandon` runs when the flow ends without signing in.

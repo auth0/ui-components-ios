@@ -131,19 +131,23 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ### Display the Embedded Login View
 
-`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, then the one-time code, then multi-factor authentication (Guardian push) when the tenant's policy asks for more. It reads `ClientId` and `Domain` from `Auth0.plist`, stores the credentials in the Keychain, and then calls `onAuthenticated` on the main actor:
+`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, then the one-time code, then multi-factor authentication (Guardian push) when the tenant's policy asks for more. It reads `ClientId` and `Domain` from `Auth0.plist`. The SDK stores nothing: when the user is signed in it hands the credentials to `onAuthenticated`, once, on the main actor, and your app keeps them where it keeps its session:
 
 ```swift
 import SwiftUI
+import Auth0
 import Auth0UniversalComponents
 
 struct LoginView: View {
     @State private var isSignedIn = false
+    private let credentialsManager = CredentialsManager(authentication: Auth0.authentication())
 
     var body: some View {
         NavigationStack {
-            EmbeddedLoginView(connection: "email") {
-                // Credentials are already in the Keychain at this point.
+            EmbeddedLoginView(connection: "email") { credentials in
+                // The SDK keeps nothing: this app decides where the credentials go.
+                try? credentialsManager.clear()      // drop an earlier session's pinned expiry
+                try credentialsManager.store(credentials: credentials)
                 isSignedIn = true
             }
         }
@@ -154,13 +158,13 @@ struct LoginView: View {
 }
 ```
 
-`onAuthenticated` fires only once the credentials are saved. If the Keychain write fails, the user sees an error screen, and **Try again** restarts from email entry, because the code has already been used.
+`onAuthenticated` runs once, as soon as the user is signed in, and after any multi-factor step. If it throws (for example, the Keychain write fails), the user sees an error screen, and **Try again** restarts from email entry, because the code has already been used. Call `clear()` before `store` when you replace an earlier session: Auth0.swift keeps the previous session's pinned expiry until `clear()`, so a new sign-in could otherwise be judged expired. The credentials are yours, so never log them.
 
 ### Multi-Factor Authentication
 
 When the tenant's MFA policy asks for more than the email code, `EmbeddedLoginView` moves into MFA in place. MFA is a separate engine, whose decisions are pure logic with no UI, with its own screens, so the login only hands over and takes the result back. Today it runs Guardian push; with several Guardian devices the user picks one from a list first. Other factors aren't supported in this flow yet.
 
-- **Approved:** the credentials are saved and `onAuthenticated` fires. If the policy asks for another factor, the list returns with **One more step**.
+- **Approved:** the credentials go to `onAuthenticated`. If the policy asks for another factor, the list returns with **One more step**.
 - **Denied, expired, session ended, too many attempts or no connection:** a screen with its own message and **Start over**, which begins a new sign-in with the email filled in.
 - **Verify another way** (several devices) returns to the list. **Back** cancels MFA and returns to email entry; a push approved after that is discarded and never signs the user in.
 - **No factor this flow can run** (e.g. only an authenticator app or SMS, or nothing enrolled): without a handler, a **Verification method not available.** screen with **Sign in again** shows. With `.onMfaError`, your app is told. Return `.handled` when it takes over and routes the user itself, or `.notHandled` when it only observes (logging), so the screen still shows.
@@ -174,8 +178,8 @@ struct SignInScreen: View {
     @EnvironmentObject private var session: SessionStore
 
     var body: some View {
-        EmbeddedLoginView(connection: "email") {
-            session.didSignIn()          // the flow is complete and the credentials are in the Keychain
+        EmbeddedLoginView(connection: "email") { credentials in
+            try session.store(credentials)       // the flow is complete; the SDK kept nothing
         }
         .onMfaError { error -> MfaErrorHandling in
             // Log or measure the error here: that alone does not take the screen away.
@@ -188,13 +192,19 @@ struct SignInScreen: View {
 }
 
 extension SessionStore {
+    /// Both sign-in paths end here: the app keeps the credentials and marks the user signed in.
+    func store(_ credentials: Credentials) throws {
+        try? credentialsManager.clear()
+        try credentialsManager.store(credentials: credentials)
+        didSignIn()
+    }
+
     func signInWithUniversalLogin() async {
         do {
             let credentials = try await Auth0.webAuth()
                 .scope("openid profile email offline_access")
                 .start()
-            try credentialsManager.store(credentials: credentials)
-            didSignIn()
+            try store(credentials)
         } catch {
             // The user closed the browser sheet: they stay on the login, which still offers Back.
         }
@@ -216,7 +226,7 @@ let mfa = MfaConfiguration(
         $0.pushChallenge.title = String(localized: "mfa.push.title")     // your own localized string
     }
 )
-EmbeddedLoginView(connection: "email", mfa: mfa) { session.didSignIn() }
+EmbeddedLoginView(connection: "email", mfa: mfa) { credentials in try session.store(credentials) }
 ```
 
 The built-in words are English, and the SDK doesn't read your app's String Catalog. To translate them, set the lines with your own `String(localized:)` values as above.
@@ -256,7 +266,7 @@ The factor list and the error screen are replaced the same way, through `MfaScre
 
 #### Draw everything yourself (headless)
 
-The flow still decides everything: which factors to offer, when to poll, when to give up, and when to store credentials. It only publishes each step into a stream **you** create and hold, and you draw it however you like.
+The flow still decides everything: which factors to offer, when to poll, when to give up, and when to hand the credentials to your app. It only publishes each step into a stream **you** create and hold, and you draw it however you like.
 
 ```swift
 struct HeadlessSignIn: View {
@@ -266,8 +276,8 @@ struct HeadlessSignIn: View {
     var body: some View {
         ZStack {
             EmbeddedLoginView(connection: "email",
-                              mfa: MfaConfiguration(presentation: .headless(stream))) {
-                session.didSignIn()
+                              mfa: MfaConfiguration(presentation: .headless(stream))) { credentials in
+                try session.store(credentials)
             }
             if let step = stream.step {                              // nil = nothing to draw
                 MyMfaScreens(step: step)
@@ -314,14 +324,14 @@ struct MyMfaScreens: View {
 
 #### Multi-step sign-in
 
-A policy that needs several factors shows the list again for each step, headed **One more step**, all inside one MFA run, for as many steps as the server asks for. The step number is on the models (`AuthenticatorListModel.round`, `MfaFactorStep.round`). The credentials are stored once, at the end.
+A policy that needs several factors shows the list again for each step, headed **One more step**, all inside one MFA run, for as many steps as the server asks for. The step number is on the models (`AuthenticatorListModel.round`, `MfaFactorStep.round`). The credentials reach your app once, at the end.
 
 #### How the pieces fit
 
 Login, the MFA engine and each factor don't know each other's insides:
 
 - **Login** only has a small `AdditionalStep` contract ("an additional step runs here") and never mentions MFA.
-- **The MFA engine** (`MFA/Core`) knows the factor list, rounds, switching, cancel, storing credentials and rendering the current step. It names no factor, no login type and no Auth0 type.
+- **The MFA engine** (`MFA/Core`) knows the factor list, rounds, switching, cancel, handing over the credentials and rendering the current step. It names no factor, no login type and no Auth0 type.
 - **A factor** (`MFA/Factors/Push` today) is an id and rank, a session that runs it, a model and screen, its words, and a small transport protocol it defines. Adding one touches no engine file.
 - **`EmbeddedMfaStep`** is the only adapter that knows both sides: it reads each factor's eligible factors from the server's response and builds the factors over the sign-in.
 
@@ -329,7 +339,7 @@ A source-level test (`ArchitectureTests`) fails if a layer starts to mention wha
 
 ### Read the Stored Credentials
 
-The flow saves the credentials with the default `CredentialsManager`, so you can read them back like this:
+The SDK stores nothing, so you read back whatever your `onAuthenticated` closure stored. With the `CredentialsManager` from the example above:
 
 ```swift
 import Auth0

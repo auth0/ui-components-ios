@@ -198,7 +198,7 @@ Embedded Login (email code) and MFA are separate layers. `ArchitectureTests` rea
 
 - **Screens only render the current step.** Decisions live in pure state machines (`MfaFlowReducer`, `PushApprovalMachine`); a screen renders a model and calls its actions.
 - **Adding a factor never edits the engine or the login:** an id, a model, a session, a transport protocol, words (`MfaFactorMessages` + an extension on `MfaMessages`), a screen, and a binding listed in `EmbeddedMfaStep`. `AddingAFactorTests` shows the shape.
-- **Credentials are staged, then stored once by the engine** (`EmbeddedMfaStager`). A factor never writes to the Keychain.
+- **Credentials are staged, then handed to the app once by the engine** (`EmbeddedMfaStager`). The SDK stores nothing: neither a factor nor the login touches the Keychain or `CredentialsManager`, and `ArchitectureTests` fails the build if one does. The app's `onAuthenticated(credentials)` closure decides where they go; if it throws, the sign-in ends as `credentialsNotSaved`.
 - **Public API is the app's contract:** `MfaConfiguration`, `MfaStep`, `MfaError`, the standard screens and `.onMfaError`. The factor contract is internal.
 - Use "additional step" for what the login hands over, and "eligible factors" for what the user can choose from. Don't call MFA the "second" step or factor.
 

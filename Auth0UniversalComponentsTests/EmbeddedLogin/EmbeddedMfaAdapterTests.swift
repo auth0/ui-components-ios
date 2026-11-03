@@ -49,21 +49,21 @@ struct EmbeddedPushBindingTests {
 @MainActor
 struct EmbeddedMfaStagerTests {
 
-    private let store = StubCredentialsStore()
-    private var sut: EmbeddedMfaStager { EmbeddedMfaStager(store: store) }
+    private let store = StubCredentialsDelivery()
+    private var sut: EmbeddedMfaStager { EmbeddedMfaStager(delivery: store) }
 
     @Test func staging_storesNothing_commitStoresOnce() throws {
         let stager = sut
         try stager.stage(Credentials(accessToken: "push"))
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
         try stager.commit()
-        #expect(store.stored.map(\.accessToken) == ["push"])
+        #expect(store.delivered.map(\.accessToken) == ["push"])
         #expect(throws: MfaError.unexpected(nil)) { try stager.commit() }
-        #expect(store.stored.count == 1)
+        #expect(store.delivered.count == 1)
     }
 
-    @Test func aKeychainFailure_isCredentialsNotSaved() throws {
-        store.error = NSError(domain: "keychain", code: -25308)
+    @Test func anAppFailure_isCredentialsNotSaved() throws {
+        store.error = NSError(domain: "app", code: -25308)
         let stager = sut
         try stager.stage(Credentials())
         #expect(throws: MfaError.credentialsNotSaved) { try stager.commit() }
@@ -74,7 +74,7 @@ struct EmbeddedMfaStagerTests {
         try stager.stage(Credentials(accessToken: "push"))
         stager.abandon()
         #expect(throws: MfaError.unexpected(nil)) { try stager.commit() }
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
     }
 
     @Test func aSignInAcceptedAfterTheFlowEnded_isNotStaged() {
@@ -82,7 +82,7 @@ struct EmbeddedMfaStagerTests {
         stager.abandon()
         #expect(throws: MfaError.cancelled) { try stager.stage(Credentials(accessToken: "late")) }
         #expect(throws: MfaError.unexpected(nil)) { try stager.commit() }
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
     }
 }
 
@@ -121,12 +121,12 @@ struct EmbeddedPushTransportTests {
     private typealias Fix = EmbeddedAuthFixtures
 
     private let client = StubEmbeddedAuthClient()
-    private let store = StubCredentialsStore()
+    private let store = StubCredentialsDelivery()
     private let iPhone = MfaFactorOffer(id: "push:0", factor: .push, label: "iPhone", reference: 0)
     private let menuOffer = scriptedOffer("push:9", factor: .push, label: "menu")
 
     private func make() -> (EmbeddedPushTransport, EmbeddedMfaStager) {
-        let stager = EmbeddedMfaStager(store: store)
+        let stager = EmbeddedMfaStager(delivery: store)
         return (EmbeddedPushTransport(client: client, stager: stager, menu: { [menuOffer] _ in [menuOffer] }), stager)
     }
 
@@ -190,9 +190,9 @@ struct EmbeddedPushTransportTests {
         client.verifyOobResults = [.success(Credentials(accessToken: "push"))]
         let (transport, stager) = make()
         #expect(try await transport.checkApproval() == .approved)
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
         try stager.commit()
-        #expect(store.stored.map(\.accessToken) == ["push"])
+        #expect(store.delivered.map(\.accessToken) == ["push"])
     }
 
     @Test func check_approvedAndAnotherFactorIsNeeded_usesTheWholeMenu() async throws {
@@ -214,7 +214,7 @@ struct EmbeddedPushTransportTests {
         let (transport, stager) = make()
         stager.abandon()
         await #expect(throws: MfaError.cancelled) { try await transport.checkApproval() }
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
     }
 }
 
@@ -227,9 +227,9 @@ struct EmbeddedMfaStepTests {
 
     private let clock = RecordingMfaClock()
 
-    private func context(_ client: StubEmbeddedAuthClient, _ store: StubCredentialsStore) -> AdditionalStepContext {
+    private func context(_ client: StubEmbeddedAuthClient, _ store: StubCredentialsDelivery) -> AdditionalStepContext {
         AdditionalStepContext(nextActions: [.challengePush(index: 0, name: "iPhone")], client: client,
-                              credentialsStore: store)
+                              credentialsDelivery: store)
     }
 
     private func eventually(_ condition: () -> Bool) async {
@@ -239,7 +239,7 @@ struct EmbeddedMfaStepTests {
     @Test func oneProvider_runsSeveralIndependentSessions() async {
         let provider = EmbeddedMfaStep(clock: clock)
         let first = StubEmbeddedAuthClient()
-        let firstStore = StubCredentialsStore()
+        let firstStore = StubCredentialsDelivery()
         first.challengePushResults = [Fix.needs([Fix.verifyOob()])]
         clock.suspends = true
         let firstDelegate = RecordingAdditionalStepDelegate()
@@ -253,7 +253,7 @@ struct EmbeddedMfaStepTests {
         // A second run on the same provider, over a different sign-in, is not affected by the first.
         clock.suspends = false
         let second = StubEmbeddedAuthClient()
-        let secondStore = StubCredentialsStore()
+        let secondStore = StubCredentialsDelivery()
         second.challengePushResults = [Fix.needs([Fix.verifyOob()])]
         second.verifyOobResults = [.success(Credentials(accessToken: "second"))]
         let secondDelegate = RecordingAdditionalStepDelegate()
@@ -262,19 +262,19 @@ struct EmbeddedMfaStepTests {
         await eventually { !secondDelegate.results.isEmpty }
 
         #expect(secondDelegate.results == [.completed])
-        #expect(secondStore.stored.map(\.accessToken) == ["second"])
-        #expect(firstStore.stored.isEmpty, "the first sign-in was cancelled and stays unstored")
+        #expect(secondStore.delivered.map(\.accessToken) == ["second"])
+        #expect(firstStore.delivered.isEmpty, "the first sign-in was cancelled and stays undelivered")
         #expect(firstSession !== secondSession)
     }
 
     @Test func severalSessionsMayBeAliveTogether_withoutSharingCredentials() async {
         let provider = EmbeddedMfaStep(clock: clock)
-        var stores: [StubCredentialsStore] = []
+        var stores: [StubCredentialsDelivery] = []
         var delegates: [RecordingAdditionalStepDelegate] = []
         var sessions: [AdditionalStepSession] = []
         for token in ["one", "two"] {
             let client = StubEmbeddedAuthClient()
-            let store = StubCredentialsStore()
+            let store = StubCredentialsDelivery()
             client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
             client.verifyOobResults = [.success(Credentials(accessToken: token))]
             let delegate = RecordingAdditionalStepDelegate()
@@ -284,12 +284,12 @@ struct EmbeddedMfaStepTests {
         }
         sessions.forEach { $0.start() }
         await eventually { delegates.allSatisfy { !$0.results.isEmpty } }
-        #expect(stores.map { $0.stored.map(\.accessToken) } == [["one"], ["two"]])
+        #expect(stores.map { $0.delivered.map(\.accessToken) } == [["one"], ["two"]])
     }
 
     /// The modifier takes a closure that answers; a closure that only logs must say so (`.notHandled`).
     @Test func onMfaError_takesAClosureThatAnswers() {
-        let view = EmbeddedLoginView(connection: "email").onMfaError { error in
+        let view = EmbeddedLoginView(connection: "email") { _ in }.onMfaError { error in
             if case .noEligibleFactors = error { return .handled }
             return .notHandled
         }
@@ -305,7 +305,7 @@ struct EmbeddedMfaStepTests {
             let client = StubEmbeddedAuthClient()
             client.challengePushResults = [Fix.network]
             let delegate = RecordingAdditionalStepDelegate()
-            let session = provider.makeSession(context: context(client, StubCredentialsStore()), delegate: delegate)
+            let session = provider.makeSession(context: context(client, StubCredentialsDelivery()), delegate: delegate)
             session.start()
             await eventually { !delegate.results.isEmpty }
         }

@@ -11,10 +11,10 @@ struct Auth0EmbeddedAuthInteractorTests {
 
     private let email = "sarah.doe@atko.email"
     private let client = StubEmbeddedAuthClient()
-    private let store = StubCredentialsStore()
+    private let store = StubCredentialsDelivery()
 
     private func makeSUT(connection: String? = "email") -> Auth0EmbeddedAuthInteractor {
-        Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store, connection: connection)
+        Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: store, connection: connection)
     }
 
     /// Scripts discovery → identify → challenge so `startOTP` lands on code entry.
@@ -90,15 +90,15 @@ struct Auth0EmbeddedAuthInteractorTests {
 
     // MARK: Verify
 
-    @Test func success_storesCredentials() async throws {
+    @Test func success_handsTheCredentialsToTheApp() async throws {
         client.verifyOtpResults = [.success(Credentials(accessToken: "at"))]
         #expect(try await makeSUT().verifyOTP(code: "112233") == .authenticated)
-        #expect(store.stored.map(\.accessToken) == ["at"])
+        #expect(store.delivered.map(\.accessToken) == ["at"])
         #expect(client.calls == [.verifyOtp(code: "112233", type: .oob)])
     }
 
-    @Test func storeFailure_throwsCredentialsNotSaved() async {
-        store.error = NSError(domain: "keychain", code: -25308)
+    @Test func appFailure_throwsCredentialsNotSaved() async {
+        store.error = NSError(domain: "app", code: -25308)
         await #expect(throws: CredentialsNotSavedError()) { try await makeSUT().verifyOTP(code: "112233") }
     }
 
@@ -124,10 +124,10 @@ struct Auth0EmbeddedAuthInteractorTests {
             return
         }
         #expect(context.nextActions.count == 4)
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
     }
 
-    /// The additional step continues the same sign-in: same client, same credentials store.
+    /// The additional step continues the same sign-in: same client, same credentials delivery.
     @Test func theContext_carriesTheSameSignIn() async throws {
         client.verifyOtpResults = [.failure(Fix.needs([Fix.challengePush]))]
         let progress = try await makeSUT().verifyOTP(code: "112233")
@@ -136,7 +136,7 @@ struct Auth0EmbeddedAuthInteractorTests {
             return
         }
         #expect((context.client as AnyObject) === client)
-        #expect((context.credentialsStore as AnyObject) === store)
+        #expect((context.credentialsDelivery as AnyObject) === store)
     }
 
     /// More is required but the user has no eligible factor: an empty menu, not a full-screen retry.

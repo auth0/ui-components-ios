@@ -37,7 +37,7 @@ extension View {
     /// way out, so the answer changes nothing for them.
     ///
     /// ```swift
-    /// EmbeddedLoginView(connection: "email") { session.didSignIn() }
+    /// EmbeddedLoginView(connection: "email") { credentials in try session.store(credentials) }
     ///     .onMfaError { error in
     ///         analytics.log(error)
     ///         if case .noEligibleFactors = error {

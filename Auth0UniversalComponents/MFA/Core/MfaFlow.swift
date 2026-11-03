@@ -51,7 +51,7 @@ enum MfaFlowReducer {
     static func reduce(_ old: MfaFlowState, _ event: MfaFlowEvent,
                        registry: MfaFactorRegistry) -> (MfaFlowState, [MfaFlowEffect]) {
         var state = old
-        // Terminal: nothing more happens. That is also what keeps a late approval out of the Keychain after Cancel.
+        // Terminal: nothing more happens. That is also what keeps a late approval from reaching the app after Cancel.
         if state.isTerminal { return (state, []) }
         let effects = state.apply(event, registry: registry)
         return (state, effects)

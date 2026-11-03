@@ -13,7 +13,7 @@ import SwiftUI
 struct AdditionalStepContext {
     let nextActions: [NextAction]
     let client: EmbeddedAuthClient
-    let credentialsStore: CredentialsStoring
+    let credentialsDelivery: CredentialsDelivering
 }
 
 extension AdditionalStepContext: Equatable {
@@ -24,7 +24,7 @@ extension AdditionalStepContext: Equatable {
 
 /// How an additional step ended.
 enum AdditionalStepResult: Equatable {
-    /// The user is signed in and the credentials are stored.
+    /// The user is signed in and the app has the credentials.
     case completed
     /// The user backed out. The login starts again at the first screen.
     case cancelled

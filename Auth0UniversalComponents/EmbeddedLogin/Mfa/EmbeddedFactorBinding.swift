@@ -21,20 +21,20 @@ struct EmbeddedFactorServices {
     let menu: ([NextAction]) -> [MfaFactorOffer]
 }
 
-/// Holds verified credentials until the Core says the sign-in is still live, then stores them.
+/// Holds verified credentials until the Core says the sign-in is still live, then hands them to the app.
 @MainActor
 final class EmbeddedMfaStager: MfaCommitter {
-    private let store: CredentialsStoring
+    private let delivery: CredentialsDelivering
     private var staged: Credentials?
     private var isAbandoned = false
 
-    init(store: CredentialsStoring) {
-        self.store = store
+    init(delivery: CredentialsDelivering) {
+        self.delivery = delivery
     }
 
     /// Called by a transport when the server accepts the sign-in. Throws if the flow already ended.
     func stage(_ credentials: Credentials) throws {
-        // Approved after the flow ended: nothing may be stored on this device.
+        // Approved after the flow ended: nothing may reach the app.
         guard !isAbandoned else { throw MfaError.cancelled }
         staged = credentials
     }
@@ -43,7 +43,7 @@ final class EmbeddedMfaStager: MfaCommitter {
         guard let credentials = staged else { throw MfaError.unexpected(nil) }
         staged = nil
         do {
-            try store.store(credentials: credentials)
+            try delivery.deliver(credentials: credentials)
         } catch {
             throw MfaError.credentialsNotSaved
         }

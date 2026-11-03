@@ -86,7 +86,7 @@ struct EmbeddedPushTransportSerializationTests {
     private let offerB = MfaFactorOffer(id: "push:1", factor: .push, label: "iPad", reference: 1)
 
     private func transport() -> EmbeddedPushTransport {
-        EmbeddedPushTransport(client: client, stager: EmbeddedMfaStager(store: StubCredentialsStore()),
+        EmbeddedPushTransport(client: client, stager: EmbeddedMfaStager(delivery: StubCredentialsDelivery()),
                               menu: { _ in [] })
     }
 

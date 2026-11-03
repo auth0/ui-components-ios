@@ -48,6 +48,15 @@ struct ArchitectureTests {
         #expect(try code(in: "MFA/Core").count >= 5, "the architecture rules would pass vacuously if no files were read")
         #expect(try code(in: "EmbeddedLogin/Domain").count >= 4)
         #expect(try code(in: "MFA/Factors/Push").count >= 5)
+        #expect(try code(in: "EmbeddedLogin").count >= 10)
+    }
+
+    /// The SDK hands the credentials to the app and keeps nothing: no Keychain code and no Auth0 credentials manager
+    /// anywhere in the login or the MFA. Where the credentials go is the app's decision.
+    @Test func loginAndMfa_keepNoCredentials() throws {
+        let sources = try code(in: "EmbeddedLogin") + code(in: "MFA")
+        let found = try violations(in: sources, matching: #"\bCredentialsManager\b|SimpleKeychain|\bSecItem\w*|\.store\(credentials"#)
+        #expect(found.isEmpty, "\(found)")
     }
 
     @Test func login_knowsNothingAboutMfa() throws {

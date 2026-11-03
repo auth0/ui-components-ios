@@ -33,7 +33,7 @@ final class EmbeddedMfaStep: ObservableObject, AdditionalStepProviding {
     }
 
     func makeSession(context: AdditionalStepContext, delegate: AdditionalStepDelegate) -> AdditionalStepSession {
-        let stager = EmbeddedMfaStager(store: context.credentialsStore)
+        let stager = EmbeddedMfaStager(delivery: context.credentialsDelivery)
         let menu: ([NextAction]) -> [MfaFactorOffer] = { [bindings] next in bindings.flatMap { $0.offers(in: next) } }
         let services = EmbeddedFactorServices(client: context.client, stager: stager, menu: menu)
         let session = EmbeddedMfaSession(

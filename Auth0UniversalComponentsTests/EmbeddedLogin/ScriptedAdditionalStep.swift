@@ -65,9 +65,9 @@ final class ScriptedAdditionalStepSession: AdditionalStepSession {
 extension AdditionalStepContext {
     @MainActor
     static func sample(nextActions: [NextAction] = [], client: EmbeddedAuthClient? = nil,
-                       store: CredentialsStoring? = nil) -> AdditionalStepContext {
+                       store: CredentialsDelivering? = nil) -> AdditionalStepContext {
         AdditionalStepContext(nextActions: nextActions, client: client ?? StubEmbeddedAuthClient(),
-                              credentialsStore: store ?? StubCredentialsStore())
+                              credentialsDelivery: store ?? StubCredentialsDelivery())
     }
 }
 

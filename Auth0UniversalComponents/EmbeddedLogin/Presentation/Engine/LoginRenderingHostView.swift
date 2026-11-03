@@ -22,15 +22,10 @@ struct LoginRenderingHostView: View {
 
     private let renderer = LoginRenderer() // TODO: Move into a view model.
 
-    /// Called once credentials are stored in the Keychain.
-    private let onAuthenticated: () -> Void
-
     /// `interactor` is built once, with the coordinator: a parent re-rendering doesn't build another.
-    init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil,
-         onAuthenticated: @escaping () -> Void = {}) {
+    init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil) {
         _coordinator = StateObject(
             wrappedValue: LoginFlowCoordinator(interactor: interactor(), additionalStep: additionalStep))
-        self.onAuthenticated = onAuthenticated
     }
 
     var body: some View {
@@ -56,7 +51,6 @@ struct LoginRenderingHostView: View {
         }
         .onChangeCompat(of: coordinator.step) { newStep in
             trackInputStep(newStep)
-            if case .authenticated = newStep { onAuthenticated() }
             syncDisplay()
         }
     }

@@ -15,7 +15,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
     private let email = "sudhanshu.vohra@okta.com"
     private let client = StubEmbeddedAuthClient()
-    private let store = StubCredentialsStore()
+    private let store = StubCredentialsDelivery()
     private let clock = RecordingMfaClock()
 
     private let secondPush: [String: Any] = [
@@ -27,14 +27,16 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
     /// Scripts discovery → email → challenge, then answers the email code with `afterTheCode`.
     private func signIn(afterTheCode: EmbeddedAuthError, policy: PushPollingPolicy? = nil,
-                        handler: ((MfaError) -> MfaErrorHandling)? = nil) async -> LoginFlowCoordinator {
+                        handler: ((MfaError) -> MfaErrorHandling)? = nil,
+                        delivery: CredentialsDelivering? = nil) async -> LoginFlowCoordinator {
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         client.verifyOtpResults = [.failure(afterTheCode)]
         let provider = EmbeddedMfaStep(clock: clock, bindings: [EmbeddedPushBinding(policy: policy ?? noResendWait)])
         provider.errorHandler = handler
-        let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store, connection: "email")
+        let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: delivery ?? store,
+                                                     connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: provider)
         await sut.send(.start)
         await sut.send(.submitIdentifier(email))
@@ -92,7 +94,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
         #expect(sut.step == .authenticated)
         #expect(pushCalls == [.challengePush(index: 0), .verifyOob, .verifyOob])
-        #expect(store.stored.map(\.accessToken) == ["push"])
+        #expect(store.delivered.map(\.accessToken) == ["push"])
     }
 
     /// GP-02: several Guardian devices, so the user picks one and the push goes to that index.
@@ -118,7 +120,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
         #expect(sut.step == .additionalStepUnavailable)
         #expect(pushCalls.isEmpty)
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
     }
 
     /// The same, when the app set `onMfaError` and takes over: it is told, and routes the user (say, to Universal
@@ -169,9 +171,8 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         client.verifyOtpResults = [.success(Credentials(accessToken: "email"))]
-        let sut = LoginFlowCoordinator(interactor: Auth0EmbeddedAuthInteractor(client: client, credentialsStore: store,
-                                                                               connection: "email"),
-                                       additionalStep: EmbeddedMfaStep(clock: clock))
+        let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: store, connection: "email")
+        let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: EmbeddedMfaStep(clock: clock))
         await sut.send(.start)
         await sut.send(.submitIdentifier(email))
         await sut.send(.submitOTP(code: "111111"))
@@ -206,7 +207,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
             await eventually { error(sut) == expected }
 
             #expect(error(sut) == expected)
-            #expect(store.stored.isEmpty)
+            #expect(store.delivered.isEmpty)
         }
     }
 
@@ -345,16 +346,16 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
     // MARK: Credentials and server oddities
 
-    /// GP-23: if the credentials can't be saved, approval ends on an error instead of signing in.
-    @Test func gp23_keychainFailure_isAnError() async {
-        store.error = NSError(domain: "keychain", code: -25308)
+    /// GP-23: if the app can't take the credentials, approval ends on an error instead of signing in.
+    @Test func gp23_appFailure_isAnError() async {
+        store.error = NSError(domain: "app", code: -25308)
         client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
         let sut = await signIn(afterTheCode: menu([Fix.challengePush]))
         await eventually { error(sut) == .credentialsNotSaved }
 
         #expect(error(sut) == .credentialsNotSaved)
         #expect(sut.step == .additionalStep)
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
     }
 
     /// GP-29: the server answers the push without an approval step; that's an error, not a hang.
@@ -393,11 +394,11 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         guard let rows = list(sut) else { Issue.record("no list"); return }
         #expect(rows.header == .challengeAdditional)
         #expect(rows.rows.count == 2)
-        #expect(store.stored.isEmpty, "nothing is stored until the whole policy is met")
+        #expect(store.delivered.isEmpty, "nothing reaches the app until the whole policy is met")
     }
 
-    /// A policy that needs two factors: two rounds, a fresh push for each, and nothing stored until the second.
-    @Test func aMultiStepSignIn_runsTwoRounds_thenStoresOnce() async {
+    /// A policy that needs two factors: two rounds, a fresh push for each, and nothing delivered until the second.
+    @Test func aMultiStepSignIn_runsTwoRounds_thenDeliversOnce() async {
         client.challengePushResults = [Fix.needs([Fix.verifyOob()]), Fix.needs([Fix.verifyOob()])]
         client.verifyOobResults = [.failure(Fix.needs([Fix.challengePush, secondPush])),
                                    .success(Credentials(accessToken: "final"))]
@@ -405,17 +406,53 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         let sut = await signIn(afterTheCode: menu([Fix.challengePush]))
         await eventually { list(sut)?.round == 2 }
         #expect(list(sut)?.header == .challengeAdditional)
-        #expect(store.stored.isEmpty, "the first round only moved the sign-in along")
+        #expect(store.delivered.isEmpty, "the first round only moved the sign-in along")
 
         list(sut)?.select("push:1")
         await eventually { sut.step == .authenticated }
 
         #expect(pushCalls == [.challengePush(index: 0), .verifyOob, .challengePush(index: 1), .verifyOob])
-        #expect(store.stored.map(\.accessToken) == ["final"])
+        #expect(store.delivered.map(\.accessToken) == ["final"])
     }
 
-    /// An approval that arrives after the user left is never stored (Cancel discards it).
-    @Test func anApprovalAfterBack_isNeverStored() async {
+    /// What the app's closure sees through the real hand-over: nothing mid-policy, then the final credentials, once.
+    @Test func theAppReceivesTheCredentialsOnce_afterTheLastRound() async {
+        var received: [String] = []
+        let handOver = CredentialsHandOver { received.append($0.accessToken) }
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()]), Fix.needs([Fix.verifyOob()])]
+        client.verifyOobResults = [.failure(Fix.needs([Fix.challengePush, secondPush])),
+                                   .success(Credentials(accessToken: "final"))]
+
+        let sut = await signIn(afterTheCode: menu([Fix.challengePush]), delivery: handOver)
+        await eventually { list(sut)?.round == 2 }
+        #expect(received.isEmpty, "the first round only moved the sign-in along")
+
+        list(sut)?.select("push:1")
+        await eventually { sut.step == .authenticated }
+
+        #expect(received == ["final"])
+    }
+
+    /// The app's closure throws (it could not keep the credentials): the approval ends on the error, not a sign-in.
+    @Test func whenTheAppRefusesTheCredentials_approvalEndsOnAnError() async {
+        struct Refused: Error {}
+        var calls = 0
+        let handOver = CredentialsHandOver { _ in
+            calls += 1
+            throw Refused()
+        }
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+
+        let sut = await signIn(afterTheCode: menu([Fix.challengePush]), delivery: handOver)
+        await eventually { error(sut) == .credentialsNotSaved }
+
+        #expect(error(sut) == .credentialsNotSaved)
+        #expect(sut.step == .additionalStep)
+        #expect(calls == 1)
+    }
+
+    /// An approval that arrives after the user left never reaches the app (Cancel discards it).
+    @Test func anApprovalAfterBack_isNeverDelivered() async {
         clock.suspends = true
         client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
         client.verifyOobResults = [.success(Credentials(accessToken: "late"))]
@@ -426,7 +463,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         clock.suspends = false
         await sut.send(.submitIdentifier(email))
 
-        #expect(store.stored.isEmpty)
+        #expect(store.delivered.isEmpty)
         #expect(sut.step != .authenticated)
     }
 }

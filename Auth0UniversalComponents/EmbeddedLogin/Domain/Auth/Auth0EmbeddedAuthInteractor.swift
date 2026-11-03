@@ -78,38 +78,39 @@ struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
     func verifyOob() async throws -> Credentials { try await auth.verifyOob().start() }
 }
 
-protocol CredentialsStoring {
-    func store(credentials: Credentials) throws
+/// Where a finished sign-in's credentials go. The SDK keeps nothing: the app that embeds the login receives them.
+@MainActor
+protocol CredentialsDelivering {
+    /// Throws when the app can't take them; the sign-in then ends as "couldn't be saved".
+    func deliver(credentials: Credentials) throws
 }
-
-extension CredentialsManager: CredentialsStoring {}
 
 /// One instance per login flow — `EmbeddedAuth` is stateful.
 final class Auth0EmbeddedAuthInteractor: AuthInteracting {
 
     private let client: EmbeddedAuthClient
-    private let credentialsStore: CredentialsStoring
+    private let credentialsDelivery: CredentialsDelivering
     private let connection: String?
 
     private var lastNextActions: [NextAction] = []
     /// Lets the first `startOTP` reuse the loop `discover()` opened.
     private var hasFreshLoop = false
 
-    init(client: EmbeddedAuthClient, credentialsStore: CredentialsStoring, connection: String? = nil) {
+    init(client: EmbeddedAuthClient, credentialsDelivery: CredentialsDelivering, connection: String? = nil) {
         self.client = client
-        self.credentialsStore = credentialsStore
+        self.credentialsDelivery = credentialsDelivery
         self.connection = connection
     }
 
     /// Reads `clientId`/`domain` from `Auth0.plist`. `additionalStepCapabilities` are the extra steps whatever runs the
     /// additional step can render; without any, a tenant that asks for more can't be served.
-    convenience init(session: URLSession = .shared, bundle: Bundle = .main, connection: String? = nil,
-                     additionalStepCapabilities: [EmbeddedCapability] = []) {
+    convenience init(credentialsDelivery: CredentialsDelivering, session: URLSession = .shared, bundle: Bundle = .main,
+                     connection: String? = nil, additionalStepCapabilities: [EmbeddedCapability] = []) {
         self.init(
             client: LiveEmbeddedAuthClient(
                 auth: Auth0.embeddedAuth(session: session, bundle: bundle),
                 capabilities: LiveEmbeddedAuthClient.firstFactorCapabilities + additionalStepCapabilities),
-            credentialsStore: CredentialsManager(authentication: Auth0.authentication(session: session, bundle: bundle)),
+            credentialsDelivery: credentialsDelivery,
             connection: connection
         )
     }
@@ -141,7 +142,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         do {
             let credentials = try await client.verifyOtp(code, type: .oob)
             do {
-                try credentialsStore.store(credentials: credentials)
+                try credentialsDelivery.deliver(credentials: credentials)
             } catch {
                 throw CredentialsNotSavedError()
             }
@@ -164,7 +165,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
 
     /// The same sign-in session, for whatever continues it.
     private func additionalStepContext(_ nextActions: [NextAction]) -> AdditionalStepContext {
-        AdditionalStepContext(nextActions: nextActions, client: client, credentialsStore: credentialsStore)
+        AdditionalStepContext(nextActions: nextActions, client: client, credentialsDelivery: credentialsDelivery)
     }
 
     // MARK: Loop helpers
