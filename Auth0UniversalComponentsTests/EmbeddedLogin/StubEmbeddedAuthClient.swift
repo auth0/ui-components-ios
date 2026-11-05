@@ -9,8 +9,9 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
 
     enum Call: Equatable {
         case authorize(connection: String)
-        case identify(email: String)
+        case identify(_ identifier: String, type: IdentifierType)
         case challengeEmail(index: Int)
+        case challengePhone(index: Int, deliveryMethod: PhoneDeliveryMethod)
         case verifyOtp(code: String, type: OtpType)
         case challengePush(index: Int)
         case verifyOob
@@ -21,6 +22,7 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     var authorizeResults: [Error?] = []
     var identifyResults: [Error?] = []
     var challengeEmailResults: [Error?] = []
+    var challengePhoneResults: [Error?] = []
     var verifyOtpResults: [Result<Credentials, Error>] = []
     var challengePushResults: [Error?] = []
     var verifyOobResults: [Result<Credentials, Error>] = []
@@ -30,14 +32,19 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         if let error = authorizeResults.popFirst() ?? nil { throw error }
     }
 
-    func identify(email: String) async throws {
-        calls.append(.identify(email: email))
+    func identify(_ identifier: String, type: IdentifierType) async throws {
+        calls.append(.identify(identifier, type: type))
         if let error = identifyResults.popFirst() ?? nil { throw error }
     }
 
     func challengeEmail(index: Int) async throws {
         calls.append(.challengeEmail(index: index))
         if let error = challengeEmailResults.popFirst() ?? nil { throw error }
+    }
+
+    func challengePhone(index: Int, deliveryMethod: PhoneDeliveryMethod) async throws {
+        calls.append(.challengePhone(index: index, deliveryMethod: deliveryMethod))
+        if let error = challengePhoneResults.popFirst() ?? nil { throw error }
     }
 
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials {
@@ -78,6 +85,12 @@ enum EmbeddedAuthFixtures {
                                            "identifier": "+1***99"]
     static let challengePush: [String: Any] = ["action": "action:challenge:push:v1", "index": 0,
                                                "name": "Sudhanshu's iPhone"]
+    static let identifyPhone: [String: Any] = ["action": "action:identify:phone:v1"]
+
+    static func challengePhone(index: Int = 0, masked: String = "(4**)***-*900",
+                               methods: [String] = ["text", "voice"]) -> [String: Any] {
+        ["action": "action:challenge:phone:v1", "index": index, "identifier": masked, "delivery_methods": methods]
+    }
 
     static func verifyOob(pollInMs: Int = 2_000) -> [String: Any] {
         ["action": "action:verify:oob:v1", "poll_in_ms": pollInMs]

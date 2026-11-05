@@ -1,0 +1,196 @@
+@testable import Auth0UniversalComponents
+import Foundation
+import Testing
+
+@Suite
+struct PhoneNumberValidatorTests {
+
+    @Test func joinsTheCountryCodeAndTheNumber_ignoringFormatting() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "(415) 555-0123") == "+14155550123")
+        #expect(PhoneNumberValidator.e164(dialCode: "+44", number: " 7700 900123 ") == "+447700900123")
+    }
+
+    /// A number typed with its own `+` is already international: the picked country isn't added again.
+    @Test func aLeadingPlus_ignoresThePickedCountry() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "+44 7700 900123") == "+447700900123")
+    }
+
+    @Test func rejectsTooShortTooLongAndLetters() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "123") == nil)
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "") == nil)
+        // 16 digits with the country code: over E.164's 15.
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "123456789012345") == nil)
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "415 555 CALL") == nil)
+    }
+}
+
+@Suite
+struct CountryLookupTests {
+
+    @Test func aRegionsFlag_isItsLettersAsRegionalIndicators() {
+        #expect(CountryStore.flag(forRegion: "US") == "🇺🇸")
+        #expect(CountryStore.flag(forRegion: "in") == "🇮🇳")
+        #expect(CountryStore.flag(forRegion: "USA") == nil)
+        #expect(CountryStore.flag(forRegion: "1A") == nil)
+    }
+
+    @Test func findsTheDevicesCountry_elseTheUnitedStates() {
+        let countries = CountryStore.loadCountries()
+        #expect(!countries.isEmpty, "CountryCodes.json didn't load")
+        #expect(CountryStore.defaultCountry(in: countries, region: "GB")?.code == "+44")
+        // +1 is shared: the flag tells Canada from the United States.
+        #expect(CountryStore.defaultCountry(in: countries, region: "CA")?.name == "Canada")
+        #expect(CountryStore.defaultCountry(in: countries, region: "ZZ")?.name == "United States")
+        #expect(CountryStore.defaultCountry(in: countries, region: nil)?.name == "United States")
+    }
+}
+
+@Suite
+struct LoginFieldErrorsTests {
+
+    @Test func showsTheFormsOwnCheckBeforeTheServers() {
+        var errors = LoginFieldErrors()
+        errors.validation = "Please enter a valid email address."
+        #expect(errors.shown(server: "Server said no") == "Please enter a valid email address.")
+    }
+
+    @Test func editingHidesBoth_untilTheServerReportsAgain() {
+        var errors = LoginFieldErrors()
+        errors.validation = "Please enter a valid email address."
+        errors.userEdited()
+        #expect(errors.shown(server: "Server said no") == nil)
+        errors.serverReported()
+        #expect(errors.shown(server: "Server said no") == "Server said no")
+    }
+}
+
+@Suite
+struct PhoneNumberFormatterTests {
+
+    private let usMask = "(###)###-####"
+
+    @Test func laysTheDigitsOnTheMask() {
+        #expect(PhoneNumberFormatter.format("4233530900", mask: usMask) == "(423)353-0900")
+        #expect(PhoneNumberFormatter.format("423 353 0900", mask: usMask) == "(423)353-0900")
+    }
+
+    /// A literal shows only once a digit follows it, so a part-typed number has no dangling `)` or `-`.
+    @Test func partlyTyped_hasNoDanglingLiterals() {
+        #expect(PhoneNumberFormatter.format("4", mask: usMask) == "(4")
+        #expect(PhoneNumberFormatter.format("423", mask: usMask) == "(423")
+        #expect(PhoneNumberFormatter.format("4233", mask: usMask) == "(423)3")
+        #expect(PhoneNumberFormatter.format("", mask: usMask) == "")
+    }
+
+    @Test func formattingTwice_changesNothing() {
+        let once = PhoneNumberFormatter.format("4233530900", mask: usMask)
+        #expect(PhoneNumberFormatter.format(once, mask: usMask) == once)
+    }
+
+    @Test func noMask_orOwnPlus_isLeftAsTyped() {
+        #expect(PhoneNumberFormatter.format("7700 900123", mask: nil) == "7700 900123")
+        #expect(PhoneNumberFormatter.format("+44 7700 900123", mask: usMask) == "+44 7700 900123")
+    }
+
+    @Test func digitsPastTheMask_areKept() {
+        #expect(PhoneNumberFormatter.format("42335309001", mask: usMask) == "(423)353-09001")
+    }
+}
+
+@Suite
+struct PhoneNumberMaskValidationTests {
+
+    private let usMask = "(###)###-####"
+
+    @Test func aMaskedCountry_needsEveryDigit() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "(423)353-0900", mask: usMask) == "+14233530900")
+        // The design's client-side error example.
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "(423)35323", mask: usMask) == nil)
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "(423)353-09001", mask: usMask) == nil)
+    }
+
+    @Test func ownPlus_skipsTheMask() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "+44 7700 900123", mask: usMask) == "+447700900123")
+    }
+
+    /// The Caribbean codes are written `+1-876` in the list; only their digits are dialled.
+    @Test func dialCodeWithADash_usesItsDigits() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1-876", number: "555 0123") == "+18765550123")
+    }
+}
+
+@Suite
+struct PhoneNumberSplitTests {
+
+    private let countries = CountryStore.loadCountries()
+
+    @Test func splitsIntoCountryAndTheRest() {
+        let split = CountryStore.split("+447700900123", in: countries, region: "US")
+        #expect(split?.country.name == "United Kingdom")
+        #expect(split?.national == "7700900123")
+    }
+
+    /// `+1` is shared: the device's country decides, else the United States.
+    @Test func aSharedCode_prefersTheDevicesCountry() {
+        #expect(CountryStore.split("+14155550123", in: countries, region: "CA")?.country.name == "Canada")
+        #expect(CountryStore.split("+14155550123", in: countries, region: "GB")?.country.name == "United States")
+        #expect(CountryStore.split("+14155550123", in: countries, region: "US")?.national == "4155550123")
+    }
+
+    @Test func theLongestCodeWins() {
+        let split = CountryStore.split("+18765550123", in: countries, region: "US")
+        #expect(split?.country.code == "+1-876")
+        #expect(split?.national == "5550123")
+    }
+
+    @Test func notInternational_isNotSplit() {
+        #expect(CountryStore.split("4155550123", in: countries, region: "US") == nil)
+    }
+
+    @Test func theUnitedStates_hasTheDesignsMask() {
+        #expect(countries.first { $0.name == "United States" }?.format == "(###)###-####")
+    }
+}
+
+@Suite
+struct AuthFailurePhoneCopyTests {
+
+    @Test func phoneWords_sayPhone() {
+        #expect(AuthFailure.invalidCode.message(for: .phone)
+                == "Invalid Code. Please double check the code sent to your phone.")
+        #expect(AuthFailure.codeNotSent.message(for: .phone)
+                == "We couldn't send your code. Please confirm the phone number is correct and try again.")
+        #expect(AuthFailure.codeExpired.message(for: .phone)
+                == "Your code has expired. Resend another code and try again.")
+    }
+
+    @Test func emailWords_areUnchanged() {
+        #expect(AuthFailure.invalidCode.message(for: .email)
+                == "Invalid Code. Please double check the code sent to your email.")
+        #expect(AuthFailure.codeNotSent.message(for: .email)
+                == "We couldn't send your code. Please confirm the email address is correct and try again.")
+    }
+}
+
+#if canImport(UIKit)
+import UIKit
+
+@Suite
+struct LoginIconAssetTests {
+
+    /// A missing or renamed asset leaves an empty slot with only a log line, so check it ships. (The module name is
+    /// spelled out: this target shadows `ResourceBundle` with a mock.)
+    @Test func thePhoneIcon_shipsAtItsDesignSize() throws {
+        let image = try #require(UIImage(named: "phone", in: Auth0UniversalComponents.ResourceBundle.default,
+                                                 with: nil))
+        #expect(image.size == CGSize(width: 11, height: 15))
+    }
+
+    /// The envelope is exported larger than the phone icon; the button fits both to the same height.
+    @Test func theEmailIcon_ships() throws {
+        let image = try #require(UIImage(named: "email", in: Auth0UniversalComponents.ResourceBundle.default,
+                                         with: nil))
+        #expect(image.size == CGSize(width: 24, height: 22))
+    }
+}
+#endif

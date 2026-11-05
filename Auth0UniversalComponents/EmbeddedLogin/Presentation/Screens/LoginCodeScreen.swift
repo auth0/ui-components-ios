@@ -7,8 +7,10 @@ public struct LoginCodeScreen: View {
     let fieldLabel: String
     let digitCount: Int
     let isLoading: Bool
-    /// Rejection to show under the boxes. Hidden once the user retypes.
+    /// Rejection to show under the boxes. Hidden once the user retypes, unless the code expired.
     let errorMessage: String?
+    /// The code timed out: only a new one helps. Verify stays off, Resend is offered at once, and the error stays.
+    let isCodeExpired: Bool
     let onVerify: (String) -> Void
     let onEdit: (() -> Void)?
     /// `nil` hides the resend row.
@@ -24,6 +26,7 @@ public struct LoginCodeScreen: View {
                 digitCount: Int = 6,
                 isLoading: Bool = false,
                 errorMessage: String? = nil,
+                isCodeExpired: Bool = false,
                 onVerify: @escaping (String) -> Void,
                 onEdit: (() -> Void)? = nil,
                 onResend: (() -> Void)? = nil) {
@@ -33,31 +36,37 @@ public struct LoginCodeScreen: View {
         self.digitCount = digitCount
         self.isLoading = isLoading
         self.errorMessage = errorMessage
+        self.isCodeExpired = isCodeExpired
         self.onVerify = onVerify
         self.onEdit = onEdit
         self.onResend = onResend
     }
 
-    private var activeError: String? { suppressError ? nil : errorMessage }
+    private var activeError: String? { suppressError && !isCodeExpired ? nil : errorMessage }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             LoginScreenHeader(title: title, subtitle: subtitle, isEditEnabled: !isLoading, onEdit: onEdit)
 
             LoginFieldLabel(fieldLabel)
-            LoginCodeField(code: $code, digitCount: digitCount, isError: activeError != nil)
+            LoginCodeField(code: $code, digitCount: digitCount, isError: activeError != nil, isEnabled: !isLoading)
 
             if let activeError {
                 LoginInlineError(activeError)
                     .padding(.top, theme.spacing.xs)
             }
 
-            LoginPrimaryButton("Verify", isLoading: isLoading, isEnabled: code.count == digitCount, action: verify)
+            LoginPrimaryButton("Verify", isLoading: isLoading,
+                               isEnabled: code.count == digitCount && !isCodeExpired, action: verify)
             .padding(.top, theme.spacing.lg)
 
             if let onResend {
-                LoginResendButton(isBusy: isLoading, onResend: onResend)
-                    .padding(.top, theme.spacing.lg)
+                LoginResendButton(isBusy: isLoading, isAvailableNow: isCodeExpired) {
+                    // The expired code is no use once a new one is on its way.
+                    if isCodeExpired { code = "" }
+                    onResend()
+                }
+                .padding(.top, theme.spacing.lg)
             }
 
             Spacer()
@@ -68,7 +77,7 @@ public struct LoginCodeScreen: View {
     }
 
     private func verify() {
-        guard !isLoading, code.count == digitCount else { return }
+        guard !isLoading, !isCodeExpired, code.count == digitCount else { return }
         onVerify(code)
     }
 }
@@ -78,6 +87,15 @@ public struct LoginCodeScreen: View {
 }
 
 #Preview("Code – rejected") {
-    LoginCodeScreen(subtitle: "From sarah.doe@atko.email", errorMessage: AuthFailure.invalidCode.message,
+    LoginCodeScreen(subtitle: "From sarah.doe@atko.email", errorMessage: AuthFailure.invalidCode.message(for: .email),
                     onVerify: { _ in }, onEdit: {}, onResend: {})
+}
+
+#Preview("Phone code – verifying") {
+    LoginCodeScreen(subtitle: "From (4**)***-*900", isLoading: true, onVerify: { _ in }, onEdit: {}, onResend: {})
+}
+
+#Preview("Phone code – expired") {
+    LoginCodeScreen(subtitle: "From (4**)***-*900", errorMessage: AuthFailure.codeExpired.message(for: .phone),
+                    isCodeExpired: true, onVerify: { _ in }, onEdit: {}, onResend: {})
 }

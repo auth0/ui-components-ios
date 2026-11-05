@@ -3,9 +3,12 @@ import Foundation
 /// What the coordinator asks the renderer to show.
 enum LoginStep: Equatable {
     case loading
-    case collectOTPIdentifier
-    /// `identifier` is the email the code was sent to.
-    case collectOTPCode(identifier: String)
+    /// Asks for an email or a phone number. The tenant's first method is the starting screen, listing the others; the
+    /// others open on their own screen from there.
+    case collectOTPIdentifier(LoginChannel)
+    /// `identifier` is what the user typed. `sentTo` is where the server says the code went, masked
+    /// (`(4**)***-*900`), when it says; otherwise the screen shows `identifier`.
+    case collectOTPCode(identifier: LoginIdentifier, sentTo: String? = nil)
     /// More than the first factor is required, and an additional step is running it
     /// (`LoginFlowCoordinator.additionalStep`).
     case additionalStep
@@ -20,7 +23,9 @@ enum LoginStep: Equatable {
 /// User input the renderer sends back to the coordinator.
 enum LoginEvent: Equatable {
     case start
-    case submitIdentifier(String)
+    case submitIdentifier(LoginIdentifier)
+    /// "Continue with Phone" (or Email): opens that method's own screen.
+    case chooseChannel(LoginChannel)
     case submitOTP(code: String)
     case retry
     /// Starts a new sign-in, e.g. after the additional step failed.

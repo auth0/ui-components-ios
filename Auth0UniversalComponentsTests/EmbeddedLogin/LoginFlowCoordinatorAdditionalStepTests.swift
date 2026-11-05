@@ -20,13 +20,13 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         interactor.verifyOTPResult = .success(.additionalStepRequired(.sample()))
         let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: provider ?? self.provider)
         await sut.send(.start)
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
         await sut.send(.submitOTP(code: "111111"))
         return (sut, interactor)
     }
 
     private func startOTPCount(_ interactor: ScriptedAuthInteractor) -> Int {
-        interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", email: email) }.count
+        interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", identifier: .email(email)) }.count
     }
 
     // MARK: Handing over
@@ -45,7 +45,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
             discover: .success([.emailOTP(connection: "email")]), startOTP: .success(()),
             verifyOTP: .success(.additionalStepRequired(.sample()))))
         await bare.send(.start)
-        await bare.send(.submitIdentifier(email))
+        await bare.send(.submitIdentifier(.email(email)))
         await bare.send(.submitOTP(code: "111111"))
         #expect(bare.step == .additionalStepUnavailable)
         #expect(sut.step == .additionalStep, "the same input with an additional step plugged in")
@@ -62,7 +62,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
     @Test func cancelled_returnsToEmailEntry() async {
         let (sut, _) = await afterEmailCode()
         provider.last.finish(.cancelled)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     @Test func unavailable_notReported_showsTheUnavailableScreen() async {
@@ -88,7 +88,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         provider.last.finish(.failed)
         provider.last.requestRestart()
         for _ in 0..<200 where sut.step == .additionalStep { try? await Task.sleep(nanoseconds: 5_000_000) }
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
         #expect(interactor.receivedRequests.filter { $0 == .discover }.count == 2)
     }
 
@@ -96,7 +96,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         let (sut, interactor) = await afterEmailCode()
         provider.last.finish(.unavailable(reported: false))
         await sut.send(.restart)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
         #expect(interactor.receivedRequests.filter { $0 == .discover }.count == 2)
     }
 
@@ -106,7 +106,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
     @Test func aProvider_isAskedForAFreshSessionEachSignIn() async {
         let (sut, _) = await afterEmailCode()
         sut.goBack()
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
         await sut.send(.submitOTP(code: "222222"))
         #expect(sut.step == .additionalStep)
         #expect(provider.sessions.count == 2)
@@ -120,7 +120,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         let (sut, _) = await afterEmailCode()
         #expect(sut.goBack() == .movedBack)
         #expect(provider.last.log.contains("cancel"))
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     @Test func back_isIgnored_whileTheAdditionalStepRefusesToBeCancelled() async {
@@ -134,14 +134,14 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         let (sut, _) = await afterEmailCode()
         provider.last.finish(.failed)
         #expect(sut.goBack() == .movedBack)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     @Test func back_fromAdditionalStepUnavailable_goesToEmailEntry() async {
         let (sut, _) = await afterEmailCode()
         provider.last.finish(.unavailable(reported: false))
         #expect(sut.goBack() == .movedBack)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     // MARK: A new sign-in waits for the old one
@@ -151,7 +151,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         provider.last.holdsCancel = true
         sut.goBack()
 
-        let submitted = Task { await sut.send(.submitIdentifier(email)) }
+        let submitted = Task { await sut.send(.submitIdentifier(.email(email))) }
         for _ in 0..<20 { await Task.yield() }
         try? await Task.sleep(nanoseconds: 30_000_000)
         #expect(startOTPCount(interactor) == 1, "the SDK allows one request at a time")
@@ -159,7 +159,7 @@ struct LoginFlowCoordinatorAdditionalStepTests {
         provider.last.releaseCancel()
         await submitted.value
         #expect(startOTPCount(interactor) == 2)
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
         #expect(sut.additionalStep == nil)
     }
 }

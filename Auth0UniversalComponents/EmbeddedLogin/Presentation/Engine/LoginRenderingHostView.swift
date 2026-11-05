@@ -63,13 +63,13 @@ struct LoginRenderingHostView: View {
     }
 
     private var currentPlan: ScreenPlan {
-        renderer.plan(for: displayStep)
+        renderer.plan(for: displayStep, channels: coordinator.channels)
     }
 
     private var context: RenderContext {
         RenderContext(
             additionalStepView: coordinator.additionalStep?.view,
-            email: coordinator.enteredEmail,
+            identifier: coordinator.enteredIdentifier,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
             dispatch: { send($0) },

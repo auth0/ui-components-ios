@@ -38,10 +38,12 @@ struct EmbeddedPushBindingTests {
                 == [.challengePush, .verifyOob])
     }
 
-    /// With the login's own steps, this is what `authorize` is asked to route to: Email OTP, then Guardian push.
-    @Test func withTheLoginsOwnSteps_theCapabilitiesAreEmailAndPush() {
+    /// With the login's own steps, this is what `authorize` is asked to route to: Email and SMS OTP, then Guardian
+    /// push.
+    @Test func withTheLoginsOwnSteps_theCapabilitiesAreEmailPhoneAndPush() {
         #expect(LiveEmbeddedAuthClient.firstFactorCapabilities + EmbeddedMfaStep().capabilities
-                == [.identifyEmail, .challengeEmail, .verifyOTP, .challengePush, .verifyOob])
+                == [.identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP,
+                    .challengePush, .verifyOob])
     }
 }
 

@@ -55,7 +55,7 @@ struct CredentialsHandOverTests {
         let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: handOver, connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor)
         await sut.send(.start)
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
         await sut.send(.submitOTP(code: "111111"))
         return sut
     }
