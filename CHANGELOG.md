@@ -1,5 +1,22 @@
 # Change Log
 
+## Unreleased
+
+**Added**
+
+- **Embedded Login: sign in with a phone number (SMS OTP).** When the connection offers SMS OTP, `EmbeddedLoginView` texts the one-time code and signs the user in with it. No code changes are needed: the screens follow what the tenant offers. With email and phone both offered, the first screen asks for whichever the tenant lists first, with **Continue with Phone** (or **Continue with Email**) below an **OR** divider, which opens the other method's own screen. The phone field starts on the device's country, formats numbers as they're typed where the country has a format (US for now), checks them on the device and sends them in E.164 form. The code screen shows the number as the server masked it. An expired texted code stays on the code screen with **Verify** disabled and **Resend Code** available at once. Codes go by text message only, and SMS isn't available as a multi-factor step yet. See "Sign in with a Phone Number" in `EXAMPLES.md`.
+- **New public API.** `LoginPhoneScreen` (the standalone phone entry screen; hands back an E.164 number). `LoginCodeScreen(isCodeExpired:)`, `LoginCodeField(isEnabled:)` and `LoginResendButton(isAvailableNow:)`. All new parameters have defaults, so existing call sites compile unchanged.
+
+**Changed**
+
+- Embedded Login now advertises the phone steps (`identifyPhone`, `challengePhone`) in its `authorize` capabilities, as well as Email OTP and Guardian push.
+- `LoginEmailScreen` disables **Continue** while its "Please enter a valid email address." error shows. A server error (such as "We couldn't send your code") leaves it enabled so the user can try again.
+- The code screen greys out the digits, locks them and puts the keyboard away while a code is being verified.
+
+**Fixed**
+
+- The country list was missing when the SDK is installed with Swift Package Manager (`CountryCodes.json` wasn't bundled), so the country picker in phone enrollment was empty.
+
 ## [1.0.0-beta.2](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.2) (2026-11-03)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.1...1.0.0-beta.2)
 

@@ -127,11 +127,11 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ## Embedded Login
 
-> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.1` or later 4.x**, the first release with the Embedded Authorization MFA APIs that Guardian push uses. Your tenant must have Embedded Login enabled, with Email OTP on the connection you pass in.
+> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.1` or later 4.x**, the first release with the Embedded Authorization MFA APIs that Guardian push uses. Your tenant must have Embedded Login enabled, with Email OTP, SMS OTP or both on the connection you pass in.
 
 ### Display the Embedded Login View
 
-`EmbeddedLoginView` runs the full native sign-in flow inside your app: email entry, then the one-time code, then multi-factor authentication (Guardian push) when the tenant's policy asks for more. It reads `ClientId` and `Domain` from `Auth0.plist`. The SDK stores nothing: when the user is signed in it hands the credentials to `onAuthenticated`, once, on the main actor, and your app keeps them where it keeps its session:
+`EmbeddedLoginView` runs the full native sign-in flow inside your app: email or phone number entry, then the one-time code (sent by email or text message), then multi-factor authentication (Guardian push) when the tenant's policy asks for more. It reads `ClientId` and `Domain` from `Auth0.plist`. The SDK stores nothing: when the user is signed in it hands the credentials to `onAuthenticated`, once, on the main actor, and your app keeps them where it keeps its session:
 
 ```swift
 import SwiftUI
@@ -158,15 +158,27 @@ struct LoginView: View {
 }
 ```
 
-`onAuthenticated` runs once, as soon as the user is signed in, and after any multi-factor step. If it throws (for example, the Keychain write fails), the user sees an error screen, and **Try again** restarts from email entry, because the code has already been used. Call `clear()` before `store` when you replace an earlier session: Auth0.swift keeps the previous session's pinned expiry until `clear()`, so a new sign-in could otherwise be judged expired. The credentials are yours, so never log them.
+`onAuthenticated` runs once, as soon as the user is signed in, and after any multi-factor step. If it throws (for example, the Keychain write fails), the user sees an error screen, and **Try again** restarts from the screen where the email or phone number was entered, because the code has already been used. Call `clear()` before `store` when you replace an earlier session: Auth0.swift keeps the previous session's pinned expiry until `clear()`, so a new sign-in could otherwise be judged expired. The credentials are yours, so never log them.
+
+### Sign in with a Phone Number
+
+When the connection offers SMS OTP, `EmbeddedLoginView` signs users in with a code sent by text message. Nothing changes in your code: the screens follow what the tenant offers.
+
+- **Email and phone offered:** the first screen asks for whichever the tenant lists first, with **Continue with Phone** (or **Continue with Email**) below an **OR** divider. That button opens the other method's own screen, and Back returns to the first one.
+- **Only one offered:** the first screen asks for just that one.
+- **The phone field** starts on the device's country (else the United States), with a picker for the rest. Numbers are formatted as they're typed where a country has a format (US: `(423)353-0900`), checked on the device ("Please enter a valid phone number."), and sent in E.164 form (`+14233530900`).
+- **The code screen** shows the number as the server masked it (`From (4**)***-*900`), with **Edit** to change it.
+- **An expired texted code** stays on the code screen: **Verify** is disabled and **Resend Code** works at once. An expired email code still shows the full-screen error.
+
+Codes are sent by text message only; a number that can only take voice calls gets "We couldn't send your code." SMS isn't available as a multi-factor step yet.
 
 ### Multi-Factor Authentication
 
-When the tenant's MFA policy asks for more than the email code, `EmbeddedLoginView` moves into MFA in place. MFA is a separate engine, whose decisions are pure logic with no UI, with its own screens, so the login only hands over and takes the result back. Today it runs Guardian push; with several Guardian devices the user picks one from a list first. Other factors aren't supported in this flow yet.
+When the tenant's MFA policy asks for more than the one-time code, `EmbeddedLoginView` moves into MFA in place. MFA is a separate engine, whose decisions are pure logic with no UI, with its own screens, so the login only hands over and takes the result back. Today it runs Guardian push; with several Guardian devices the user picks one from a list first. Other factors aren't supported in this flow yet.
 
 - **Approved:** the credentials go to `onAuthenticated`. If the policy asks for another factor, the list returns with **One more step**.
-- **Denied, expired, session ended, too many attempts or no connection:** a screen with its own message and **Start over**, which begins a new sign-in with the email filled in.
-- **Verify another way** (several devices) returns to the list. **Back** cancels MFA and returns to email entry; a push approved after that is discarded and never signs the user in.
+- **Denied, expired, session ended, too many attempts or no connection:** a screen with its own message and **Start over**, which begins a new sign-in at the first screen, with what was typed there filled in.
+- **Verify another way** (several devices) returns to the list. **Back** cancels MFA and returns to the first screen; a push approved after that is discarded and never signs the user in.
 - **No factor this flow can run** (e.g. only an authenticator app or SMS, or nothing enrolled): without a handler, a **Verification method not available.** screen with **Sign in again** shows. With `.onMfaError`, your app is told. Return `.handled` when it takes over and routes the user itself, or `.notHandled` when it only observes (logging), so the screen still shows.
 
 #### Fall back to Universal Login
@@ -354,10 +366,10 @@ if credentialsManager.canRenew() {
 
 ### Flow Behaviour
 
-- **Recoverable errors appear inline:** an invalid code, a code that couldn't be sent, or too many attempts. The user stays on the current screen; when attempts run out, they can use **Resend Code**.
+- **Recoverable errors appear inline:** an invalid code, a code that couldn't be sent, an expired texted code, or too many attempts. The user stays on the current screen; when attempts run out, they can use **Resend Code**.
 - **Other failures go full screen:** network or server errors. **Try again** returns to the step that failed.
 - **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed. During MFA, Back cancels it at once, and an approval already on its way is discarded.
-- **Email entry keeps the email** when the user comes back to it: Back from code entry or push, **Try again**, or **Sign in again**.
+- **Email and phone entry keep what was typed** when the user comes back to them: Back or **Edit** from code entry, Back from push, **Try again**, or **Sign in again**. A phone number comes back with its country.
 - **Push checks right away** when the app returns to the foreground, so approving on the same phone signs in without waiting for the next check.
 - **During the initial loading screen,** Back still leaves the flow.
 
@@ -389,16 +401,34 @@ struct CustomEmailStep: View {
     }
 }
 
-struct CustomCodeStep: View {
-    let email: String
+struct CustomPhoneStep: View {
     @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        LoginPhoneScreen(isLoading: isLoading, errorMessage: errorMessage) { number in
+            // `number` is in E.164 form, e.g. "+14233530900"
+            isLoading = true
+            Task {
+                defer { isLoading = false }
+                // text the code to `number`, and set `errorMessage` on failure
+            }
+        }
+    }
+}
+
+struct CustomCodeStep: View {
+    let sentTo: String                  // an email, or the server's masked number
+    @State private var isLoading = false
+    @State private var isCodeExpired = false
 
     var body: some View {
         LoginCodeScreen(
-            subtitle: "From \(email)",
+            subtitle: "From \(sentTo)",
             isLoading: isLoading,           // also disables "Edit" while verifying
+            isCodeExpired: isCodeExpired,   // Verify off, Resend available at once
             onVerify: { code in /* verify `code` */ },
-            onEdit: { /* return to email entry */ },
+            onEdit: { /* return to email or phone entry */ },
             onResend: { /* resend the code */ }
         )
     }
@@ -408,4 +438,4 @@ struct CustomCodeStep: View {
 The other screens and building blocks are also public and work the same way:
 
 - **Screens:** `LoginLoadingScreen`, `LoginErrorScreen`, `LoginSuccessScreen`, `LoginNoMethodsScreen`.
-- **Building blocks:** `LoginScreenHeader` (with `isEditEnabled`), `LoginInputField`, `LoginCodeField`, `LoginPrimaryButton`, `LoginResendButton`.
+- **Building blocks:** `LoginScreenHeader` (with `isEditEnabled`), `LoginInputField`, `LoginCodeField` (with `isEnabled`), `LoginPrimaryButton`, `LoginResendButton` (with `isAvailableNow`).

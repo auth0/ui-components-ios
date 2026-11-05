@@ -36,7 +36,7 @@ ui-components-ios/
 │   ├── SaveAuthenticators/             # Manage saved factors
 │   │   ├── Domain/                     # DeleteAuthMethodUseCase
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
-│   ├── EmbeddedLogin/                  # Native Email OTP sign-in; hands over to MFA when the tenant asks for more
+│   ├── EmbeddedLogin/                  # Native Email or SMS OTP sign-in; hands over to MFA when the tenant asks for more
 │   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
 │   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
 │   │   └── Presentation/               # EmbeddedLoginView, login screens, shared factor-screen pieces
@@ -187,7 +187,7 @@ let client = Auth0.myAccount(token: token, domain: domain, session: session)
 
 ## MFA in Embedded Login: Layering Rules
 
-Embedded Login (email code) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
+Embedded Login (email or SMS code) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
 
 | Layer | May know | Must not know |
 |---|---|---|
