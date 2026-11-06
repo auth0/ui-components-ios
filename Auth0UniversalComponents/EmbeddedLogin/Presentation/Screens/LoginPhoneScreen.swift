@@ -22,7 +22,10 @@ public struct LoginPhoneScreen: View {
                 errorMessage: String? = nil,
                 onContinue: @escaping (String) -> Void) {
         self.title = title
-        self._number = State(initialValue: number)
+        // Set before the first render, so the form doesn't take it for an edit and hide `errorMessage`.
+        let entry = LoginPhoneForm.startingEntry(for: number)
+        self._country = State(initialValue: entry.country)
+        self._number = State(initialValue: entry.number)
         self.isLoading = isLoading
         self.errorMessage = errorMessage
         self.onContinue = onContinue
@@ -35,11 +38,6 @@ public struct LoginPhoneScreen: View {
                            pinsContinueToBottom: true, onContinue: onContinue)
         }
         .embeddedScreenChrome(theme: theme)
-        // Loaded once it shows, not on every redraw of the parent.
-        .onAppear {
-            guard country == nil else { return }
-            (country, number) = CountryStore.phoneEntry(for: number)
-        }
     }
 }
 

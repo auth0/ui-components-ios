@@ -43,6 +43,13 @@ struct LoginPhoneForm: View {
         .onChangeCompat(of: serverError) { if $0 != nil { errors.serverReported() } }
     }
 
+    /// What a phone form starts with: a stored E.164 number split into its country and formatted, or the device's
+    /// country and the text as given. Set in the host's `init`, so it never counts as an edit and can't hide an error.
+    static func startingEntry(for number: String) -> (country: Country?, number: String) {
+        let entry = CountryStore.phoneEntry(for: number)
+        return (entry.country, PhoneNumberFormatter.format(entry.number, mask: entry.country?.format))
+    }
+
     private func submit() {
         // Return on the keyboard bypasses the button's guards.
         guard !isLoading, errors.validation == nil else { return }

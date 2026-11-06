@@ -27,7 +27,10 @@ struct LoginIdentifierScreen: View {
         self.onContinue = onContinue
         self.onChoose = onChoose
         _email = State(initialValue: prefill?.channel == .email ? prefill?.value ?? "" : "")
-        _number = State(initialValue: prefill?.channel == .phone ? prefill?.value ?? "" : "")
+        // Set before the first render, so the phone form doesn't take it for an edit and hide `errorMessage`.
+        let entry = LoginPhoneForm.startingEntry(for: prefill?.channel == .phone ? prefill?.value ?? "" : "")
+        _country = State(initialValue: channel == .phone ? entry.country : nil)
+        _number = State(initialValue: channel == .phone ? entry.number : "")
     }
 
     var body: some View {
@@ -47,10 +50,6 @@ struct LoginIdentifierScreen: View {
             }
         }
         .embeddedScreenChrome(theme: theme)
-        .onAppear {
-            guard channel == .phone, country == nil else { return }
-            (country, number) = CountryStore.phoneEntry(for: number)
-        }
     }
 
     @ViewBuilder

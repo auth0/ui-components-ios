@@ -32,7 +32,16 @@ enum PhoneNumberFormatter {
         mask.filter { $0 == slot }.count
     }
 
+    /// A decimal digit in any script (ASCII, Arabic-Indic, full-width, Devanagari, …) as its ASCII digit. Other
+    /// numerals (½, ④, ², 五, Ⅷ) aren't digits: nil. The validator uses this too, so the two always agree.
+    static func digit(_ character: Character) -> Character? {
+        guard character.unicodeScalars.count == 1, let scalar = character.unicodeScalars.first,
+              scalar.properties.numericType == .decimal, let value = character.wholeNumberValue else { return nil }
+        return Character(String(value))
+    }
+
+    /// The digits in `text`, as ASCII digits.
     static func digits(_ text: String) -> String {
-        String(text.filter { $0.isASCII && $0.isNumber })
+        String(text.compactMap(digit))
     }
 }

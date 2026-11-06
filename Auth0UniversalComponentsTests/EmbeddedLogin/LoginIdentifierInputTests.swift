@@ -194,3 +194,57 @@ struct LoginIconAssetTests {
     }
 }
 #endif
+
+/// The phone screens' starting state, set in `init` so it never looks like an edit (which hid the server's error).
+@Suite
+@MainActor
+struct PhoneStartingEntryTests {
+
+    @Test func aStoredNumber_comesBackSplitAndFormatted() {
+        let entry = LoginPhoneForm.startingEntry(for: "+14233530900")
+        #expect(entry.country?.name == "United States")
+        #expect(entry.number == "(423)353-0900")
+    }
+
+    @Test func anotherCountrysNumber_keepsItsCountry() {
+        let entry = LoginPhoneForm.startingEntry(for: "+447700900123")
+        #expect(entry.country?.name == "United Kingdom")
+        #expect(entry.number == "7700900123")      // no UK mask yet: digits as given
+    }
+
+    @Test func noNumber_startsEmpty_onACountry() {
+        let entry = LoginPhoneForm.startingEntry(for: "")
+        #expect(entry.country != nil)
+        #expect(entry.number.isEmpty)
+    }
+
+    /// Decoded once, so a country is the same value each time the picker opens.
+    @Test func theCountryList_isDecodedOnce() {
+        #expect(!CountryStore.all.isEmpty)
+        #expect(CountryStore().countries.map(\.id) == CountryStore().countries.map(\.id))
+    }
+}
+
+/// Digits in any script are understood; other numerals are rejected, never dropped.
+@Suite
+struct PhoneDigitScriptTests {
+
+    @Test func otherScripts_becomeOrdinaryDigits() {
+        #expect(PhoneNumberFormatter.digits("٠٥٠١٢٣٤٥٦٧") == "0501234567")
+        #expect(PhoneNumberFormatter.digits("４１５５５５０１２３") == "4155550123")
+        #expect(PhoneNumberFormatter.digits("४१५५५५०१२३") == "4155550123")
+    }
+
+    @Test func aNumberInAnotherScript_isAccepted() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+20", number: "١٠٠١٢٣٤٥٦٧") == "+201001234567")
+    }
+
+    @Test func fullWidthDigits_formatOnTheMask() {
+        #expect(PhoneNumberFormatter.format("４２３３５３０９００", mask: "(###)###-####") == "(423)353-0900")
+    }
+
+    @Test(arguments: ["½1234", "五五五五", "④①⑤⑤", "²³⁴⁵", "Ⅷ123"])
+    func otherNumerals_areRejected(_ typed: String) {
+        #expect(PhoneNumberValidator.e164(dialCode: "+20", number: typed) == nil)
+    }
+}

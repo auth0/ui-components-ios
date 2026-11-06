@@ -31,9 +31,12 @@ final class CountryStore: ObservableObject {
     /// The list of available countries with their calling codes
     @Published var countries: [Country] = []
 
-    /// Initializes the store and loads countries from the JSON file.
+    /// Decoded once: the list never changes while the app runs, and each country keeps the same `id`.
+    static let all: [Country] = loadCountries()
+
+    /// Initializes the store with the countries from the JSON file.
     init() {
-        self.countries = Self.loadCountries()
+        self.countries = Self.all
     }
 
     /// Loads countries from the CountryCodes.json file in the resource bundle.
@@ -63,7 +66,7 @@ final class CountryStore: ObservableObject {
     }
 
     /// The device's country, else the United States.
-    static func defaultCountry(in countries: [Country] = loadCountries(),
+    static func defaultCountry(in countries: [Country] = all,
                                region: String? = Locale.current.region?.identifier) -> Country? {
         country(forRegion: region, in: countries) ?? country(forRegion: "US", in: countries)
     }
@@ -87,7 +90,7 @@ final class CountryStore: ObservableObject {
     /// What a phone field starts with: a stored E.164 number split back into country and digits, or the device's
     /// country and the text as given.
     static func phoneEntry(for number: String) -> (country: Country?, number: String) {
-        let countries = loadCountries()
+        let countries = all
         if let split = split(number, in: countries) { return (split.country, split.national) }
         return (defaultCountry(in: countries), number)
     }
