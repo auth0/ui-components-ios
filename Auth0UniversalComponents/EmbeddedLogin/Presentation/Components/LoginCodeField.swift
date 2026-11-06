@@ -1,25 +1,37 @@
 import SwiftUI
 
-/// One-box-per-digit code entry. `isError` switches to the rejected-code treatment.
+/// One-box-per-digit code entry. `isError` switches to the rejected-code treatment. While `isEnabled` is off (a verify
+/// is in flight) the digits grey out, the boxes can't be focused or edited (by touch, VoiceOver or keyboard) and the
+/// keyboard goes away.
 public struct LoginCodeField: View {
     @Binding var code: String
     let digitCount: Int
     let isError: Bool
+    let isEnabled: Bool
 
     @Environment(\.auth0Theme) private var theme
     @FocusState private var focusedField: Int?
 
-    public init(code: Binding<String>, digitCount: Int = 6, isError: Bool = false) {
+    public init(code: Binding<String>, digitCount: Int = 6, isError: Bool = false, isEnabled: Bool = true) {
         self._code = code
         self.digitCount = digitCount
         self.isError = isError
+        self.isEnabled = isEnabled
     }
 
     public var body: some View {
         HStack(spacing: theme.spacing.xs) {
             ForEach(0..<digitCount, id: \.self) { digitBox($0) }
         }
+        .disabled(!isEnabled)
         .onAppear { focusedField = 0 }
+        // Back on the next box to fill (the last one when it's full), so a rejected code can be fixed at once.
+        .onChangeCompat(of: isEnabled) { focusedField = $0 ? min(code.count, digitCount - 1) : nil }
+    }
+
+    private var digitColor: Color {
+        if isError { return theme.colors.loginError }
+        return isEnabled ? theme.colors.text.bold : theme.colors.text.disabled
     }
 
     private func digitBox(_ index: Int) -> some View {
@@ -33,7 +45,7 @@ public struct LoginCodeField: View {
             setText: { setText($0, at: index) },
             enterKeyPressed: { focusedField = nil },
             emptyBackspaceKeyPressed: emptyBackspace,
-            textColor: isError ? theme.colors.loginError : theme.colors.text.bold
+            textColor: digitColor
         )
         .frame(maxWidth: .infinity)
         .frame(height: theme.sizes.size3xlDimen)

@@ -3,7 +3,7 @@ import Auth0
 import Foundation
 import Testing
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 struct MyAccountAuthMethodsViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"

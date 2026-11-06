@@ -18,7 +18,7 @@ struct EmbeddedPushBinding: EmbeddedFactorBinding {
 
     func makeFactor(_ services: EmbeddedFactorServices) -> any MfaFactor {
         PushFactor(transport: EmbeddedPushTransport(client: services.client, stager: services.stager,
-                                                    menu: services.menu), policy: policy)
+                                                    gate: services.gate, menu: services.menu), policy: policy)
     }
 }
 
@@ -27,22 +27,23 @@ struct EmbeddedPushBinding: EmbeddedFactorBinding {
 final class EmbeddedPushTransport: PushTransport {
     private let client: EmbeddedAuthClient
     private let stager: EmbeddedMfaStager
+    /// Shared with every other factor of this sign-in: a session the user switched away from may still have a check on
+    /// its way when the next one sends its push.
+    private let gate: EmbeddedRequestGate
     private let menu: ([NextAction]) -> [MfaFactorOffer]
-    /// The SDK allows one request at a time. Every push session of this sign-in shares this transport, and a session
-    /// the user switched away from may still have a check on its way when the next one sends its push.
-    private var isBusy = false
-    private var waiters: [CheckedContinuation<Void, Never>] = []
 
-    init(client: EmbeddedAuthClient, stager: EmbeddedMfaStager, menu: @escaping ([NextAction]) -> [MfaFactorOffer]) {
+    init(client: EmbeddedAuthClient, stager: EmbeddedMfaStager, gate: EmbeddedRequestGate,
+         menu: @escaping ([NextAction]) -> [MfaFactorOffer]) {
         self.client = client
         self.stager = stager
+        self.gate = gate
         self.menu = menu
     }
 
     func sendPush(to offer: MfaFactorOffer) async throws -> PushPending {
         guard let index = offer.reference else { throw MfaError.unexpected(nil) }
         do {
-            try await exclusively { try await client.challengePush(index: index) }
+            try await gate.run(challenging: offer.id) { try await client.challengePush(index: index) }
         } catch let error as EmbeddedAuthError {
             guard case let .insufficientAuthorization(_, nextActions) = error.reason else {
                 throw EmbeddedMfaErrors.map(error)
@@ -58,24 +59,11 @@ final class EmbeddedPushTransport: PushTransport {
     func checkApproval() async throws -> PushCheck {
         do {
             // The server accepted: stage the credentials. The Core says whether the sign-in is still live.
-            try stager.stage(try await exclusively { try await client.verifyOob() })
+            try stager.stage(try await gate.run { try await client.verifyOob() })
             return .approved
         } catch let error as EmbeddedAuthError {
             return try check(for: error)
         }
-    }
-
-    /// Runs `call` once no other request of this sign-in is on its way.
-    private func exclusively<T>(_ call: () async throws -> T) async throws -> T {
-        if isBusy {
-            await withCheckedContinuation { waiters.append($0) }    // the finishing request hands its turn over
-        } else {
-            isBusy = true
-        }
-        defer {
-            if waiters.isEmpty { isBusy = false } else { waiters.removeFirst().resume() }
-        }
-        return try await call()
     }
 
     private func check(for error: EmbeddedAuthError) throws -> PushCheck {

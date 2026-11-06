@@ -1,9 +1,10 @@
 import Auth0
 import SwiftUI
 
-/// Email OTP Embedded Login against the tenant in `Auth0.plist`.
+/// Email or SMS OTP Embedded Login against the tenant in `Auth0.plist`.
 ///
-/// When the tenant asks for more than the email code, the login hands over to the MFA flow in place. Report flows
+/// The first screen asks for whichever the tenant lists first, with a button for the other when it offers both.
+/// When the tenant asks for more than the one-time code, the login hands over to the MFA flow in place. Report flows
 /// that can't finish with `onMfaError(_:)`, and brand or replace the MFA screens through `mfa`.
 ///
 /// The SDK stores nothing. When the user is signed in, the credentials go to `onAuthenticated`, once, and keeping

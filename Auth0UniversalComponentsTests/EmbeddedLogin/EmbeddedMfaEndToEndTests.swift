@@ -39,7 +39,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
                                                      connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: provider)
         await sut.send(.start)
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
         await sut.send(.submitOTP(code: "111111"))
         return sut
     }
@@ -174,7 +174,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: store, connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: EmbeddedMfaStep(clock: clock))
         await sut.send(.start)
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
         await sut.send(.submitOTP(code: "111111"))
 
         #expect(sut.step == .authenticated)
@@ -185,7 +185,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
     @Test func gp05_wrongEmailCode_staysInline() async {
         let sut = await signIn(afterTheCode: Fix.needs([Fix.verifyEmail], subReason: "invalid_identifier_or_code"))
 
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
         #expect(sut.inputError == .invalidCode)
         #expect(pushCalls.isEmpty)
     }
@@ -221,7 +221,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         await sut.send(.restart)
 
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
         #expect(sut.additionalStep == nil)
         #expect(client.calls.filter { $0 == .authorize(connection: "email") }.count == 2)
     }
@@ -268,16 +268,16 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         await eventually { pushModel(sut) != nil }
 
         #expect(sut.goBack() == .movedBack)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
 
         clock.suspends = false
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
 
         #expect(!pushCalls.contains(.verifyOob))
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
     }
 
     /// GP-16 / GP-17: with several devices Back leaves the additional step altogether; "Verify another way" is the
@@ -295,7 +295,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
         #expect(list(sut) != nil)
 
         #expect(sut.goBack() == .movedBack)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     // MARK: Resend and polling
@@ -461,7 +461,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
         sut.goBack()
         clock.suspends = false
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
 
         #expect(store.delivered.isEmpty)
         #expect(sut.step != .authenticated)

@@ -36,7 +36,7 @@ ui-components-ios/
 │   ├── SaveAuthenticators/             # Manage saved factors
 │   │   ├── Domain/                     # DeleteAuthMethodUseCase
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
-│   ├── EmbeddedLogin/                  # Native Email OTP sign-in; hands over to MFA when the tenant asks for more
+│   ├── EmbeddedLogin/                  # Native Email or SMS OTP sign-in; hands over to MFA when the tenant asks for more
 │   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
 │   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
 │   │   └── Presentation/               # EmbeddedLoginView, login screens, shared factor-screen pieces
@@ -44,7 +44,8 @@ ui-components-ios/
 │   │   ├── Core/                       # MfaFlowReducer, MfaController, MfaStep, MfaError, factor contract
 │   │   ├── Configuration/              # MfaConfiguration, MfaMessages, MfaScreens, .onMfaError
 │   │   ├── Presentation/               # MfaHostView and the standard screens
-│   │   └── Factors/Push/               # Guardian push: state machine, session, model, screen, transport protocol
+│   │   ├── Factors/Push/               # Guardian push: state machine, session, model, screen, transport protocol
+│   │   └── Factors/PhoneCode/          # Texted or spoken code (one factor per delivery): state machine, session, model, screen, transport protocol
 │   ├── Core/Utils/                     # Shared utilities
 │   │   ├── OTPTextField.swift          # OTP code input component
 │   │   ├── CountryCodePicker/          # Phone number country selection
@@ -187,7 +188,7 @@ let client = Auth0.myAccount(token: token, domain: domain, session: session)
 
 ## MFA in Embedded Login: Layering Rules
 
-Embedded Login (email code) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
+Embedded Login (email or SMS code) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
 
 | Layer | May know | Must not know |
 |---|---|---|
@@ -196,7 +197,8 @@ Embedded Login (email code) and MFA are separate layers. `ArchitectureTests` rea
 | A factor (`MFA/Factors/<Name>`) | The engine's contract | The login, Auth0.swift, how requests are sent (it uses its own transport protocol) |
 | Adapter (`EmbeddedLogin/Mfa`) | Everything above | — |
 
-- **Screens only render the current step.** Decisions live in pure state machines (`MfaFlowReducer`, `PushApprovalMachine`); a screen renders a model and calls its actions.
+- **Screens only render the current step.** Decisions live in pure state machines (`MfaFlowReducer`, `PushApprovalMachine`, `PhoneCodeMachine`); a screen renders a model and calls its actions.
+- **One request at a time per sign-in, across factors.** Every factor's Embedded Login transport goes through the sign-in's shared `EmbeddedRequestGate`.
 - **Adding a factor never edits the engine or the login:** an id, a model, a session, a transport protocol, words (`MfaFactorMessages` + an extension on `MfaMessages`), a screen, and a binding listed in `EmbeddedMfaStep`. `AddingAFactorTests` shows the shape.
 - **Credentials are staged, then handed to the app once by the engine** (`EmbeddedMfaStager`). The SDK stores nothing: neither a factor nor the login touches the Keychain or `CredentialsManager`, and `ArchitectureTests` fails the build if one does. The app's `onAuthenticated(credentials)` closure decides where they go; if it throws, the sign-in ends as `credentialsNotSaved`.
 - **Public API is the app's contract:** `MfaConfiguration`, `MfaStep`, `MfaError`, the standard screens and `.onMfaError`. The factor contract is internal.

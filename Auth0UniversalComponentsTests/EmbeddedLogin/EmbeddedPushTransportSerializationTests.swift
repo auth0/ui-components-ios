@@ -60,8 +60,9 @@ final class GatedEmbeddedAuthClient: EmbeddedAuthClient {
 
     // The login's own steps aren't part of the push loop.
     func authorize(connection: String) async throws { throw Fix.noActiveSession }
-    func identify(email: String) async throws { throw Fix.noActiveSession }
+    func identify(_ identifier: String, type: IdentifierType) async throws { throw Fix.noActiveSession }
     func challengeEmail(index: Int) async throws { throw Fix.noActiveSession }
+    func challengePhone(index: Int, deliveryMethod: PhoneDeliveryMethod) async throws { throw Fix.noActiveSession }
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials { throw Fix.noActiveSession }
 
     private func begin(_ call: Call) {
@@ -87,7 +88,7 @@ struct EmbeddedPushTransportSerializationTests {
 
     private func transport() -> EmbeddedPushTransport {
         EmbeddedPushTransport(client: client, stager: EmbeddedMfaStager(delivery: StubCredentialsDelivery()),
-                              menu: { _ in [] })
+                              gate: EmbeddedRequestGate(), menu: { _ in [] })
     }
 
     /// Device A has a check on the wire when the user switches to device B: B's push must wait for it.

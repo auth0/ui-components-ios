@@ -6,8 +6,8 @@ import SwiftUI
 struct RenderContext {
     /// What the additional step shows; set while the coordinator is on `.additionalStep`.
     var additionalStepView: AnyView?
-    /// Pre-fills email entry, so Back from code entry keeps what the user typed.
-    var email: String?
+    /// Pre-fills the identifier screens, so Back from code entry keeps what the user typed.
+    var identifier: LoginIdentifier?
     var isSubmitting: Bool
     var inputError: AuthFailure?
     let dispatch: (LoginEvent) -> Void
@@ -17,8 +17,10 @@ struct RenderContext {
 
 enum ScreenPlan: Equatable {
     case loading
-    case identifier
-    case otpCode(identifier: String)
+    /// Asks for `channel`. `alternatives` are the other ways listed under "OR"; only the first screen has them.
+    /// `isFirst` is false on a way's own screen, opened from the first one.
+    case identifier(LoginChannel, alternatives: [LoginChannel] = [], isFirst: Bool = true)
+    case otpCode(identifier: LoginIdentifier, sentTo: String? = nil)
     case additionalStep
     case additionalStepUnavailable
     case authenticated
@@ -30,38 +32,43 @@ extension ScreenPlan {
     /// Identifies the *screen*, ignoring inline payload, so payload changes don't transition.
     var transitionIdentity: String {
         switch self {
-        case .loading:                return "loading"
-        case .identifier:             return "identifier"
-        case .otpCode:                return "otpCode"
-        case .additionalStep:             return "additionalStep"
+        case .loading:                   return "loading"
+        case let .identifier(channel, _, _): return "identifier.\(channel)"
+        case .otpCode:                   return "otpCode"
+        case .additionalStep:            return "additionalStep"
         case .additionalStepUnavailable: return "additionalStepUnavailable"
-        case .authenticated:          return "authenticated"
-        case .failed:                 return "failed"
-        case .noMethods:              return "noMethods"
+        case .authenticated:             return "authenticated"
+        case .failed:                    return "failed"
+        case .noMethods:                 return "noMethods"
         }
     }
 
     /// Compared across a change to pick a push (deeper) or pop (shallower).
     var navigationDepth: Int {
         switch self {
-        case .loading:                return 0
-        case .identifier, .noMethods: return 1
-        case .otpCode:                return 2
-        case .additionalStep, .additionalStepUnavailable: return 3
-        case .authenticated, .failed: return 4
+        case .loading:                                    return 0
+        case let .identifier(_, _, isFirst):              return isFirst ? 1 : 2
+        case .noMethods:                                  return 1
+        case .otpCode:                                    return 3
+        case .additionalStep, .additionalStepUnavailable: return 4
+        case .authenticated, .failed:                     return 5
         }
     }
 }
 
 struct LoginRenderer {
 
-    func plan(for step: LoginStep) -> ScreenPlan {
+    /// - Parameter channels: The ways the tenant offers, in its order; the first is the starting screen.
+    func plan(for step: LoginStep, channels: [LoginChannel] = []) -> ScreenPlan {
         switch step {
         case .loading:                    return .loading
-        case .collectOTPIdentifier:       return .identifier
-        case let .collectOTPCode(email):  return .otpCode(identifier: email)
-        case .additionalStep:                 return .additionalStep
-        case .additionalStepUnavailable:    return .additionalStepUnavailable
+        case let .collectOTPIdentifier(channel):
+            let isFirst = channel == channels.first ?? channel
+            return .identifier(channel, alternatives: isFirst ? channels.filter { $0 != channel } : [],
+                               isFirst: isFirst)
+        case let .collectOTPCode(identifier, sentTo): return .otpCode(identifier: identifier, sentTo: sentTo)
+        case .additionalStep:             return .additionalStep
+        case .additionalStepUnavailable:  return .additionalStepUnavailable
         case .authenticated:              return .authenticated
         case let .failed(message):        return .failed(message: message)
         case .noMethodsAvailable:         return .noMethods
@@ -74,18 +81,15 @@ struct LoginRenderer {
         case .loading:
             LoginLoadingScreen()
 
-        case .identifier:
-            LoginEmailScreen(email: ctx.email ?? "",
-                             isLoading: ctx.isSubmitting,
-                             errorMessage: ctx.inputError?.message) {
-                ctx.dispatch(.submitIdentifier($0))
-            }
+        case let .identifier(channel, alternatives, _):
+            identifierScreen(channel, alternatives: alternatives, context: ctx)
 
-        case let .otpCode(identifier):
+        case let .otpCode(identifier, sentTo):
             LoginCodeScreen(
-                subtitle: "From \(identifier)",
+                subtitle: "From \(sentTo ?? identifier.value)",
                 isLoading: ctx.isSubmitting,
-                errorMessage: ctx.inputError?.message,
+                errorMessage: ctx.inputError?.message(for: identifier.channel),
+                isCodeExpired: ctx.inputError == .codeExpired,
                 onVerify: { ctx.dispatch(.submitOTP(code: $0)) },
                 onEdit: ctx.back,
                 onResend: ctx.resend
@@ -105,6 +109,31 @@ struct LoginRenderer {
 
         case .noMethods:
             LoginNoMethodsScreen(onBack: ctx.back)
+        }
+    }
+
+    /// The first of several ways gets the shared screen with "OR"; a way on its own gets its own screen.
+    @ViewBuilder
+    private func identifierScreen(_ channel: LoginChannel, alternatives: [LoginChannel],
+                                  context ctx: RenderContext) -> some View {
+        let prefill = ctx.identifier?.channel == channel ? ctx.identifier : nil
+        let error = ctx.inputError?.message(for: channel)
+        if !alternatives.isEmpty {
+            LoginIdentifierScreen(channel: channel, alternatives: alternatives, prefill: prefill,
+                                  isLoading: ctx.isSubmitting, errorMessage: error,
+                                  onContinue: { ctx.dispatch(.submitIdentifier($0)) },
+                                  onChoose: { ctx.dispatch(.chooseChannel($0)) })
+        } else {
+            switch channel {
+            case .email:
+                LoginEmailScreen(email: prefill?.value ?? "", isLoading: ctx.isSubmitting, errorMessage: error) {
+                    ctx.dispatch(.submitIdentifier(.email($0)))
+                }
+            case .phone:
+                LoginPhoneScreen(number: prefill?.value ?? "", isLoading: ctx.isSubmitting, errorMessage: error) {
+                    ctx.dispatch(.submitIdentifier(.phone($0)))
+                }
+            }
         }
     }
 }
