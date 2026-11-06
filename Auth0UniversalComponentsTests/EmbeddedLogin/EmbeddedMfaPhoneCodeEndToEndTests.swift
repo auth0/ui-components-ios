@@ -17,16 +17,17 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
     private let store = StubCredentialsDelivery()
     private let clock = RecordingMfaClock()
 
-    /// Scripts discovery → email → challenge, then answers the email code with `afterTheCode`. Push and a phone code
-    /// for each of `deliveries` are plugged in, with no resend wait.
+    /// Scripts discovery → email → challenge, then answers the email code with `afterTheCode`. Push and a phone
+    /// code for each of `deliveries` are plugged in, with no resend wait unless `phoneWait` says so.
     private func signIn(afterTheCode: EmbeddedAuthError, deliveries: [PhoneCodeDelivery] = [.text],
+                        phoneWait: Int = 0,
                         handler: ((MfaError) -> MfaErrorHandling)? = nil) async -> LoginFlowCoordinator {
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
         client.verifyOtpResults = [.failure(afterTheCode)] + client.verifyOtpResults
         let phoneCodes = deliveries.map {
-            EmbeddedPhoneCodeBinding(delivery: $0, policy: PhoneCodePolicy(resendCooldownSeconds: 0))
+            EmbeddedPhoneCodeBinding(delivery: $0, policy: PhoneCodePolicy(resendCooldownSeconds: phoneWait))
         }
         let provider = EmbeddedMfaStep(clock: clock, bindings: [
             EmbeddedPushBinding(policy: PushPollingPolicy(resendCooldownSeconds: 0))
@@ -68,6 +69,11 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
             default: return false
             }
         }
+    }
+
+    /// The requests that ask for a code to be sent.
+    private var sends: [StubEmbeddedAuthClient.Call] {
+        codeCalls.filter { if case .challengePhone = $0 { return true } else { return false } }
     }
 
     // MARK: One phone
@@ -139,6 +145,84 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
         codeModel(sut)?.switchFactor()
         await eventually { list(sut) != nil }
         #expect(list(sut)?.rows.count == 2)
+    }
+
+    // MARK: Failures that leave the code usable
+
+    /// The texted code timed out: the code screen stays, Verify is off, and Resend sends a new one at once.
+    @Test func anExpiredCode_staysOnTheCodeScreen_andResendSendsANewOne() async {
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone()]),
+                                        Fix.needs([Fix.verifySMS, Fix.challengePhone()])]
+        client.verifyOtpResults = [
+            .failure(Fix.terminal("access_denied", description: "challenge_expired")),
+            .success(Credentials(accessToken: "sms"))
+        ]
+
+        let sut = await signIn(afterTheCode: menu([Fix.challengePhone()]))
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.submit("123456")
+        await eventually { codeModel(sut)?.isCodeExpired == true }
+        #expect(sut.step == .additionalStep, "no error screen")
+        #expect(store.delivered.isEmpty)
+
+        codeModel(sut)?.resend()
+        await eventually { sends.count == 2 }
+        await eventually { codeModel(sut)?.isCodeExpired == false }
+        codeModel(sut)?.submit("654321")
+        await eventually { sut.step == .authenticated }
+        #expect(store.delivered.map(\.accessToken) == ["sms"])
+    }
+
+    /// The connection drops while a new code is requested: the code on the phone still works.
+    @Test func aResendWithoutAConnection_keepsTheCodeScreen_andTheOldCodeStillSignsIn() async {
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone()]), Fix.network]
+        client.verifyOtpResults = [.success(Credentials(accessToken: "sms"))]
+
+        let sut = await signIn(afterTheCode: menu([Fix.challengePhone()]))
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.resend()
+        await eventually { codeModel(sut)?.requestError == .network }
+        #expect(sut.step == .additionalStep, "no error screen")
+
+        codeModel(sut)?.submit("123456")
+        await eventually { sut.step == .authenticated }
+        #expect(store.delivered.map(\.accessToken) == ["sms"])
+    }
+
+    /// Too many wrong codes locks the challenge: that still ends the flow.
+    @Test func tooManyRequestsWhileChecking_stillEndsWithTheErrorScreen() async {
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS])]
+        client.verifyOtpResults = [.failure(Fix.terminal("too_many_requests", description: "too_many_attempts",
+                                                         statusCode: 429))]
+
+        let sut = await signIn(afterTheCode: menu([Fix.challengePhone()]))
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.submit("000000")
+        await eventually { if case .error = mfaStep(sut) { return true } else { return false } }
+        guard case let .error(model)? = mfaStep(sut) else { Issue.record("no error screen"); return }
+        #expect(model.error == .tooManyAttempts)
+    }
+
+    // MARK: Leaving and coming back
+
+    /// "Verify another way" and then the same phone again, inside the wait: the first code's screen returns, and no
+    /// second text is sent.
+    @Test func leavingAndComingBack_doesNotTextAnotherCode() async {
+        clock.suspends = true                                  // the countdown stands still
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone()])]
+
+        let sut = await signIn(afterTheCode: menu([Fix.challengePhone(), Fix.challengePush]), phoneWait: 60)
+        list(sut)?.select("sms:0")
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+
+        list(sut)?.select("sms:0")
+        await eventually { codeModel(sut) != nil }
+        #expect(codeModel(sut)?.canResend == true)
+        #expect(codeModel(sut)?.resendAvailableIn ?? 0 > 0, "the wait carried over")
+        await settle()
+        #expect(sends == [.challengePhone(index: 0, deliveryMethod: .text)], "one text, not two")
     }
 
     // MARK: Voice

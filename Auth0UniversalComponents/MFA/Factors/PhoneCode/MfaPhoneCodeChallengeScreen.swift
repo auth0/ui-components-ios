@@ -23,7 +23,17 @@ public struct MfaPhoneCodeChallengeScreen: View {
     }
 
     private var copy: PhoneCodeChallengeMessages { messages.phoneCodeChallenge }
-    private var rejection: String? { model.isCodeRejected && !isRejectionHidden ? copy.invalidCode : nil }
+    /// What went wrong, most recent first. A rejection hides once the user retypes; the others stay until the next
+    /// request starts, since retyping doesn't fix them.
+    private var problem: String? {
+        switch model.requestError {
+        case .network?: return copy.noConnection
+        case .tooManyAttempts?: return copy.tooManyRequests
+        default: break
+        }
+        if model.isCodeExpired { return copy.expiredCode }
+        return model.isCodeRejected && !isRejectionHidden ? copy.invalidCode : nil
+    }
 
     /// The screen.
     public var body: some View {
@@ -32,12 +42,13 @@ public struct MfaPhoneCodeChallengeScreen: View {
                           subtitle: copy.subtitle(number: model.destination, delivery: model.delivery))
 
             MfaCodeEntryForm(code: $code, digitCount: model.codeLength, fieldLabel: copy.fieldLabel,
-                             verifyTitle: copy.verify, isVerifying: model.isVerifying, error: rejection,
-                             onVerify: { model.submit($0) }, actions: {
+                             verifyTitle: copy.verify, isVerifying: model.isVerifying, error: problem,
+                             canVerify: !model.isCodeExpired, onVerify: { model.submit($0) }, actions: {
                 VStack(spacing: theme.spacing.md) {
                     if model.canResend {
-                        MfaResendCodeButton(remaining: model.resendAvailableIn, isBusy: model.isVerifying,
-                                            title: copy.resend.button, cooldownTitle: copy.resend.cooldown) {
+                        MfaResendButton(remaining: model.resendAvailableIn, isBusy: model.isVerifying,
+                                        title: copy.resend.button, cooldownTitle: copy.resend.cooldown,
+                                        look: .text) {
                             // The old code is no use once a new one is on its way.
                             code = ""
                             model.resend()
@@ -75,6 +86,16 @@ public struct MfaPhoneCodeChallengeScreen: View {
 #Preview("Voice code") {
     MfaPhoneCodeChallengeScreen(model: PhoneCodeChallengeModel(delivery: .voice, destination: "(4**)***-*900",
                                                                canResend: true, canSwitch: true))
+}
+
+#Preview("Code – expired") {
+    MfaPhoneCodeChallengeScreen(model: PhoneCodeChallengeModel(destination: "(4**)***-*900", isCodeExpired: true,
+                                                               canResend: true, canSwitch: true))
+}
+
+#Preview("Code – no connection") {
+    MfaPhoneCodeChallengeScreen(model: PhoneCodeChallengeModel(destination: "(4**)***-*900", requestError: .network,
+                                                               canResend: true, resendAvailableIn: 30))
 }
 
 #Preview("Code – verifying") {

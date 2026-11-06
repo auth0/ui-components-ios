@@ -101,16 +101,159 @@ struct PhoneCodeMachineTests {
 
     // MARK: Failures
 
-    @Test func aFailure_endsTheFactor() {
-        let (state, effects) = run([.submit(code: "123456"), .failed(.tooManyAttempts, epoch: 1)], from: awaitingCode)
+    /// A first send that fails leaves nothing to stay on: the factor ends, whatever the reason.
+    @Test(arguments: [MfaError.network, .tooManyAttempts, .tokenInvalid])
+    func aFirstSendThatFails_endsTheFactor(_ error: MfaError) {
+        let (state, effects) = run([.start, .sendFailed(error, epoch: 1)])
+        #expect(state.phase == .finished)
+        #expect(effects == [.report(.failed(error))])
+    }
+
+    /// The server locked the challenge after wrong codes: nothing on this screen can fix that.
+    @Test func tooManyWrongCodes_endsTheFactor() {
+        let (state, effects) = run([.submit(code: "123456"), .verifyFailed(.tooManyAttempts, epoch: 1)],
+                                   from: awaitingCode)
         #expect(state.phase == .finished)
         #expect(effects == [.report(.failed(.tooManyAttempts))])
     }
 
+    @Test(arguments: [MfaError.tokenInvalid, .unexpected(nil), .rejected])
+    func aCheckThatFailsForAnyOtherReason_endsTheFactor(_ error: MfaError) {
+        let (state, effects) = run([.submit(code: "123456"), .verifyFailed(error, epoch: 1)], from: awaitingCode)
+        #expect(state.phase == .finished)
+        #expect(effects == [.report(.failed(error))])
+    }
+
     @Test func aFailureOfAReplacedSend_isDropped() {
-        let (state, effects) = run([.resend, .failed(.network, epoch: 1)], from: awaitingCode)
+        let (state, effects) = run([.resend, .sendFailed(.network, epoch: 1)], from: awaitingCode)
         #expect(state.phase == .sending)
         #expect(effects.isEmpty)
+    }
+
+    @Test func aFailureOfACheckThatIsNotRunning_isDropped() {
+        let (state, effects) = run([.verifyFailed(.network, epoch: 1)], from: awaitingCode)
+        #expect(state.phase == .awaitingCode)
+        #expect(effects.isEmpty)
+    }
+
+    // MARK: A dropped connection
+
+    @Test func aDroppedConnectionWhileChecking_keepsTheCode_andLetsTheSameOneBeSentAgain() {
+        let (state, effects) = run([.submit(code: "123456"), .verifyFailed(.network, epoch: 1)], from: awaitingCode)
+        #expect(state.phase == .awaitingCode)
+        #expect(state.requestError == .network)
+        #expect(state.isCodeRejected == false)
+        #expect(effects.isEmpty, "nothing ends")
+        // Submitting again clears the error while the code is checked.
+        let (again, retry) = run([.submit(code: "123456")], from: state)
+        #expect(again.requestError == nil)
+        #expect(retry == [.verify(code: "123456", epoch: 1)])
+    }
+
+    @Test func aResendThatFails_keepsTheScreen_withTheCodeAlreadyOnThePhone() {
+        let (state, effects) = run([.resend, .sendFailed(.network, epoch: 2)], from: awaitingCode, policy: policy)
+        #expect(state.phase == .awaitingCode)
+        #expect(state.hasCode)
+        #expect(state.requestError == .network)
+        #expect(state.canResend, "the user can try again")
+        #expect(effects == [.scheduleCooldownTick(afterMs: 1_000, epoch: 2)])
+        // The code on the phone is still good.
+        #expect(run([.submit(code: "123456")], from: state).1 == [.verify(code: "123456", epoch: 2)])
+    }
+
+    @Test func aResendThatFails_waitsAgainBeforeTheNextTry() {
+        let failed = run([.resend, .sendFailed(.network, epoch: 2)], from: awaitingCode, policy: policy).0
+        #expect(failed.resendAvailableIn == 60)
+        #expect(run([.resend], from: failed, policy: policy).1.isEmpty, "a refusal can't be hammered")
+        let later = run([.cooldownTick(seconds: 60, epoch: 2)], from: failed, policy: policy).0
+        #expect(run([.resend], from: later, policy: policy).1 == [.send(epoch: 3)])
+    }
+
+    @Test func aResendRefusedForTooManyRequests_keepsTheScreen() {
+        let (state, _) = run([.resend, .sendFailed(.tooManyAttempts, epoch: 2)], from: awaitingCode)
+        #expect(state.phase == .awaitingCode)
+        #expect(state.requestError == .tooManyAttempts)
+    }
+
+    @Test func aResendThatFailsForAnyOtherReason_endsTheFactor() {
+        let (state, effects) = run([.resend, .sendFailed(.tokenInvalid, epoch: 2)], from: awaitingCode)
+        #expect(state.phase == .finished)
+        #expect(effects == [.report(.failed(.tokenInvalid))])
+    }
+
+    @Test func aNewCodeThatArrives_clearsTheError() {
+        let failed = run([.resend, .sendFailed(.network, epoch: 2)], from: awaitingCode, policy: noWait).0
+        let (state, _) = run([.resend, .sent(PhoneCodeSent(canResend: true), epoch: 3)], from: failed, policy: noWait)
+        #expect(state.requestError == nil)
+    }
+
+    // MARK: An expired code
+
+    @Test func anExpiredCode_staysOnTheScreen_withVerifyOff_andResendAtOnce() {
+        // The wait is still running when the server says the code timed out.
+        let waiting = run([.start, .sent(PhoneCodeSent(canResend: true), epoch: 1)]).0
+        #expect(waiting.resendAvailableIn == 60)
+        let (state, effects) = run([.submit(code: "123456"), .verifyFailed(.tokenExpired, epoch: 1)], from: waiting)
+        #expect(state.phase == .awaitingCode)
+        #expect(state.isCodeExpired)
+        #expect(state.resendAvailableIn == 0, "only a new code helps, so there is no wait")
+        #expect(effects.isEmpty)
+        #expect(run([.submit(code: "123456")], from: state).1.isEmpty, "checking is off until a new code arrives")
+        #expect(run([.resend], from: state).1 == [.send(epoch: 2)])
+    }
+
+    @Test func aNewCode_endsTheExpiry() {
+        let expired = run([.submit(code: "123456"), .verifyFailed(.tokenExpired, epoch: 1)], from: awaitingCode).0
+        let (state, _) = run([.resend, .sent(PhoneCodeSent(canResend: true), epoch: 2)], from: expired)
+        #expect(state.isCodeExpired == false)
+        #expect(run([.submit(code: "123456")], from: state).1 == [.verify(code: "123456", epoch: 2)])
+    }
+
+    @Test func anExpiredCode_withNoWayToSendAnother_endsTheFactor() {
+        let noResend = run([.start, .sent(PhoneCodeSent(canResend: false), epoch: 1)], policy: noWait).0
+        let (state, effects) = run([.submit(code: "123456"), .verifyFailed(.tokenExpired, epoch: 1)], from: noResend)
+        #expect(state.phase == .finished)
+        #expect(effects == [.report(.failed(.tokenExpired))])
+    }
+
+    @Test func aResendThatFails_afterTheCodeExpired_isStillAvailableAtOnce() {
+        let expired = run([.submit(code: "123456"), .verifyFailed(.tokenExpired, epoch: 1)], from: awaitingCode).0
+        let (state, effects) = run([.resend, .sendFailed(.network, epoch: 2)], from: expired, policy: policy)
+        #expect(state.isCodeExpired)
+        #expect(state.resendAvailableIn == 0)
+        #expect(effects.isEmpty)
+        #expect(run([.resend], from: state, policy: policy).1 == [.send(epoch: 3)])
+    }
+
+    // MARK: Coming back to a code that was just sent
+
+    @Test func resume_showsTheEarlierCode_andSendsNothing() {
+        let (state, effects) = run([.resume(canResend: true, resendAvailableIn: 25)])
+        #expect(state.phase == .awaitingCode)
+        #expect(state.hasCode)
+        #expect(state.canResend)
+        #expect(state.resendAvailableIn == 25)
+        #expect(effects == [.scheduleCooldownTick(afterMs: 1_000, epoch: 1)])
+        #expect(run([.resend], from: state).1.isEmpty, "the wait carries over")
+    }
+
+    @Test func resume_remembersThatTheServerOfferedNoResend() {
+        #expect(run([.resume(canResend: false, resendAvailableIn: 25)]).0.canResend == false)
+    }
+
+    @Test func resume_neverWaitsLongerThanThePolicy() {
+        #expect(run([.resume(canResend: true, resendAvailableIn: 600)]).0.resendAvailableIn == 60)
+    }
+
+    @Test func resume_countsDown_thenAllowsAResend() {
+        let resumed = run([.resume(canResend: true, resendAvailableIn: 2)]).0
+        let later = run([.cooldownTick(seconds: 2, epoch: 1)], from: resumed).0
+        #expect(run([.resend], from: later).1 == [.send(epoch: 2)])
+    }
+
+    @Test func resume_isOnlyForAFreshFactor() {
+        #expect(run([.resume(canResend: true, resendAvailableIn: 25)], from: awaitingCode).1.isEmpty)
+        #expect(run([.resume(canResend: true, resendAvailableIn: 25), .start]).1.isEmpty, "and it doesn't also send")
     }
 
     // MARK: Resend

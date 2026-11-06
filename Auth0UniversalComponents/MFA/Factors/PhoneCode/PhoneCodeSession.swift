@@ -10,6 +10,8 @@ final class PhoneCodeSession: MfaFactorSession {
     private let transport: PhoneCodeTransport
     private let policy: PhoneCodePolicy
     private let clock: MfaClock
+    /// Shared by every session of this factor, so that coming back to a phone can't skip its wait.
+    private let ledger: PhoneCodeSendLedger
     private weak var host: MfaFactorHost?
     /// Counts the resend cooldown down, one second at a time, on the injected clock.
     private var tick: Task<Void, Never>?
@@ -18,12 +20,13 @@ final class PhoneCodeSession: MfaFactorSession {
     private var isStopped = false
 
     init(offer: MfaFactorOffer, delivery: PhoneCodeDelivery, transport: PhoneCodeTransport, policy: PhoneCodePolicy,
-         clock: MfaClock, host: MfaFactorHost) {
+         clock: MfaClock, host: MfaFactorHost, ledger: PhoneCodeSendLedger? = nil) {
         self.offer = offer
         self.delivery = delivery
         self.transport = transport
         self.policy = policy
         self.clock = clock
+        self.ledger = ledger ?? PhoneCodeSendLedger()
         self.host = host
     }
 
@@ -35,6 +38,7 @@ final class PhoneCodeSession: MfaFactorSession {
         return PhoneCodeChallengeModel(
             delivery: delivery, destination: offer.label ?? "", codeLength: policy.codeLength,
             isVerifying: state.phase == .verifying, isCodeRejected: state.isCodeRejected,
+            isCodeExpired: state.isCodeExpired, requestError: state.requestError,
             canResend: state.canResend, resendAvailableIn: state.resendAvailableIn,
             canSwitch: host?.canSwitch ?? false,
             submit: MfaAction<String> { [weak self] in self?.send(.submit(code: $0)) },
@@ -43,7 +47,15 @@ final class PhoneCodeSession: MfaFactorSession {
             cancel: MfaAction<Void> { [weak self] in self?.host?.cancel() })
     }
 
-    func start() { send(.start) }
+    func start() {
+        // A code went to this phone a moment ago, before the user left and came back: that code is shown again, and no
+        // new one goes out until its wait is over.
+        if let earlier = ledger.earlier(offer.id, cooldownSeconds: policy.resendCooldownSeconds) {
+            send(.resume(canResend: earlier.canResend, resendAvailableIn: earlier.resendAvailableIn))
+        } else {
+            send(.start)
+        }
+    }
 
     func deactivate() {
         send(.deactivate)
@@ -73,9 +85,19 @@ final class PhoneCodeSession: MfaFactorSession {
     private func run(_ effect: PhoneCodeEffect) {
         switch effect {
         case let .send(epoch):
-            request(epoch) { session in .sent(try await session.transport.sendCode(to: session.offer), epoch: epoch) }
+            request(epoch, failure: { .sendFailed($0, epoch: epoch) }, call: { session in
+                session.ledger.sending(session.offer.id)
+                let reply = try await session.transport.sendCode(to: session.offer)
+                session.ledger.sent(session.offer.id, canResend: reply.canResend)
+                return .sent(reply, epoch: epoch)
+            })
         case let .verify(code, epoch):
-            request(epoch) { session in .verified(try await session.transport.verify(code: code), epoch: epoch) }
+            request(epoch, failure: { .verifyFailed($0, epoch: epoch) }, call: { session in
+                let answer = try await session.transport.verify(code: code)
+                // The code is used up unless it was wrong; the next visit to this phone needs a new one.
+                if case .rejected = answer {} else { session.ledger.forget(session.offer.id) }
+                return .verified(answer, epoch: epoch)
+            })
         case let .scheduleCooldownTick(milliseconds, epoch):
             scheduleCooldownTick(afterMs: milliseconds, epoch: epoch)
         case let .report(report):
@@ -100,7 +122,8 @@ final class PhoneCodeSession: MfaFactorSession {
     }
 
     /// One request at a time. Cancelling a Task doesn't cancel its HTTP call, so wait for the last one.
-    private func request(_ epoch: Int, _ call: @escaping (PhoneCodeSession) async throws -> PhoneCodeEvent) {
+    private func request(_ epoch: Int, failure: @escaping (MfaError) -> PhoneCodeEvent,
+                         call: @escaping (PhoneCodeSession) async throws -> PhoneCodeEvent) {
         let previous = inFlight
         inFlight = Task { [weak self] in
             await previous?.value
@@ -109,7 +132,7 @@ final class PhoneCodeSession: MfaFactorSession {
             do {
                 self.send(try await call(self))
             } catch {
-                self.send(.failed(.from(error), epoch: epoch))
+                self.send(failure(.from(error)))
             }
         }
     }

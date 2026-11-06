@@ -60,6 +60,16 @@ public struct PhoneCodeChallengeMessages: MfaFactorMessages {
     /// Under the boxes when the code was wrong.
     public var invalidCode = localized("mfa.phoneCodeChallenge.invalidCode",
                                   "Invalid Code. Please double check the code sent to your phone.")
+    /// Under the boxes when the code timed out. Verify is off until a new one is sent.
+    public var expiredCode = localized("mfa.phoneCodeChallenge.expiredCode",
+                                       "Your code has expired. Resend another code and try again.")
+    /// Under the boxes when the connection dropped while a code was being checked or a new one sent. The code on the
+    /// phone still works.
+    public var noConnection = localized("mfa.phoneCodeChallenge.noConnection",
+                                        "No connection. Check your connection and try again.")
+    /// Under the boxes when a new code was refused because too many were asked for.
+    public var tooManyRequests = localized("mfa.phoneCodeChallenge.tooManyRequests",
+                                           "Too many attempts. Please try again later.")
     /// The resend button's words.
     public var resend = Resend()
     /// The link that goes back to the factor list.

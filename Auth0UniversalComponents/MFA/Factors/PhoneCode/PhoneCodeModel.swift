@@ -23,6 +23,14 @@ public struct PhoneCodeChallengeModel: MfaFactorModel, Equatable {
     /// The last code was wrong. Show `messages.phoneCodeChallenge.invalidCode`. Cleared when another code is submitted
     /// or sent.
     public let isCodeRejected: Bool
+    /// The code timed out. Only a new one helps: checking is off (``submit`` does nothing), and ``resend`` works at
+    /// once when ``canResend`` is true. Show `messages.phoneCodeChallenge.expiredCode`.
+    public let isCodeExpired: Bool
+    /// The last request failed but the code on the phone is still usable, so the screen stays: `.network` when the
+    /// connection dropped (submit again or resend), or `.tooManyAttempts` when a new code was refused (try again
+    /// later). `nil` otherwise; cleared when the next request starts. Show
+    /// `messages.phoneCodeChallenge.noConnection` or `.tooManyRequests`.
+    public let requestError: MfaError?
     /// Whether the server allows a new code to be sent.
     public let canResend: Bool
     /// Seconds until resend is allowed; 0 when it can be used now. ``canResend`` still says whether the server allows
@@ -51,6 +59,8 @@ public struct PhoneCodeChallengeModel: MfaFactorModel, Equatable {
     ///   - codeLength: How many digits the code has.
     ///   - isVerifying: Whether a submitted code is being checked.
     ///   - isCodeRejected: Whether the last code was wrong.
+    ///   - isCodeExpired: Whether the code timed out.
+    ///   - requestError: Why the last request failed, when the screen stays up.
     ///   - canResend: Whether the server allows a new code to be sent.
     ///   - resendAvailableIn: Seconds until resend is allowed; 0 when it can be used now.
     ///   - canSwitch: Whether there is another factor to switch to.
@@ -59,8 +69,9 @@ public struct PhoneCodeChallengeModel: MfaFactorModel, Equatable {
     ///   - switchFactor: Goes back to the factor list.
     ///   - cancel: Ends the flow.
     public init(delivery: PhoneCodeDelivery = .text, destination: String, codeLength: Int = 6,
-                isVerifying: Bool = false, isCodeRejected: Bool = false, canResend: Bool = false,
-                resendAvailableIn: Int = 0, canSwitch: Bool = false,
+                isVerifying: Bool = false, isCodeRejected: Bool = false, isCodeExpired: Bool = false,
+                requestError: MfaError? = nil, canResend: Bool = false, resendAvailableIn: Int = 0,
+                canSwitch: Bool = false,
                 submit: MfaAction<String> = .init { _ in }, resend: MfaAction<Void> = .none,
                 switchFactor: MfaAction<Void> = .none, cancel: MfaAction<Void> = .none) {
         self.delivery = delivery
@@ -68,6 +79,8 @@ public struct PhoneCodeChallengeModel: MfaFactorModel, Equatable {
         self.codeLength = codeLength
         self.isVerifying = isVerifying
         self.isCodeRejected = isCodeRejected
+        self.isCodeExpired = isCodeExpired
+        self.requestError = requestError
         self.canResend = canResend
         self.resendAvailableIn = resendAvailableIn
         self.canSwitch = canSwitch

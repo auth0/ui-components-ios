@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// "Resend Code" with a cooldown that starts when it appears and after each resend. The look is
-/// `ResendCodeButton`'s; this only owns the timer.
+/// "Resend Code" with a cooldown that starts when it appears and after each resend. The button is
+/// `CountdownResendButton`'s, as plain text; this only owns the timer.
 public struct LoginResendButton: View {
     /// Disables the row while a verify is in flight.
     let isBusy: Bool
@@ -22,7 +22,8 @@ public struct LoginResendButton: View {
 
     public var body: some View {
         TimelineView(.periodic(from: cooldown.startedAt, by: 1)) { context in
-            ResendCodeButton(remaining: isAvailableNow ? 0 : cooldown.remaining(at: context.date), isBusy: isBusy) {
+            CountdownResendButton(remaining: isAvailableNow ? 0 : cooldown.remaining(at: context.date),
+                                  isBusy: isBusy, look: .text) {
                 onResend()
                 cooldown.restart()
             }

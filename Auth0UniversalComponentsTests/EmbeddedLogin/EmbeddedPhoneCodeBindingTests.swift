@@ -166,6 +166,22 @@ struct EmbeddedPhoneCodeTransportTests {
         #expect(try await transport(menu: { _ in next }).0.verify(code: "123456") == .anotherFactor(next))
     }
 
+    /// The code timed out: the factor keeps its screen and offers a new one.
+    @Test func verify_anExpiredCode_isReportedAsExpired() async {
+        client.verifyOtpResults = [.failure(Fix.terminal("access_denied", description: "challenge_expired"))]
+        await #expect(throws: MfaError.tokenExpired) { try await transport().0.verify(code: "123456") }
+    }
+
+    @Test func verify_withoutAConnection_isANetworkError() async {
+        client.verifyOtpResults = [.failure(Fix.network)]
+        await #expect(throws: MfaError.network) { try await transport().0.verify(code: "123456") }
+    }
+
+    @Test func send_withoutAConnection_isANetworkError() async {
+        client.challengePhoneResults = [Fix.network]
+        await #expect(throws: MfaError.network) { try await transport().0.sendCode(to: offer) }
+    }
+
     @Test func verify_tooManyWrongCodes_endsTheFlow() async {
         client.verifyOtpResults = [.failure(Fix.terminal("access_denied", description: "too_many_wrong_otp_attempts"))]
         await #expect(throws: MfaError.tooManyAttempts) { try await transport().0.verify(code: "000000") }

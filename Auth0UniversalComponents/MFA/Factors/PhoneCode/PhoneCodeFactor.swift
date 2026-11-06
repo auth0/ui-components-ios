@@ -8,11 +8,15 @@ struct PhoneCodeFactor: MfaFactor {
     let delivery: PhoneCodeDelivery
     private let transport: PhoneCodeTransport
     private let policy: PhoneCodePolicy
+    /// One for the life of the factor, so every session picks up where the last one left off.
+    private let ledger: PhoneCodeSendLedger
 
-    init(delivery: PhoneCodeDelivery, transport: PhoneCodeTransport, policy: PhoneCodePolicy = .default) {
+    init(delivery: PhoneCodeDelivery, transport: PhoneCodeTransport, policy: PhoneCodePolicy = .default,
+         ledger: PhoneCodeSendLedger? = nil) {
         self.delivery = delivery
         self.transport = transport
         self.policy = policy
+        self.ledger = ledger ?? PhoneCodeSendLedger()
     }
 
     var id: MfaFactorID {
@@ -44,7 +48,7 @@ struct PhoneCodeFactor: MfaFactor {
     func makeSession(for offer: MfaFactorOffer, host: MfaFactorHost,
                      environment: MfaFactorEnvironment) -> MfaFactorSession {
         PhoneCodeSession(offer: offer, delivery: delivery, transport: transport, policy: policy,
-                         clock: environment.clock, host: host)
+                         clock: environment.clock, host: host, ledger: ledger)
     }
 
     func standardView(for model: any MfaFactorModel, messages: MfaMessages) -> AnyView? {
