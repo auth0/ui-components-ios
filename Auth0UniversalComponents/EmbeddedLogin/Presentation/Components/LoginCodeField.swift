@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// One-box-per-digit code entry. `isError` switches to the rejected-code treatment. While `isEnabled` is off (a verify
-/// is in flight) the digits grey out, taps are ignored and the keyboard goes away.
+/// is in flight) the digits grey out, the boxes can't be focused or edited (by touch, VoiceOver or keyboard) and the
+/// keyboard goes away.
 public struct LoginCodeField: View {
     @Binding var code: String
     let digitCount: Int
@@ -22,7 +23,7 @@ public struct LoginCodeField: View {
         HStack(spacing: theme.spacing.xs) {
             ForEach(0..<digitCount, id: \.self) { digitBox($0) }
         }
-        .allowsHitTesting(isEnabled)
+        .disabled(!isEnabled)
         .onAppear { focusedField = 0 }
         // Back on the next box to fill (the last one when it's full), so a rejected code can be fixed at once.
         .onChangeCompat(of: isEnabled) { focusedField = $0 ? min(code.count, digitCount - 1) : nil }

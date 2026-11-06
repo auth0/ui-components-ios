@@ -11,7 +11,7 @@ enum PhoneNumberFormatter {
     /// past the mask are kept at the end, so nothing typed is lost. With no mask, or a number typed with its own `+`,
     /// `text` comes back as it is.
     static func format(_ text: String, mask: String?) -> String {
-        guard let mask, !text.trimmingCharacters(in: .whitespaces).hasPrefix("+") else { return text }
+        guard let mask, !isInternational(text) else { return text }
         let typed = digits(text)
         var next = typed.startIndex
         var result = ""
@@ -25,6 +25,11 @@ enum PhoneNumberFormatter {
             }
         }
         return result + typed[next...]
+    }
+
+    /// Typed with its own `+`: the number names its country, so the picked one doesn't matter.
+    static func isInternational(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("+")
     }
 
     /// How many digits a number on `mask` has.

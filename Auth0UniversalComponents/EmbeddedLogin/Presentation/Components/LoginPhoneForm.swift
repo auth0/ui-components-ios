@@ -37,10 +37,16 @@ struct LoginPhoneForm: View {
         }
         // A new country brings its own mask, and can make a rejected number right.
         .onChangeCompat(of: country?.flag) { _ in
-            number = PhoneNumberFormatter.format(PhoneNumberFormatter.digits(number), mask: country?.format)
+            number = Self.reformatted(number, for: country)
             errors.userEdited()
         }
         .onChangeCompat(of: serverError) { if $0 != nil { errors.serverReported() } }
+    }
+
+    /// `number` laid out for the country just picked. One typed with its own `+` names its country, so it stays as is.
+    static func reformatted(_ number: String, for country: Country?) -> String {
+        guard !PhoneNumberFormatter.isInternational(number) else { return number }
+        return PhoneNumberFormatter.format(PhoneNumberFormatter.digits(number), mask: country?.format)
     }
 
     /// What a phone form starts with: a stored E.164 number split into its country and formatted, or the device's

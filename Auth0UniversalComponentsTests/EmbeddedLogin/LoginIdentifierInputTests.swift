@@ -15,6 +15,32 @@ struct PhoneNumberValidatorTests {
         #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "+44 7700 900123") == "+447700900123")
     }
 
+    /// The 0 people write at home is a trunk prefix: it isn't part of the number dialled from abroad.
+    @Test(arguments: [("+44", "07700 900123", "+447700900123"),
+                      ("+49", "030 1234567", "+49301234567"),
+                      ("+91", "098765 43210", "+919876543210")])
+    func aLeadingTrunkZero_isDropped(_ dialCode: String, _ typed: String, _ expected: String) {
+        #expect(PhoneNumberValidator.e164(dialCode: dialCode, number: typed) == expected)
+    }
+
+    /// Where the 0 belongs to the number, it stays.
+    @Test(arguments: [("+39", "06 1234 5678", "+390612345678"),
+                      ("+378", "0549 123456", "+3780549123456"),
+                      ("+225", "07 12 34 56 78", "+2250712345678")])
+    func aZeroThatIsPartOfTheNumber_isKept(_ dialCode: String, _ typed: String, _ expected: String) {
+        #expect(PhoneNumberValidator.e164(dialCode: dialCode, number: typed) == expected)
+    }
+
+    /// `00` is an international prefix, not a number: not guessed at.
+    @Test(arguments: ["0044 7700 900123", "00 7700 900123", "00", "0"])
+    func anInternationalPrefixOrAloneZero_isRejected(_ typed: String) {
+        #expect(PhoneNumberValidator.e164(dialCode: "+44", number: typed) == nil)
+    }
+
+    @Test func aNumberWithItsOwnPlus_keepsEverythingAsTyped() {
+        #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "+39 06 1234 5678") == "+390612345678")
+    }
+
     @Test func rejectsTooShortTooLongAndLetters() {
         #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "123") == nil)
         #expect(PhoneNumberValidator.e164(dialCode: "+1", number: "") == nil)
@@ -246,5 +272,34 @@ struct PhoneDigitScriptTests {
     @Test(arguments: ["½1234", "五五五五", "④①⑤⑤", "²³⁴⁵", "Ⅷ123"])
     func otherNumerals_areRejected(_ typed: String) {
         #expect(PhoneNumberValidator.e164(dialCode: "+20", number: typed) == nil)
+    }
+}
+
+/// Picking another country must not turn an international number into a national one.
+@Suite
+@MainActor
+struct PhoneCountryChangeTests {
+
+    private let countries = CountryStore.loadCountries()
+    private func country(_ name: String) -> Country? { countries.first { $0.name == name } }
+
+    @Test func anInternationalNumber_isLeftAloneWhenTheCountryChanges() {
+        for name in ["United Kingdom", "United States", "Germany"] {
+            #expect(LoginPhoneForm.reformatted("+447911123456", for: country(name)) == "+447911123456")
+            #expect(LoginPhoneForm.reformatted(" +44 7911 123456", for: country(name)) == " +44 7911 123456")
+        }
+    }
+
+    @Test func anInternationalNumber_stillMeansTheSameNumberAfterThePick() {
+        let britain = country("United Kingdom")
+        let shown = LoginPhoneForm.reformatted("+447911123456", for: britain)
+        let typed = PhoneNumberValidator.e164(dialCode: britain?.code ?? "", number: shown, mask: britain?.format)
+        #expect(typed == "+447911123456")
+    }
+
+    @Test func aNationalNumber_isLaidOutOnTheNewCountrysMask() {
+        let america = country("United States")
+        #expect(LoginPhoneForm.reformatted("4233530900", for: america) == "(423)353-0900")
+        #expect(LoginPhoneForm.reformatted("(423)353-0900", for: country("United Kingdom")) == "4233530900")
     }
 }
