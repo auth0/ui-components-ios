@@ -19,30 +19,34 @@ struct PhoneCodeFactor: MfaFactor {
         self.ledger = ledger ?? PhoneCodeSendLedger()
     }
 
-    var id: MfaFactorID {
-        switch delivery {
-        case .text: return .sms
-        case .voice: return .voice
-        }
-    }
+    var id: MfaFactorID { delivery.factorID }
 
-    /// After push (20): a phone code can be phished, an approval on a registered device can't. A text comes before a
-    /// call: it can be read when the user can't take a call.
+    /// After push (20): a code can be phished, an approval on a registered device can't. A text comes before a call:
+    /// it can be read when the user can't take a call. Email is last.
     var rank: Int {
         switch delivery {
         case .text: return 40
         case .voice: return 45
+        case .email: return 50
         }
     }
 
     func row(for offer: MfaFactorOffer, messages: MfaMessages) -> MfaFactorRowContent {
         let copy = messages.phoneCodeChallenge.copy(for: delivery).row
-        // The masked number leads; the kind of factor sits under it.
+        // The masked number or address leads; the kind of factor sits under it.
         return MfaFactorRowContent(title: offer.label ?? copy.title,
                                    subtitle: offer.label == nil ? copy.description : copy.title,
-                                   icon: delivery == .text ? "sms" : nil,
-                                   // A handset, until the design's own voice icon is in the bundle.
-                                   systemImage: delivery == .voice ? "phone" : nil)
+                                   icon: images.icon, systemImage: images.systemImage)
+    }
+
+    /// The row's image: one of the SDK's own, or a system symbol.
+    private var images: (icon: String?, systemImage: String?) {
+        switch delivery {
+        case .text: return ("sms", nil)
+        // A handset, until the design's own voice icon is in the bundle.
+        case .voice: return (nil, "phone")
+        case .email: return ("email", nil)
+        }
     }
 
     func makeSession(for offer: MfaFactorOffer, host: MfaFactorHost,

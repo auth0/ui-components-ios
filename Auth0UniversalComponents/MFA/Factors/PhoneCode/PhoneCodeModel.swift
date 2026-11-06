@@ -1,27 +1,39 @@
 import Foundation
 
-/// How the code reaches the phone.
+/// How the code reaches the user. The factor runs the same way for each; only the words and the row differ.
 public enum PhoneCodeDelivery: String, Sendable, Equatable {
     /// A text message.
     case text
     /// A phone call that reads the code out.
     case voice
+    /// An email.
+    case email
+
+    /// The factor this delivery runs as.
+    var factorID: MfaFactorID {
+        switch self {
+        case .text: return .sms
+        case .voice: return .voice
+        case .email: return .email
+        }
+    }
 }
 
-/// Waiting for the code sent to the user's phone, by text message or by a call.
+/// Waiting for the code sent to the user, by text message, by a call or by email.
 public struct PhoneCodeChallengeModel: MfaFactorModel, Equatable {
-    /// How the code was sent, so a screen can word it ("texted" or "called").
+    /// How the code was sent, so a screen can word it ("texted", "called" or "emailed").
     public let delivery: PhoneCodeDelivery
-    /// The phone number as the server masked it, e.g. `(4**)***-*900`, with every masked digit as `*`. Empty when the
-    /// server sent none: the standard screen then uses ``PhoneCodeChallengeMessages/Delivery/descriptionUnnamed``, and
-    /// a custom screen should not print an empty number.
+    /// Where the code went, as the server masked it: a phone number such as `(4**)***-*900` (every masked digit as
+    /// `*`), or an email address such as `al**@example.com`. Empty when the server sent none: the standard screen then
+    /// uses ``PhoneCodeChallengeMessages/Delivery/descriptionUnnamed``, and a custom screen should not print an empty
+    /// value.
     public let destination: String
     /// How many digits the code has.
     public let codeLength: Int
     /// A code was submitted and is being checked: show progress, and don't take another.
     public let isVerifying: Bool
-    /// The last code was wrong. Show `messages.phoneCodeChallenge.invalidCode`. Cleared when another code is submitted
-    /// or sent.
+    /// The last code was wrong. Show `invalidCode` from the words for this ``delivery``
+    /// (`messages.phoneCodeChallenge.text`, `.voice` or `.email`). Cleared when another code is submitted or sent.
     public let isCodeRejected: Bool
     /// The code timed out. Only a new one helps: checking is off (``submit`` does nothing), and ``resend`` works at
     /// once when ``canResend`` is true. Show `messages.phoneCodeChallenge.expiredCode`.
@@ -96,18 +108,20 @@ extension MfaFactorID {
     public static let sms: MfaFactorID = "sms"
     /// Enter a code read out in a call to a registered phone.
     public static let voice: MfaFactorID = "voice"
+    /// Enter a code emailed to a registered address.
+    public static let email: MfaFactorID = "email"
 }
 
 extension MfaScreens {
     /// The same call shape as the Core's own slots: `MfaScreens(phoneCodeChallenge: .custom { model in … })`. The
-    /// screen is used for texted and spoken codes alike; read `model.delivery` to tell them apart. To replace more
-    /// than one factor's screen, chain ``replacing(_:with:)``.
+    /// screen is used for texted, spoken and emailed codes alike; read `model.delivery` to tell them apart. To
+    /// replace more than one factor's screen, chain ``replacing(_:with:)``.
     public init(authenticatorList: MfaScreenSlot<AuthenticatorListModel> = .standard,
                 phoneCodeChallenge: MfaScreenSlot<PhoneCodeChallengeModel>,
                 error: MfaScreenSlot<ErrorModel> = .standard) {
         self.init(authenticatorList: authenticatorList, error: error)
         if case let .custom(build) = phoneCodeChallenge.source {
-            self = replacing(.sms, with: build).replacing(.voice, with: build)
+            self = replacing(.sms, with: build).replacing(.voice, with: build).replacing(.email, with: build)
         }
     }
 }

@@ -49,6 +49,60 @@ struct EmbeddedPhoneCodeBindingTests {
         #expect(EmbeddedPhoneCodeBinding(delivery: delivery).capabilities == [.challengePhone, .verifyOTP])
     }
 
+    // MARK: Email
+
+    private let emailMenu: [NextAction] = [
+        .challengePush(index: 0, name: "iPhone"),
+        .challengeEmail(index: 0, identifier: "sa**@atko.email"),
+        .challengePhone(index: 0, identifier: "(4**)***-*900", deliveryMethods: [.text, .voice]),
+        .challengeEmail(index: 3, identifier: "al**@work.example")
+    ]
+
+    /// Every enrolled address is offered, under the server's own index.
+    @Test func theEmailBinding_offersEveryAddress() {
+        let offers = EmbeddedPhoneCodeBinding(delivery: .email).offers(in: emailMenu)
+        #expect(offers.map(\.id) == ["email:0", "email:3"])
+        #expect(offers.map(\.label) == ["sa**@atko.email", "al**@work.example"])
+        #expect(offers.map(\.reference) == [0, 3], "the server's index, not a position in the list")
+        #expect(offers.allSatisfy { $0.factor == .email })
+    }
+
+    /// An address isn't a phone and a phone isn't an address: neither kind of binding offers the other's.
+    @Test func theBindings_neverOfferEachOthersDestinations() {
+        #expect(EmbeddedPhoneCodeBinding(delivery: .email).offers(in: menu).isEmpty, "no address in a phone menu")
+        for delivery in [PhoneCodeDelivery.text, .voice] {
+            let ids = EmbeddedPhoneCodeBinding(delivery: delivery).offers(in: emailMenu).map(\.id)
+            #expect(ids == ["\(delivery.factorID.rawValue):0"], "only the phone, never an address")
+        }
+    }
+
+    /// The mask replacement is for phone numbers: it would turn the visible `x` of an address into `*`.
+    @Test func theEmailBinding_showsTheAddressAsSent() {
+        let menu: [NextAction] = [.challengeEmail(index: 0, identifier: "Alex.X***@Xylo.example")]
+        #expect(EmbeddedPhoneCodeBinding(delivery: .email).offers(in: menu).map(\.label) == ["Alex.X***@Xylo.example"])
+    }
+
+    @Test func theEmailBinding_advertisesWhatAnEmailCodeNeeds() {
+        #expect(EmbeddedPhoneCodeBinding(delivery: .email).capabilities == [.challengeEmail, .verifyOTP])
+    }
+
+    /// Push, then a text, a call, and email last: the order of how hard each is to phish and how easy to read.
+    @Test func theEmail_isListedLast_withItsOwnWordsAndIcon() {
+        let step = EmbeddedMfaStep()
+        let context = AdditionalStepContext(nextActions: emailMenu, client: StubEmbeddedAuthClient(),
+                                            credentialsDelivery: StubCredentialsDelivery())
+        let session = step.makeSession(context: context, delegate: NoAdditionalStepDelegate())
+        let controller = (session as? EmbeddedMfaSession)?.controller
+        controller?.start()
+        guard case let .authenticatorList(list)? = controller?.step else { Issue.record("no list"); return }
+        #expect(list.rows.map(\.factor) == [.push, .sms, .voice, .email, .email])
+        let emails = list.rows.filter { $0.factor == .email }
+        #expect(emails.map(\.title) == ["sa**@atko.email", "al**@work.example"])
+        #expect(emails.map(\.subtitle) == ["Email", "Email"])
+        #expect(emails.map(\.icon) == ["email", "email"])
+        #expect(emails.map(\.systemImage) == [nil, nil])
+    }
+
     /// Push comes first in the list: an approval on a registered device can't be phished, a phone code can. A text
     /// comes before a call to the same phone.
     @Test func push_isListedBeforeTheText_andTheTextBeforeTheCall() {
@@ -119,6 +173,53 @@ struct EmbeddedPhoneCodeTransportTests {
         client.verifyOtpResults = [.success(Credentials(accessToken: "voice"))]
         #expect(try await transport(.voice).0.verify(code: "123456") == .verified)
         #expect(client.calls == [.verifyOtp(code: "123456", type: .oob)])
+    }
+
+    // MARK: Email
+
+    private let emailOffer = MfaFactorOffer(id: "email:3", factor: .email, label: "sa**@atko.email", reference: 3)
+
+    @Test func send_email_mailsTheCode_andAsksForItAgainWhileTheAddressIsOffered() async throws {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge(index: 3)])]
+        let sent = try await transport(.email).0.sendCode(to: emailOffer)
+        #expect(client.calls == [.challengeEmail(index: 3)])
+        #expect(sent == PhoneCodeSent(canResend: true))
+    }
+
+    @Test func send_email_withoutTheAddressOnOffer_cantBeResent() async throws {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo])]
+        #expect(try await transport(.email).0.sendCode(to: emailOffer) == PhoneCodeSent(canResend: false))
+    }
+
+    /// A phone being on offer doesn't make an address resendable, nor the other way round.
+    @Test func resend_isOnlyOfferedForTheSameKindOfDestination() async throws {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo, Fix.challengePhone()])]
+        #expect(try await transport(.email).0.sendCode(to: emailOffer) == PhoneCodeSent(canResend: false))
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.emailChallenge()])]
+        #expect(try await transport(.text).0.sendCode(to: offer) == PhoneCodeSent(canResend: false))
+    }
+
+    /// Asking for the phone's channel after an email request means it wasn't the email that went out.
+    @Test func send_email_answeredWithAnotherChannelsPrompt_isUnexpected() async {
+        client.challengeEmailResults = [Fix.needs([Fix.verifySMS])]
+        await #expect(throws: MfaError.unexpected(nil)) { try await transport(.email).0.sendCode(to: emailOffer) }
+    }
+
+    @Test func send_email_withoutAConnection_isANetworkError() async {
+        client.challengeEmailResults = [Fix.network]
+        await #expect(throws: MfaError.network) { try await transport(.email).0.sendCode(to: emailOffer) }
+    }
+
+    @Test func verify_email_checksTheCodeTheSameWay() async throws {
+        client.verifyOtpResults = [.success(Credentials(accessToken: "email"))]
+        #expect(try await transport(.email).0.verify(code: "123456") == .verified)
+        #expect(client.calls == [.verifyOtp(code: "123456", type: .oob)])
+    }
+
+    @Test func verify_email_aWrongCode_isRejected_andCanBeResentWhileTheAddressIsOffered() async throws {
+        client.verifyOtpResults = [.failure(Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge()],
+                                                      subReason: "invalid_code"))]
+        #expect(try await transport(.email).0.verify(code: "000000") == .rejected(canResend: true))
     }
 
     @Test func send_withoutThePhoneOnOffer_cantBeResent() async throws {

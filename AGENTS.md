@@ -45,7 +45,7 @@ ui-components-ios/
 │   │   ├── Configuration/              # MfaConfiguration, MfaMessages, MfaScreens, .onMfaError
 │   │   ├── Presentation/               # MfaHostView and the standard screens
 │   │   ├── Factors/Push/               # Guardian push: state machine, session, model, screen, transport protocol
-│   │   └── Factors/PhoneCode/          # Texted or spoken code (one factor per delivery): state machine, session, model, screen, transport protocol
+│   │   └── Factors/PhoneCode/          # Texted, spoken or emailed code (one factor per delivery): state machine, session, model, screen, transport protocol
 │   ├── Core/Utils/                     # Shared utilities
 │   │   ├── OTPTextField.swift          # OTP code input component
 │   │   ├── CountryCodePicker/          # Phone number country selection

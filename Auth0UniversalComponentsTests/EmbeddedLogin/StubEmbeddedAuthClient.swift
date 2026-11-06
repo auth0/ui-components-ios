@@ -80,6 +80,13 @@ enum EmbeddedAuthFixtures {
     static let challengeEmail: [String: Any] = ["action": "action:challenge:email:v1", "index": 1,
                                                 "identifier": "s***@atko.email"]
     static let verifyEmail: [String: Any] = ["action": "action:verify:otp:v1", "channel": "email"]
+    /// The server naming the address it emailed, as it does for an additional step.
+    static let verifyEmailTo: [String: Any] = ["action": "action:verify:otp:v1", "channel": "email",
+                                               "identifier": "sa**@atko.email"]
+    /// One of the user's enrolled addresses on offer as an additional step.
+    static func emailChallenge(index: Int = 0, masked: String = "sa**@atko.email") -> [String: Any] {
+        ["action": "action:challenge:email:v1", "index": index, "identifier": masked]
+    }
     static let verifyTOTP: [String: Any] = ["action": "action:verify:otp:v1", "channel": "totp"]
     static let verifySMS: [String: Any] = ["action": "action:verify:otp:v1", "channel": "sms",
                                            "identifier": "+1***99"]

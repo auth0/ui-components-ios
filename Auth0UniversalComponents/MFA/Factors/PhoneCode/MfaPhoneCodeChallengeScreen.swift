@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The code was texted or is being read out in a call: names the masked number, takes the code, and offers resend
-/// and "Verify another way". It is built from the sign-in's code screen pieces, so the two look the same: header, then
-/// the shared code entry form.
+/// The code was texted, is being read out in a call, or was emailed: names the masked destination, takes the code, and
+/// offers resend and "Verify another way". It is built from the sign-in's code screen pieces, so the two look the
+/// same: header, then the shared code entry form.
 public struct MfaPhoneCodeChallengeScreen: View {
     let model: PhoneCodeChallengeModel
     let messages: MfaMessages
@@ -23,6 +23,8 @@ public struct MfaPhoneCodeChallengeScreen: View {
     }
 
     private var copy: PhoneCodeChallengeMessages { messages.phoneCodeChallenge }
+    /// The words that depend on how the code was sent.
+    private var words: PhoneCodeChallengeMessages.Delivery { copy.copy(for: model.delivery) }
     /// What went wrong, most recent first. A rejection hides once the user retypes; the others stay until the next
     /// request starts, since retyping doesn't fix them.
     private var problem: String? {
@@ -32,14 +34,14 @@ public struct MfaPhoneCodeChallengeScreen: View {
         default: break
         }
         if model.isCodeExpired { return copy.expiredCode }
-        return model.isCodeRejected && !isRejectionHidden ? copy.invalidCode : nil
+        return model.isCodeRejected && !isRejectionHidden ? words.invalidCode : nil
     }
 
     /// The screen.
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             MfaCodeHeader(title: copy.title,
-                          subtitle: copy.subtitle(number: model.destination, delivery: model.delivery))
+                          subtitle: copy.subtitle(destination: model.destination, delivery: model.delivery))
 
             MfaCodeEntryForm(code: $code, digitCount: model.codeLength, fieldLabel: copy.fieldLabel,
                              verifyTitle: copy.verify, isVerifying: model.isVerifying, error: problem,
@@ -71,6 +73,16 @@ public struct MfaPhoneCodeChallengeScreen: View {
 #Preview("Code") {
     MfaPhoneCodeChallengeScreen(model: PhoneCodeChallengeModel(destination: "(4**)***-*900", canResend: true,
                                                    resendAvailableIn: 5))
+}
+
+#Preview("Email code") {
+    MfaPhoneCodeChallengeScreen(model: PhoneCodeChallengeModel(delivery: .email, destination: "sa**@atko.email",
+                                                               canResend: true, canSwitch: true))
+}
+
+#Preview("Email code – rejected") {
+    MfaPhoneCodeChallengeScreen(model: PhoneCodeChallengeModel(delivery: .email, destination: "sa**@atko.email",
+                                                               isCodeRejected: true, canResend: true))
 }
 
 #Preview("Code – another way") {

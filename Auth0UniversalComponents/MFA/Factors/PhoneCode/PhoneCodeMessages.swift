@@ -5,17 +5,21 @@ private func localized(_ key: StaticString, _ defaultValue: String.LocalizationV
     String(localized: key, defaultValue: defaultValue, bundle: ResourceBundle.default)
 }
 
-/// The phone code factor's copy, for texted and spoken codes. Reach it through `MfaMessages.phoneCodeChallenge`.
-/// What depends on how the code was sent lives under ``text`` and ``voice``; the rest is shared.
+/// The phone code factor's copy, for texted, spoken and emailed codes. Reach it through
+/// `MfaMessages.phoneCodeChallenge`. What depends on how the code was sent lives under ``text``, ``voice`` and
+/// ``email``; the rest is shared.
 public struct PhoneCodeChallengeMessages: MfaFactorMessages {
     /// The words that depend on how the code was sent.
     public struct Delivery: Sendable {
         /// How the factor looks in the factor list.
         public var row: MfaHeaderMessage
-        /// The line under the title. The closure receives the phone number as the server masked it.
-        public var description: @Sendable (_ number: String) -> String
-        /// The line under the title when the server sent no number, so there is nothing to put in ``description``.
+        /// The line under the title. The closure receives the phone number or email address as the server masked it.
+        public var description: @Sendable (_ destination: String) -> String
+        /// The line under the title when the server sent no destination, so there is nothing to put in
+        /// ``description``.
         public var descriptionUnnamed: String
+        /// Under the boxes when the code was wrong.
+        public var invalidCode: String
     }
 
     /// The resend button's words.
@@ -39,7 +43,9 @@ public struct PhoneCodeChallengeMessages: MfaFactorMessages {
                    bundle: ResourceBundle.default)
         },
         descriptionUnnamed: localized("mfa.phoneCodeChallenge.text.descriptionUnnamed",
-                                      "We texted a code to your phone."))
+                                      "We texted a code to your phone."),
+        invalidCode: localized("mfa.phoneCodeChallenge.text.invalidCode",
+                               "Invalid Code. Please double check the code sent to your phone."))
     /// A code read out in a phone call.
     public var voice = Delivery(
         row: MfaHeaderMessage(
@@ -50,16 +56,28 @@ public struct PhoneCodeChallengeMessages: MfaFactorMessages {
                    bundle: ResourceBundle.default)
         },
         descriptionUnnamed: localized("mfa.phoneCodeChallenge.voice.descriptionUnnamed",
-                                 "We're calling your phone with a code."))
+                                      "We're calling your phone with a code."),
+        invalidCode: localized("mfa.phoneCodeChallenge.voice.invalidCode",
+                               "Invalid Code. Please double check the code sent to your phone."))
+    /// A code sent by email. The wording is the sign-in's own for an emailed code.
+    public var email = Delivery(
+        row: MfaHeaderMessage(
+            title: localized("mfa.authenticatorList.factors.email.title", "Email"),
+            description: localized("mfa.authenticatorList.factors.email.description", "Get a code by email.")),
+        description: { address in
+            String(localized: "mfa.phoneCodeChallenge.email.description", defaultValue: "From \(address)",
+                   bundle: ResourceBundle.default)
+        },
+        descriptionUnnamed: localized("mfa.phoneCodeChallenge.email.descriptionUnnamed",
+                                      "We emailed a code to your inbox."),
+        invalidCode: localized("mfa.phoneCodeChallenge.email.invalidCode",
+                               "Invalid Code. Please double check the code sent to your email."))
     /// The first line of text.
     public var title = localized("mfa.phoneCodeChallenge.title", "Enter the 6-digit code")
     /// The label above the code boxes.
     public var fieldLabel = localized("mfa.phoneCodeChallenge.fieldLabel", "One-Time Passcode")
     /// The button that checks the code.
     public var verify = localized("mfa.phoneCodeChallenge.verify", "Verify")
-    /// Under the boxes when the code was wrong.
-    public var invalidCode = localized("mfa.phoneCodeChallenge.invalidCode",
-                                  "Invalid Code. Please double check the code sent to your phone.")
     /// Under the boxes when the code timed out. Verify is off until a new one is sent.
     public var expiredCode = localized("mfa.phoneCodeChallenge.expiredCode",
                                        "Your code has expired. Resend another code and try again.")
@@ -80,13 +98,14 @@ public struct PhoneCodeChallengeMessages: MfaFactorMessages {
         switch delivery {
         case .text: return text
         case .voice: return voice
+        case .email: return email
         }
     }
 
-    /// The line under the title, for a number that may be missing.
-    func subtitle(number: String, delivery: PhoneCodeDelivery) -> String {
+    /// The line under the title, for a destination that may be missing.
+    func subtitle(destination: String, delivery: PhoneCodeDelivery) -> String {
         let words = copy(for: delivery)
-        return number.isEmpty ? words.descriptionUnnamed : words.description(number)
+        return destination.isEmpty ? words.descriptionUnnamed : words.description(destination)
     }
 
     /// Identifies these words inside ``MfaMessages``.

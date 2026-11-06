@@ -8,6 +8,7 @@ import Testing
 /// client.
 @Suite
 @MainActor
+// swiftlint:disable:next type_body_length
 struct EmbeddedMfaPhoneCodeEndToEndTests {
 
     private typealias Fix = EmbeddedAuthFixtures
@@ -24,7 +25,7 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
                         handler: ((MfaError) -> MfaErrorHandling)? = nil) async -> LoginFlowCoordinator {
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
-        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])]
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])] + client.challengeEmailResults
         client.verifyOtpResults = [.failure(afterTheCode)] + client.verifyOtpResults
         let phoneCodes = deliveries.map {
             EmbeddedPhoneCodeBinding(delivery: $0, policy: PhoneCodePolicy(resendCooldownSeconds: phoneWait))
@@ -261,6 +262,81 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
         await eventually { codeModel(sut) != nil }
         #expect(codeModel(sut)?.delivery == .voice)
         #expect(codeCalls == [.challengePhone(index: 0, deliveryMethod: .voice)])
+    }
+
+    // MARK: Email
+
+    /// An address on offer is mailed at once, on the code screen the texted code uses, and the right code signs in.
+    @Test func anEmailAddress_isMailedAtOnce_andTheRightCodeSignsIn() async {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge(index: 5)])]
+        client.verifyOtpResults = [.success(Credentials(accessToken: "email"))]
+
+        let sut = await signIn(afterTheCode: menu([Fix.emailChallenge(index: 5)]), deliveries: [.email])
+        await eventually { codeModel(sut) != nil }
+        guard let model = codeModel(sut) else { Issue.record("no code screen"); return }
+        #expect(model.delivery == .email)
+        #expect(model.destination == "sa**@atko.email")
+        #expect(model.canSwitch == false)
+        #expect(client.calls.filter { $0 == .challengeEmail(index: 5) }.count == 1)
+
+        model.submit("123456")
+        await eventually { sut.step == .authenticated }
+        #expect(codeCalls.last == .verifyOtp(code: "123456", type: .oob))
+        #expect(store.delivered.map(\.accessToken) == ["email"], "handed to the app once")
+    }
+
+    /// A wrong emailed code stays on the screen, and the right one then signs in.
+    @Test func aWrongEmailedCode_staysOnTheCodeScreen() async {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge(index: 5)])]
+        client.verifyOtpResults = [
+            .failure(Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge(index: 5)], subReason: "invalid_code")),
+            .success(Credentials(accessToken: "email"))
+        ]
+
+        let sut = await signIn(afterTheCode: menu([Fix.emailChallenge(index: 5)]), deliveries: [.email])
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.submit("000000")
+        await eventually { codeModel(sut)?.isCodeRejected == true }
+        #expect(sut.step == .additionalStep)
+        #expect(store.delivered.isEmpty)
+
+        codeModel(sut)?.submit("123456")
+        await eventually { sut.step == .authenticated }
+        #expect(store.delivered.map(\.accessToken) == ["email"])
+    }
+
+    /// Resend mails a new code to the same address.
+    @Test func resend_mailsANewCodeToTheSameAddress() async {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge(index: 5)]),
+                                        Fix.needs([Fix.verifyEmailTo, Fix.emailChallenge(index: 5)])]
+
+        let sut = await signIn(afterTheCode: menu([Fix.emailChallenge(index: 5)]), deliveries: [.email])
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.resend()
+        await eventually { client.calls.filter { $0 == .challengeEmail(index: 5) }.count == 2 }
+        #expect(sut.step == .additionalStep)
+    }
+
+    /// Push, a text, a call and an email on one menu: all four are listed, and the email can be picked.
+    @Test func everyKindOfCode_isListed_pushFirst_andTheEmailCanBePicked() async {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmailTo])]
+        client.verifyOtpResults = [.success(Credentials(accessToken: "email"))]
+
+        let sut = await signIn(
+            afterTheCode: menu([Fix.challengePhone(), Fix.emailChallenge(index: 5), Fix.challengePush]),
+            deliveries: [.text, .voice, .email])
+        guard let rows = list(sut) else { Issue.record("no list"); return }
+        #expect(rows.rows.map(\.id) == ["push:0", "sms:0", "voice:0", "email:5"])
+        #expect(rows.rows.map(\.subtitle) == ["Push notification", "Text message", "Voice call", "Email"])
+        #expect(client.calls.filter { $0 == .challengeEmail(index: 5) }.isEmpty, "nothing is sent until the user picks")
+
+        rows.select("email:5")
+        await eventually { codeModel(sut) != nil }
+        #expect(codeModel(sut)?.delivery == .email)
+        #expect(codeModel(sut)?.canSwitch == true)
+        codeModel(sut)?.submit("123456")
+        await eventually { sut.step == .authenticated }
+        #expect(store.delivered.map(\.accessToken) == ["email"])
     }
 
     // MARK: Nothing to send
