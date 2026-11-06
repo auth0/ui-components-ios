@@ -1,3 +1,5 @@
+require 'json'
+
 default_platform :ios
 
 platform :ios do
@@ -43,11 +45,38 @@ platform :ios do
       Dir.exist?(docs_dir) ? FileUtils.rm_r(docs_dir) : FileUtils.mkdir(docs_dir)
       # Generate the .doccarchive
       sh "xcodebuild docbuild -scheme #{target}.iOS -configuration Release -destination 'generic/platform=iOS' -derivedDataPath #{docs_archive} FRAMEWORK_SEARCH_PATHS='Carthage/Build/**'"
+      # Every public SwiftUI view inherits ~770 `View` modifiers, and each one becomes a DocC page (JSON and HTML).
+      # Drop those synthesized members from the symbol graphs and rebuild the archive from what is left.
+      archive = "#{docs_archive}/Build/Products/Release-iphoneos/#{target}.doccarchive"
+      symbol_graphs = "#{docs_archive}/Build/Intermediates.noindex/#{target}.build/Release-iphoneos/#{target}.iOS.build/symbol-graph"
+      filtered_graphs = "#{docs_archive}/symbol-graph-filtered"
+      strip_synthesized_symbols(symbol_graphs, filtered_graphs)
+      FileUtils.rm_rf(archive)
+      sh "$(xcrun --find docc) convert Documentation.docc --emit-lmdb-index --fallback-display-name #{target} --fallback-bundle-identifier com.auth0.#{target} --additional-symbol-graph-dir #{filtered_graphs} --output-dir #{archive}"
       # Generate the static site
-      sh "$(xcrun --find docc) process-archive transform-for-static-hosting #{docs_archive}/Build/Products/Release-iphoneos/#{target}.doccarchive --hosting-base-path #{target}.swift --output-path #{docs_dir}"
+      sh "$(xcrun --find docc) process-archive transform-for-static-hosting #{archive} --hosting-base-path #{target}.swift --output-path #{docs_dir}"
       # Write redirect file
       File.write("#{docs_dir}/index.html", redirect_file)
     end
+  end
+
+  # Copies the symbol graphs in `source` to `destination` without the members the compiler synthesizes onto
+  # each type (such as SwiftUI's inherited `View` modifiers). Members the SDK declares itself are kept.
+  def strip_synthesized_symbols(source, destination)
+    FileUtils.rm_rf(destination)
+    synthesized = ->(id) { id.to_s.include?('::SYNTHESIZED::') }
+    removed = 0
+    Dir.glob(File.join(source, '**', '*.symbols.json')).each do |path|
+      graph = JSON.parse(File.read(path))
+      before = graph['symbols'].size
+      graph['symbols'].reject! { |symbol| synthesized.call(symbol.dig('identifier', 'precise')) }
+      graph['relationships']&.reject! { |relationship| synthesized.call(relationship['source']) || synthesized.call(relationship['target']) }
+      removed += before - graph['symbols'].size
+      output = File.join(destination, path.delete_prefix("#{source}/"))
+      FileUtils.mkdir_p(File.dirname(output))
+      File.write(output, JSON.generate(graph))
+    end
+    UI.message "Removed #{removed} synthesized symbols from the symbol graphs"
   end
 
   # Reads the SDK version from the `version` literal in Version.swift,
