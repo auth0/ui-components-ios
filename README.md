@@ -46,6 +46,7 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 
 | Universal Components | Auth0.swift | Notes |
 |---|---|---|
+| 1.0.0-beta.3 | 4.0.0-beta.1+ (< 5.0.0) | Adds sign-in with a phone number (SMS OTP) to Embedded Login, and SMS and voice codes as multi-factor steps. No breaking changes |
 | 1.0.0-beta.2 | 4.0.0-beta.1+ (< 5.0.0) | Adds multi-factor authentication (Guardian push) to Embedded Login. Breaking: `EmbeddedLoginView` hands the credentials to `onAuthenticated` instead of storing them |
 | 1.0.0-beta.1 | 4.0.0-beta.0+ (< 5.0.0) | Adds Embedded Login. Breaking: needs the Auth0.swift 4 beta |
 | 1.0.0-beta.0 | 2.21.0+ (< 3.0.0) | First beta |
@@ -59,10 +60,10 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 Add the following to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0-beta.2")
+.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0-beta.3")
 ```
 
-> **Note:** This range also accepts later `1.0.0` betas. To stay on one beta, use `exact: "1.0.0-beta.2"`.
+> **Note:** This range also accepts later `1.0.0` betas. To stay on one beta, use `exact: "1.0.0-beta.3"`.
 
 Or use Xcode: File → Add Packages → Enter the repository URL.
 
@@ -71,7 +72,7 @@ Or use Xcode: File → Add Packages → Enter the repository URL.
 Add the following to your `Cartfile`:
 
 ```
-github "auth0/ui-components-ios" "1.0.0-beta.2"
+github "auth0/ui-components-ios" "1.0.0-beta.3"
 ```
 
 ### Configure the SDK
