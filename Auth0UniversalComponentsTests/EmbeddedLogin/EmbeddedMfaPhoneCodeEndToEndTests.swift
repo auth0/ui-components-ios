@@ -255,10 +255,9 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
         await eventually { list(sut) != nil }
 
         list(sut)?.select("sms:0")
-        await eventually { codeModel(sut) != nil }
-        await settle()
+        await eventually { phoneSends.count == 2 && (codeModel(sut)?.resendAvailableIn ?? 0) > 0 }
         #expect(phoneSends.count == 2)
-        #expect(codeModel(sut)?.resendAvailableIn ?? 0 > 0, "with a wait of its own")
+        #expect((codeModel(sut)?.resendAvailableIn ?? 0) > 0, "with a wait of its own")
     }
 
     @Test func comingBackToTheTextAfterACallToTheSamePhone_textsAgain() async {
@@ -278,8 +277,7 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
         await eventually { list(sut) != nil }
 
         list(sut)?.select("sms:0")
-        await eventually { codeModel(sut)?.delivery == .text }
-        await settle()
+        await eventually { phoneSends.count == 3 && codeModel(sut)?.delivery == .text }
         #expect(phoneSends.count == 3)
     }
 

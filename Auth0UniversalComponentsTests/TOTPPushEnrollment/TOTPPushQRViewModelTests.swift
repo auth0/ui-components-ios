@@ -3,7 +3,7 @@ import Foundation
 @testable import Auth0UniversalComponents
 import Auth0
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 struct TOTPPushQRCodeViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
