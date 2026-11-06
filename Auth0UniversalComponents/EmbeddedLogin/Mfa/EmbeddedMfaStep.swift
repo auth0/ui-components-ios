@@ -22,7 +22,8 @@ final class EmbeddedMfaStep: ObservableObject, AdditionalStepProviding {
          bindings: [EmbeddedFactorBinding]? = nil) {
         self.configuration = configuration
         self.clock = clock
-        self.bindings = bindings ?? [EmbeddedPushBinding()]
+        self.bindings = bindings ?? [EmbeddedPushBinding(), EmbeddedPhoneCodeBinding(delivery: .text),
+                                 EmbeddedPhoneCodeBinding(delivery: .voice)]
     }
 
     /// What to advertise to `authorize` so the server only routes to factors that are plugged in.
@@ -35,7 +36,9 @@ final class EmbeddedMfaStep: ObservableObject, AdditionalStepProviding {
     func makeSession(context: AdditionalStepContext, delegate: AdditionalStepDelegate) -> AdditionalStepSession {
         let stager = EmbeddedMfaStager(delivery: context.credentialsDelivery)
         let menu: ([NextAction]) -> [MfaFactorOffer] = { [bindings] next in bindings.flatMap { $0.offers(in: next) } }
-        let services = EmbeddedFactorServices(client: context.client, stager: stager, menu: menu)
+        // One gate per sign-in, shared by every factor in it.
+        let services = EmbeddedFactorServices(client: context.client, stager: stager, gate: EmbeddedRequestGate(),
+                                              menu: menu)
         let session = EmbeddedMfaSession(
             offers: menu(context.nextActions), registry: MfaFactorRegistry(bindings.map { $0.makeFactor(services) }),
             stager: stager, configuration: configuration, clock: clock, delegate: delegate,

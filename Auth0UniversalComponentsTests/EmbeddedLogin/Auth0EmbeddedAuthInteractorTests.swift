@@ -216,6 +216,20 @@ struct Auth0EmbeddedAuthInteractorTests {
         #expect(try await sut.startOTP(connection: "email", identifier: .phone(phone)) == "(4**)***-*900")
     }
 
+    /// A server that hides digits with `X` gets them drawn as `*`, like every other mask: the code prompt's number,
+    /// or the phone's own when the prompt names none.
+    @Test(arguments: [("+1XXXXXX99", "+1******99"), (nil, "+1******900")] as [(String?, String)])
+    func startOTP_phone_showsHiddenDigitsAsAsterisks(_ promptMask: String?, _ shown: String) async throws {
+        var codePrompt: [String: Any] = ["action": "action:verify:otp:v1", "channel": "sms"]
+        codePrompt["identifier"] = promptMask
+        client.authorizeResults = [Fix.needs([Fix.identifyPhone])]
+        client.identifyResults = [Fix.needs([Fix.challengePhone(masked: "+1xxxxxx900")])]
+        client.challengePhoneResults = [Fix.needs([codePrompt])]
+        let sut = makeSUT()
+        _ = try await sut.discover()
+        #expect(try await sut.startOTP(connection: "email", identifier: .phone(phone)) == shown)
+    }
+
     @Test func startOTP_phone_usesTheFirstPhoneThatTakesTexts() async throws {
         client.authorizeResults = [Fix.needs([Fix.identifyPhone])]
         client.identifyResults = [Fix.needs([

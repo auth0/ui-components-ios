@@ -55,6 +55,8 @@ public struct AuthenticatorListModel: Equatable {
         public let subtitle: String?
         /// An image name in the SDK's resource bundle.
         public let icon: String?
+        /// An SF Symbol name, for a factor whose icon is a system symbol. Used when ``icon`` is `nil`.
+        public let systemImage: String?
 
         /// Creates a row.
         ///
@@ -64,12 +66,15 @@ public struct AuthenticatorListModel: Equatable {
         ///   - title: What the row says.
         ///   - subtitle: A second line under the title.
         ///   - icon: An image name in the SDK's resource bundle.
-        public init(id: String, factor: MfaFactorID, title: String, subtitle: String? = nil, icon: String? = nil) {
+        ///   - systemImage: An SF Symbol name, used when `icon` is `nil`.
+        public init(id: String, factor: MfaFactorID, title: String, subtitle: String? = nil, icon: String? = nil,
+                    systemImage: String? = nil) {
             self.id = id
             self.factor = factor
             self.title = title
             self.subtitle = subtitle
             self.icon = icon
+            self.systemImage = systemImage
         }
     }
 

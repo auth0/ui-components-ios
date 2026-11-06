@@ -56,12 +56,17 @@ struct MfaFactorRow: View {
 
     private var primary: String { row.title }
     private var secondary: String { row.subtitle ?? "" }
+    /// The factor's own image if it has one, else its system symbol.
+    private var rowImage: Image? {
+        if let icon = row.icon { return Image(icon, bundle: ResourceBundle.default) }
+        return row.systemImage.map { Image(systemName: $0) }
+    }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: theme.spacing.md) {
-                if let icon = row.icon {
-                    Image(icon, bundle: ResourceBundle.default)
+                if let image = rowImage {
+                    image
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
@@ -70,7 +75,8 @@ struct MfaFactorRow: View {
                         .accessibilityHidden(true)
                 }
                 VStack(alignment: .leading, spacing: theme.spacing.xxs) {
-                    Text(primary)
+                    // A value the server masked: its `*` drawn small and top-aligned, as on the code screens.
+                    MfaMaskedText(primary, style: .label)
                         .auth0TextStyle(theme.typography.label)
                         .foregroundStyle(theme.colors.text.bold)
                     if !secondary.isEmpty {

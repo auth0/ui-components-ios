@@ -28,6 +28,13 @@ struct ArchitectureTests {
         }
     }
 
+    /// Every factor folder (`MFA/Factors/<Name>`), found on disk, so a factor added later is held to the same rules.
+    private static var factorFolders: [String] {
+        let base = sources.appendingPathComponent("MFA/Factors")
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: base.path)) ?? []
+        return names.filter { !$0.hasPrefix(".") }.sorted().map { "MFA/Factors/\($0)" }
+    }
+
     private static func strippingComments(_ source: String) -> String {
         var text = source.replacingOccurrences(of: "/\\*[\\s\\S]*?\\*/", with: "", options: .regularExpression)
         text = text.replacingOccurrences(of: "//[^\\n]*", with: "", options: .regularExpression)
@@ -48,6 +55,8 @@ struct ArchitectureTests {
         #expect(try code(in: "MFA/Core").count >= 5, "the architecture rules would pass vacuously if no files were read")
         #expect(try code(in: "EmbeddedLogin/Domain").count >= 4)
         #expect(try code(in: "MFA/Factors/Push").count >= 5)
+        #expect(try code(in: "MFA/Factors/PhoneCode").count >= 7)
+        #expect(Self.factorFolders.count >= 2, "\(Self.factorFolders)")
         #expect(try code(in: "EmbeddedLogin").count >= 10)
     }
 
@@ -84,16 +93,18 @@ struct ArchitectureTests {
         #expect(found.isEmpty, "\(found)")
     }
 
-    @Test func factor_knowsTheCore_notLoginOrAuth0() throws {
-        let push = try code(in: "MFA/Factors/Push")
-        let found = try violations(in: push, matching: #"import Auth0\b|\bLogin[A-Z]\w*|\bEmbedded[A-Z]\w*|NextAction|AdditionalStep|EmbeddedAuth"#)
-        #expect(found.isEmpty, "\(found)")
+    @Test func everyFactor_knowsTheCore_notLoginOrAuth0() throws {
+        for folder in Self.factorFolders {
+            let found = try violations(in: code(in: folder), matching: #"import Auth0\b|\bLogin[A-Z]\w*|\bEmbedded[A-Z]\w*|NextAction|AdditionalStep|EmbeddedAuth"#)
+            #expect(found.isEmpty, "\(folder): \(found)")
+        }
     }
 
-    @Test func factor_reachesTheServerOnlyThroughItsOwnTransportProtocol() throws {
-        let push = try code(in: "MFA/Factors/Push")
-        let found = try violations(in: push, matching: #"URLSession|URLRequest|\.authorize\(|challengePush\(|verifyOob\("#)
-        #expect(found.isEmpty, "\(found)")
+    @Test func everyFactor_reachesTheServerOnlyThroughItsOwnTransportProtocol() throws {
+        for folder in Self.factorFolders {
+            let found = try violations(in: code(in: folder), matching: #"URLSession|URLRequest|\.authorize\(|challengePush\(|verifyOob\(|challengePhone\(|verifyOtp\("#)
+            #expect(found.isEmpty, "\(folder): \(found)")
+        }
     }
 
     @Test func screenKit_isTheOnlyCorePresentationFileThatNamesSharedComponents() throws {

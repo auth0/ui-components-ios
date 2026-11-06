@@ -170,7 +170,8 @@ final class MfaController: ObservableObject {
         let rows: [AuthenticatorListModel.Row] = state.offers.compactMap { offer -> AuthenticatorListModel.Row? in
             guard let factor = registry.factor(for: offer.factor) else { return nil }
             let row = factor.row(for: offer, messages: messages)
-            return .init(id: offer.id, factor: offer.factor, title: row.title, subtitle: row.subtitle, icon: row.icon)
+            return .init(id: offer.id, factor: offer.factor, title: row.title, subtitle: row.subtitle, icon: row.icon,
+                         systemImage: row.systemImage)
         }
         return .authenticatorList(AuthenticatorListModel(
             header: state.round > 1 ? .challengeAdditional : .challenge, round: state.round, rows: rows,

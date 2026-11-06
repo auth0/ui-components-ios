@@ -32,16 +32,16 @@ struct EmbeddedPushBindingTests {
     }
 
     @Test func theAdditionalStep_advertisesTheUnionOfItsBindings_withoutRepeats() {
-        #expect(EmbeddedMfaStep().capabilities == [.challengePush, .verifyOob])
+        #expect(EmbeddedMfaStep().capabilities == [.challengePush, .verifyOob, .challengePhone, .verifyOTP])
         #expect(EmbeddedMfaStep(bindings: []).capabilities.isEmpty)
         #expect(EmbeddedMfaStep(bindings: [EmbeddedPushBinding(), EmbeddedPushBinding()]).capabilities
                 == [.challengePush, .verifyOob])
     }
 
     /// With the login's own steps, this is what `authorize` is asked to route to: Email and SMS OTP, then Guardian
-    /// push.
-    @Test func withTheLoginsOwnSteps_theCapabilitiesAreEmailPhoneAndPush() {
-        #expect(LiveEmbeddedAuthClient.firstFactorCapabilities + EmbeddedMfaStep().capabilities
+    /// push. SMS as a factor needs the same phone steps the login already lists, so they appear once.
+    @Test func withTheLoginsOwnSteps_theCapabilitiesAreEmailPhoneAndPush_eachOnce() {
+        #expect(LiveEmbeddedAuthClient.capabilities(adding: EmbeddedMfaStep().capabilities)
                 == [.identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP,
                     .challengePush, .verifyOob])
     }
@@ -129,7 +129,8 @@ struct EmbeddedPushTransportTests {
 
     private func make() -> (EmbeddedPushTransport, EmbeddedMfaStager) {
         let stager = EmbeddedMfaStager(delivery: store)
-        return (EmbeddedPushTransport(client: client, stager: stager, menu: { [menuOffer] _ in [menuOffer] }), stager)
+        return (EmbeddedPushTransport(client: client, stager: stager, gate: EmbeddedRequestGate(),
+                                      menu: { [menuOffer] _ in [menuOffer] }), stager)
     }
 
     // MARK: Sending

@@ -58,6 +58,8 @@ struct MfaFactorRowContent: Equatable {
     let subtitle: String?
     /// An image name in `ResourceBundle.default`.
     let icon: String?
+    /// An SF Symbol name, used when there is no `icon`.
+    var systemImage: String?
 }
 
 /// What the Core gives a session when it starts it.

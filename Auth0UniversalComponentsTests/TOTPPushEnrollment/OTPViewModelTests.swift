@@ -6,7 +6,7 @@ import Foundation
 @testable import Auth0UniversalComponents
 import Auth0
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 // swiftlint:disable:next type_body_length
 struct OTPViewModelTests {
     private let mockToken = "mock_access_token_123"
