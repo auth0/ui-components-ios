@@ -88,7 +88,7 @@ struct EmbeddedPushTransportSerializationTests {
 
     private func transport() -> EmbeddedPushTransport {
         EmbeddedPushTransport(client: client, stager: EmbeddedMfaStager(delivery: StubCredentialsDelivery()),
-                              menu: { _ in [] })
+                              gate: EmbeddedRequestGate(), menu: { _ in [] })
     }
 
     /// Device A has a check on the wire when the user switches to device B: B's push must wait for it.

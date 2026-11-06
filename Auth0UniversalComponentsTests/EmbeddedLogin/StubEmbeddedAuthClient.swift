@@ -83,6 +83,8 @@ enum EmbeddedAuthFixtures {
     static let verifyTOTP: [String: Any] = ["action": "action:verify:otp:v1", "channel": "totp"]
     static let verifySMS: [String: Any] = ["action": "action:verify:otp:v1", "channel": "sms",
                                            "identifier": "+1***99"]
+    static let verifyVoice: [String: Any] = ["action": "action:verify:otp:v1", "channel": "voice",
+                                             "identifier": "+1***99"]
     static let challengePush: [String: Any] = ["action": "action:challenge:push:v1", "index": 0,
                                                "name": "Sudhanshu's iPhone"]
     static let identifyPhone: [String: Any] = ["action": "action:identify:phone:v1"]

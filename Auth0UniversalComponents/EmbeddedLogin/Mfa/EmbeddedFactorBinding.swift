@@ -17,6 +17,8 @@ protocol EmbeddedFactorBinding {
 struct EmbeddedFactorServices {
     let client: EmbeddedAuthClient
     let stager: EmbeddedMfaStager
+    /// One request at a time, across every factor of this sign-in.
+    let gate: EmbeddedRequestGate
     /// Reads a whole menu, every factor included. Needed after an approval, when the server asks for another factor.
     let menu: ([NextAction]) -> [MfaFactorOffer]
 }

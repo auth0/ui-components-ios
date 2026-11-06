@@ -59,6 +59,15 @@ struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
         .identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP
     ]
 
+    /// The login's own steps, then the additional step's, each once: they can overlap (both can text a code).
+    static func capabilities(adding additional: [EmbeddedCapability]) -> [EmbeddedCapability] {
+        var all: [EmbeddedCapability] = []
+        for capability in firstFactorCapabilities + additional where !all.contains(capability) {
+            all.append(capability)
+        }
+        return all
+    }
+
     /// Auth0.swift's default scope.
     static let scope = "openid profile email offline_access"
 
@@ -119,7 +128,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         self.init(
             client: LiveEmbeddedAuthClient(
                 auth: Auth0.embeddedAuth(session: session, bundle: bundle),
-                capabilities: LiveEmbeddedAuthClient.firstFactorCapabilities + additionalStepCapabilities),
+                capabilities: LiveEmbeddedAuthClient.capabilities(adding: additionalStepCapabilities)),
             credentialsDelivery: credentialsDelivery,
             connection: connection
         )
@@ -218,17 +227,18 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         return nil
     }
 
-    /// The first of the user's phones that can take a text message, and its number as the server masked it.
+    /// The first of the user's phones that can take a text message, and its number as the server masked it, with
+    /// each hidden digit as `*`.
     private var textablePhone: (index: Int, masked: String)? {
         for case let .challengePhone(index, masked, methods) in lastNextActions where methods.contains(.text) {
-            return (index, masked)
+            return (index, PhoneMask.display(masked))
         }
         return nil
     }
 
-    /// The masked number the server says it texted.
+    /// The masked number the server says it texted, with each hidden digit as `*`.
     private var smsDestination: String? {
-        for case let .verifyOTP(.sms, masked?) in lastNextActions { return masked }
+        for case let .verifyOTP(.sms, masked?) in lastNextActions { return PhoneMask.display(masked) }
         return nil
     }
 

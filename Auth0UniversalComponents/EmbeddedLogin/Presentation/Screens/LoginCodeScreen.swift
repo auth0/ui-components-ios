@@ -48,25 +48,15 @@ public struct LoginCodeScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             LoginScreenHeader(title: title, subtitle: subtitle, isEditEnabled: !isLoading, onEdit: onEdit)
 
-            LoginFieldLabel(fieldLabel)
-            LoginCodeField(code: $code, digitCount: digitCount, isError: activeError != nil, isEnabled: !isLoading)
-
-            if let activeError {
-                LoginInlineError(activeError)
-                    .padding(.top, theme.spacing.xs)
-            }
-
-            LoginPrimaryButton("Verify", isLoading: isLoading,
-                               isEnabled: code.count == digitCount && !isCodeExpired, action: verify)
-            .padding(.top, theme.spacing.lg)
-
-            if let onResend {
-                LoginResendButton(isBusy: isLoading, isAvailableNow: isCodeExpired) {
-                    // The expired code is no use once a new one is on its way.
-                    if isCodeExpired { code = "" }
-                    onResend()
+            CodeEntryForm(code: $code, digitCount: digitCount, fieldLabel: fieldLabel, isVerifying: isLoading,
+                          error: activeError, canVerify: !isCodeExpired, onVerify: onVerify) {
+                if let onResend {
+                    LoginResendButton(isBusy: isLoading, isAvailableNow: isCodeExpired) {
+                        // The expired code is no use once a new one is on its way.
+                        if isCodeExpired { code = "" }
+                        onResend()
+                    }
                 }
-                .padding(.top, theme.spacing.lg)
             }
 
             Spacer()
@@ -74,11 +64,6 @@ public struct LoginCodeScreen: View {
         .embeddedScreenChrome(theme: theme)
         .onChangeCompat(of: code) { _ in suppressError = true }
         .onChangeCompat(of: errorMessage) { if $0 != nil { suppressError = false } }
-    }
-
-    private func verify() {
-        guard !isLoading, !isCodeExpired, code.count == digitCount else { return }
-        onVerify(code)
     }
 }
 
