@@ -7,18 +7,22 @@ final class ScriptedPhoneCodeTransport: PhoneCodeTransport {
     var sends: [Result<PhoneCodeSent, MfaError>]
     var verifies: [Result<PhoneCodeVerification, MfaError>]
     private(set) var log: [String] = []
+    var isPending = true
 
     init(send: [Result<PhoneCodeSent, MfaError>] = [], verify: [Result<PhoneCodeVerification, MfaError>] = []) {
         sends = send
         verifies = verify
     }
 
-    func sendCode(to offer: MfaFactorOffer) async throws -> PhoneCodeSent {
+    func isCodePending(for offer: MfaFactorOffer) -> Bool { isPending }
+
+    func sendCode(to offer: MfaFactorOffer, while isWanted: () -> Bool) async throws -> PhoneCodeSent {
         log.append("send \(offer.id)")
         return try (sends.isEmpty ? .success(PhoneCodeSent(canResend: true)) : sends.removeFirst()).get()
     }
 
-    func verify(code: String) async throws -> PhoneCodeVerification {
+    func verify(code: String, for offer: MfaFactorOffer, while isWanted: () -> Bool) async throws
+        -> PhoneCodeVerification {
         log.append("verify \(code)")
         return try (verifies.isEmpty ? .success(.verified) : verifies.removeFirst()).get()
     }
@@ -27,6 +31,7 @@ final class ScriptedPhoneCodeTransport: PhoneCodeTransport {
 /// The SMS session on its own, with a fake Core around it.
 @Suite
 @MainActor
+// swiftlint:disable:next type_body_length
 struct PhoneCodeSessionTests {
 
     private let offer = scriptedOffer("sms:0", factor: .sms, label: "(4**)***-*900")
@@ -265,6 +270,22 @@ struct PhoneCodeSessionTests {
         #expect(model(again)?.resendAvailableIn == 50, "the wait carries over")
         await settle()
         #expect(transport.log == ["send sms:0"], "no second code")
+    }
+
+    @Test func comingBackAfterAnotherChallenge_sendsANewCode_insideTheWait() async {
+        let wall = Wall()
+        let ledger = PhoneCodeSendLedger(now: { wall.now })
+        let transport = ScriptedPhoneCodeTransport()
+        let first = session(transport, cooldown: 60, ledger: ledger)
+        first.start()
+        await eventually { model(first) != nil }
+        first.deactivate()
+        transport.isPending = false
+
+        let again = leaveAndCome(back: transport, after: 10, ledger: ledger, wall: wall)
+        await eventually { model(again) != nil }
+        #expect(transport.log == ["send sms:0", "send sms:0"])
+        #expect(model(again)?.resendAvailableIn == 60)
     }
 
     @Test func comingBackAfterTheWait_sendsANewCode() async {

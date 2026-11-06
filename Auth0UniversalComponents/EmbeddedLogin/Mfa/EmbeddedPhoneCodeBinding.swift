@@ -56,27 +56,32 @@ final class EmbeddedPhoneCodeTransport: PhoneCodeTransport {
         self.menu = menu
     }
 
-    func sendCode(to offer: MfaFactorOffer) async throws -> PhoneCodeSent {
+    func sendCode(to offer: MfaFactorOffer, while isWanted: () -> Bool = { true }) async throws -> PhoneCodeSent {
         guard let index = offer.reference else { throw MfaError.unexpected(nil) }
         let method = delivery.method
         do {
-            try await gate.run { try await client.challengePhone(index: index, deliveryMethod: method) }
+            try await gate.run(challenging: offer.id, while: isWanted) {
+                try await client.challengePhone(index: index, deliveryMethod: method)
+            }
         } catch let error as EmbeddedAuthError {
             guard case let .insufficientAuthorization(_, nextActions) = error.reason else {
                 throw EmbeddedMfaErrors.map(error)
             }
             // The text or call went out when the server asks for the code next.
             guard asksForCode(in: nextActions) else { throw MfaError.unexpected(nil) }
-            return PhoneCodeSent(canResend: Self.offersPhone(in: nextActions))
+            return PhoneCodeSent(canResend: stillOffers(offer, in: nextActions))
         }
         // Success here means the loop closed without asking for a code; treat it as an error.
         throw MfaError.unexpected(nil)
     }
 
-    func verify(code: String) async throws -> PhoneCodeVerification {
+    func isCodePending(for offer: MfaFactorOffer) -> Bool { gate.lastChallenge == offer.id }
+
+    func verify(code: String, for offer: MfaFactorOffer, while isWanted: () -> Bool = { true }) async throws
+        -> PhoneCodeVerification {
         do {
             // The server accepted: stage the credentials. The Core says whether the sign-in is still live.
-            try stager.stage(try await gate.run { try await client.verifyOtp(code, type: .oob) })
+            try stager.stage(try await gate.run(while: isWanted) { try await client.verifyOtp(code, type: .oob) })
             return .verified
         } catch let error as EmbeddedAuthError {
             guard case let .insufficientAuthorization(reason, nextActions) = error.reason else {
@@ -84,7 +89,8 @@ final class EmbeddedPhoneCodeTransport: PhoneCodeTransport {
             }
             switch reason {
             // Wrong code: the user can try again, and resend while the server still offers the phone.
-            case .invalidCode, .invalidIdentifierOrCode: return .rejected(canResend: Self.offersPhone(in: nextActions))
+            case .invalidCode, .invalidIdentifierOrCode:
+                return .rejected(canResend: stillOffers(offer, in: nextActions))
             // Accepted, and the policy asks for another factor.
             case .none: return .anotherFactor(menu(nextActions))
             // Push answers; a code check never gets them.
@@ -98,8 +104,12 @@ final class EmbeddedPhoneCodeTransport: PhoneCodeTransport {
         nextActions.contains { if case .verifyOTP(delivery.channel, _) = $0 { return true } else { return false } }
     }
 
-    private static func offersPhone(in nextActions: [NextAction]) -> Bool {
-        nextActions.contains { if case .challengePhone = $0 { return true } else { return false } }
+    /// Resend only for the pairing the server offers: this phone, by this delivery.
+    private func stillOffers(_ offer: MfaFactorOffer, in nextActions: [NextAction]) -> Bool {
+        nextActions.contains { action in
+            guard case let .challengePhone(index, _, methods) = action else { return false }
+            return index == offer.reference && methods.contains(delivery.method)
+        }
     }
 }
 

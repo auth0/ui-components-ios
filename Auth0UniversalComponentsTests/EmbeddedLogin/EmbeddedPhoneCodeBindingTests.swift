@@ -117,7 +117,7 @@ struct EmbeddedPhoneCodeTransportTests {
 
     @Test func verify_voice_checksTheCodeTheSameWay() async throws {
         client.verifyOtpResults = [.success(Credentials(accessToken: "voice"))]
-        #expect(try await transport(.voice).0.verify(code: "123456") == .verified)
+        #expect(try await transport(.voice).0.verify(code: "123456", for: offer) == .verified)
         #expect(client.calls == [.verifyOtp(code: "123456", type: .oob)])
     }
 
@@ -142,12 +142,32 @@ struct EmbeddedPhoneCodeTransportTests {
         await #expect(throws: MfaError.tooManyAttempts) { try await transport().0.sendCode(to: offer) }
     }
 
+    // MARK: Resend only for the pairing the server offers
+
+    @Test func send_onlyAnotherPhoneOffered_cantBeResent() async throws {
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone(index: 5)])]
+        #expect(try await transport().0.sendCode(to: offer).canResend == false)
+    }
+
+    @Test func send_thisPhoneOnlyByTheOtherMethod_cantBeResent() async throws {
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone(index: 2, methods: ["voice"])])]
+        #expect(try await transport(.text).0.sendCode(to: offer).canResend == false)
+    }
+
+    @Test(arguments: [(5, ["text"]), (2, ["voice"])])
+    func verify_aWrongCode_cantBeResentUnlessThisPhoneIsOffered(_ index: Int, _ methods: [String]) async throws {
+        let reply = Fix.needs([Fix.verifySMS, Fix.challengePhone(index: index, methods: methods)],
+                              subReason: "invalid_code")
+        client.verifyOtpResults = [.failure(reply)]
+        #expect(try await transport(.text).0.verify(code: "000000", for: offer) == .rejected(canResend: false))
+    }
+
     // MARK: Checking
 
     @Test func verify_acceptsTheCode_andStagesTheCredentials() async throws {
         client.verifyOtpResults = [.success(Credentials(accessToken: "sms"))]
         let (sut, stager) = transport()
-        #expect(try await sut.verify(code: "123456") == .verified)
+        #expect(try await sut.verify(code: "123456", for: offer) == .verified)
         #expect(client.calls == [.verifyOtp(code: "123456", type: .oob)])
         #expect(store.delivered.isEmpty, "staged, not yet handed over: the Core decides")
         try stager.commit()
@@ -156,25 +176,26 @@ struct EmbeddedPhoneCodeTransportTests {
 
     @Test(arguments: ["invalid_code", "invalid_identifier_or_code"])
     func verify_aWrongCode_isRejected(_ subReason: String) async throws {
-        client.verifyOtpResults = [.failure(Fix.needs([Fix.verifySMS, Fix.challengePhone()], subReason: subReason))]
-        #expect(try await transport().0.verify(code: "000000") == .rejected(canResend: true))
+        client.verifyOtpResults = [.failure(Fix.needs([Fix.verifySMS, Fix.challengePhone(index: 2)],
+                                                      subReason: subReason))]
+        #expect(try await transport().0.verify(code: "000000", for: offer) == .rejected(canResend: true))
     }
 
     @Test func verify_thenAnotherFactor_readsTheWholeMenu() async throws {
         let next = [MfaFactorOffer(id: "push:0", factor: .push, label: "iPhone", reference: 0)]
         client.verifyOtpResults = [.failure(Fix.needs([Fix.challengePush]))]
-        #expect(try await transport(menu: { _ in next }).0.verify(code: "123456") == .anotherFactor(next))
+        #expect(try await transport(menu: { _ in next }).0.verify(code: "123456", for: offer) == .anotherFactor(next))
     }
 
     /// The code timed out: the factor keeps its screen and offers a new one.
     @Test func verify_anExpiredCode_isReportedAsExpired() async {
         client.verifyOtpResults = [.failure(Fix.terminal("access_denied", description: "challenge_expired"))]
-        await #expect(throws: MfaError.tokenExpired) { try await transport().0.verify(code: "123456") }
+        await #expect(throws: MfaError.tokenExpired) { try await transport().0.verify(code: "123456", for: offer) }
     }
 
     @Test func verify_withoutAConnection_isANetworkError() async {
         client.verifyOtpResults = [.failure(Fix.network)]
-        await #expect(throws: MfaError.network) { try await transport().0.verify(code: "123456") }
+        await #expect(throws: MfaError.network) { try await transport().0.verify(code: "123456", for: offer) }
     }
 
     @Test func send_withoutAConnection_isANetworkError() async {
@@ -184,7 +205,7 @@ struct EmbeddedPhoneCodeTransportTests {
 
     @Test func verify_tooManyWrongCodes_endsTheFlow() async {
         client.verifyOtpResults = [.failure(Fix.terminal("access_denied", description: "too_many_wrong_otp_attempts"))]
-        await #expect(throws: MfaError.tooManyAttempts) { try await transport().0.verify(code: "000000") }
+        await #expect(throws: MfaError.tooManyAttempts) { try await transport().0.verify(code: "000000", for: offer) }
     }
 }
 
@@ -213,6 +234,68 @@ struct EmbeddedRequestGateTests {
         recorder.release?.resume()
         _ = try await (first.value, second.value, third.value)
         #expect(recorder.log == ["first started", "first done", "second", "third"])
+    }
+
+    @Test func aQueuedCall_nobodyWantsAnyMore_isSkipped_andTheTurnPassesOn() async throws {
+        let gate = EmbeddedRequestGate()
+        let recorder = GateRecorder()
+        var wanted = true
+        let isWanted: () -> Bool = { wanted }
+
+        let first = Task {
+            try await gate.run {
+                await withCheckedContinuation { recorder.release = $0 }
+                recorder.log.append("first done")
+            }
+        }
+        await eventually { recorder.release != nil }
+        let skipped = Task { try await gate.run(while: isWanted) { recorder.log.append("skipped") } }
+        let third = Task { try await gate.run { recorder.log.append("third") } }
+        await settle()
+
+        wanted = false
+        recorder.release?.resume()
+        _ = try await first.value
+        await #expect(throws: CancellationError.self) { try await skipped.value }
+        _ = try await third.value
+        #expect(recorder.log == ["first done", "third"])
+    }
+
+    @Test func theGateRemembersWhichChallengeWentOutLast() async throws {
+        let gate = EmbeddedRequestGate()
+        try await gate.run(challenging: "sms:0") {}
+        try await gate.run(challenging: "push:0") {}
+        try await gate.run {}
+        #expect(gate.lastChallenge == "push:0")
+        let never: () -> Bool = { false }
+        _ = try? await gate.run(challenging: "voice:0", while: never) {}
+        #expect(gate.lastChallenge == "push:0", "a skipped challenge never went out")
+    }
+
+    /// A text queued behind a push check isn't sent if the user leaves (Verify another way, or Back) before its turn.
+    @Test(arguments: [false, true])
+    func aQueuedText_isNotSentAfterTheUserLeft(_ back: Bool) async {
+        let client = HoldingEmbeddedAuthClient()
+        let gate = EmbeddedRequestGate()
+        let stager = EmbeddedMfaStager(delivery: StubCredentialsDelivery())
+        let push = EmbeddedPushTransport(client: client, stager: stager, gate: gate, menu: { _ in [] })
+        let check = Task { _ = try? await push.checkApproval() }
+        await eventually { client.isHoldingCheck }
+        let phone = EmbeddedPhoneCodeTransport(delivery: .text, client: client, stager: stager, gate: gate,
+                                               menu: { _ in [] })
+        let session = PhoneCodeSession(
+            offer: MfaFactorOffer(id: "sms:0", factor: .sms, label: nil, reference: 0), delivery: .text,
+            transport: phone, policy: PhoneCodePolicy(resendCooldownSeconds: 0), clock: ManualMfaClock(),
+            host: FakeHost())
+        session.start()
+        await settle()
+
+        let leave = Task { if back { await session.cancelAndWait() } else { session.deactivate() } }
+        client.releaseCheck()
+        _ = await check.value
+        await leave.value
+        await settle()
+        #expect(client.calls == ["verifyOob"], "no text goes out after the user left")
     }
 
     @Test func aCallThatThrows_stillHandsTheTurnOn() async throws {

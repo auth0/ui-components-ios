@@ -8,6 +8,7 @@ import Testing
 /// client.
 @Suite
 @MainActor
+// swiftlint:disable:next type_body_length
 struct EmbeddedMfaPhoneCodeEndToEndTests {
 
     private typealias Fix = EmbeddedAuthFixtures
@@ -223,6 +224,63 @@ struct EmbeddedMfaPhoneCodeEndToEndTests {
         #expect(codeModel(sut)?.resendAvailableIn ?? 0 > 0, "the wait carried over")
         await settle()
         #expect(sends == [.challengePhone(index: 0, deliveryMethod: .text)], "one text, not two")
+    }
+
+    // MARK: Coming back after another challenge
+
+    private func pushModel(_ sut: LoginFlowCoordinator) -> PushChallengeModel? {
+        if case let .factor(step)? = mfaStep(sut) { return step.model as? PushChallengeModel }
+        return nil
+    }
+
+    private var phoneSends: [StubEmbeddedAuthClient.Call] {
+        client.calls.filter { if case .challengePhone = $0 { return true } else { return false } }
+    }
+
+    /// A code is only checked against the last challenge, so a text that a push (or a call) replaced needs a new one.
+    @Test func comingBackToTheTextAfterAPush_textsAgain() async {
+        clock.suspends = true
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone()]),
+                                        Fix.needs([Fix.verifySMS, Fix.challengePhone()])]
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+        let sut = await signIn(afterTheCode: menu([Fix.challengePhone(), Fix.challengePush]), phoneWait: 60)
+
+        list(sut)?.select("sms:0")
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+        list(sut)?.select("push:0")
+        await eventually { pushModel(sut) != nil }
+        pushModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+
+        list(sut)?.select("sms:0")
+        await eventually { codeModel(sut) != nil }
+        await settle()
+        #expect(phoneSends.count == 2)
+        #expect(codeModel(sut)?.resendAvailableIn ?? 0 > 0, "with a wait of its own")
+    }
+
+    @Test func comingBackToTheTextAfterACallToTheSamePhone_textsAgain() async {
+        clock.suspends = true
+        client.challengePhoneResults = [Fix.needs([Fix.verifySMS, Fix.challengePhone()]),
+                                        Fix.needs([Fix.verifyVoice, Fix.challengePhone()]),
+                                        Fix.needs([Fix.verifySMS, Fix.challengePhone()])]
+        let sut = await signIn(afterTheCode: menu([Fix.challengePhone()]), deliveries: [.text, .voice], phoneWait: 60)
+
+        list(sut)?.select("sms:0")
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+        list(sut)?.select("voice:0")
+        await eventually { codeModel(sut)?.delivery == .voice }
+        codeModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+
+        list(sut)?.select("sms:0")
+        await eventually { codeModel(sut)?.delivery == .text }
+        await settle()
+        #expect(phoneSends.count == 3)
     }
 
     // MARK: Voice

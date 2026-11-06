@@ -43,7 +43,7 @@ final class EmbeddedPushTransport: PushTransport {
     func sendPush(to offer: MfaFactorOffer) async throws -> PushPending {
         guard let index = offer.reference else { throw MfaError.unexpected(nil) }
         do {
-            try await gate.run { try await client.challengePush(index: index) }
+            try await gate.run(challenging: offer.id) { try await client.challengePush(index: index) }
         } catch let error as EmbeddedAuthError {
             guard case let .insufficientAuthorization(_, nextActions) = error.reason else {
                 throw EmbeddedMfaErrors.map(error)

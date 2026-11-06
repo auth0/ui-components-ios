@@ -48,9 +48,10 @@ final class PhoneCodeSession: MfaFactorSession {
     }
 
     func start() {
-        // A code went to this phone a moment ago, before the user left and came back: that code is shown again, and no
+        // A code went to this phone a moment ago and nothing was challenged since: that code is shown again, and no
         // new one goes out until its wait is over.
-        if let earlier = ledger.earlier(offer.id, cooldownSeconds: policy.resendCooldownSeconds) {
+        if let earlier = ledger.earlier(offer.id, cooldownSeconds: policy.resendCooldownSeconds),
+           transport.isCodePending(for: offer) {
             send(.resume(canResend: earlier.canResend, resendAvailableIn: earlier.resendAvailableIn))
         } else {
             send(.start)
@@ -87,13 +88,15 @@ final class PhoneCodeSession: MfaFactorSession {
         case let .send(epoch):
             request(epoch, failure: { .sendFailed($0, epoch: epoch) }, call: { session in
                 session.ledger.sending(session.offer.id)
-                let reply = try await session.transport.sendCode(to: session.offer)
+                let reply = try await session.transport.sendCode(to: session.offer,
+                                                                 while: { session.isWanted(epoch) })
                 session.ledger.sent(session.offer.id, canResend: reply.canResend)
                 return .sent(reply, epoch: epoch)
             })
         case let .verify(code, epoch):
             request(epoch, failure: { .verifyFailed($0, epoch: epoch) }, call: { session in
-                let answer = try await session.transport.verify(code: code)
+                let answer = try await session.transport.verify(code: code, for: session.offer,
+                                                                while: { session.isWanted(epoch) })
                 // The code is used up unless it was wrong; the next visit to this phone needs a new one.
                 if case .rejected = answer {} else { session.ledger.forget(session.offer.id) }
                 return .verified(answer, epoch: epoch)
@@ -121,6 +124,8 @@ final class PhoneCodeSession: MfaFactorSession {
         }
     }
 
+    private func isWanted(_ epoch: Int) -> Bool { !isStopped && state.isActive && state.epoch == epoch }
+
     /// One request at a time. Cancelling a Task doesn't cancel its HTTP call, so wait for the last one.
     private func request(_ epoch: Int, failure: @escaping (MfaError) -> PhoneCodeEvent,
                          call: @escaping (PhoneCodeSession) async throws -> PhoneCodeEvent) {
@@ -128,9 +133,11 @@ final class PhoneCodeSession: MfaFactorSession {
         inFlight = Task { [weak self] in
             await previous?.value
             // The user may have left (resent, switched, cancelled) while this waited: then it must not be sent.
-            guard let self, !self.isStopped, self.state.isActive, self.state.epoch == epoch else { return }
+            guard let self, self.isWanted(epoch) else { return }
             do {
                 self.send(try await call(self))
+            } catch is CancellationError {
+                return                                       // the user left while it waited for its turn
             } catch {
                 self.send(failure(.from(error)))
             }

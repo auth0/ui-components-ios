@@ -7,9 +7,13 @@ import Foundation
 final class EmbeddedRequestGate {
     private var isBusy = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
+    /// The offer whose challenge went out last. A code is only ever checked against that one.
+    private(set) var lastChallenge: String?
 
     /// Runs `call` once no other request of this sign-in is on its way. Waiting calls run in the order they arrived.
-    func run<T>(_ call: () async throws -> T) async throws -> T {
+    /// `isWanted` is asked again when the turn comes; if it says no, nothing is sent and `CancellationError` is thrown.
+    func run<T>(challenging offerID: String? = nil, while isWanted: () -> Bool = { true },
+                _ call: () async throws -> T) async throws -> T {
         if isBusy {
             await withCheckedContinuation { waiters.append($0) }    // the finishing request hands its turn over
         } else {
@@ -18,6 +22,8 @@ final class EmbeddedRequestGate {
         defer {
             if waiters.isEmpty { isBusy = false } else { waiters.removeFirst().resume() }
         }
+        guard isWanted() else { throw CancellationError() }
+        if let offerID { lastChallenge = offerID }
         return try await call()
     }
 }

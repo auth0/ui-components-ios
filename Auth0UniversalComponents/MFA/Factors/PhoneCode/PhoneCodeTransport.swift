@@ -22,6 +22,10 @@ enum PhoneCodeVerification: Equatable {
 /// Whoever assembles the flow supplies an implementation (Embedded Login has one). Both calls throw `MfaError`.
 @MainActor
 protocol PhoneCodeTransport {
-    func sendCode(to offer: MfaFactorOffer) async throws -> PhoneCodeSent
-    func verify(code: String) async throws -> PhoneCodeVerification
+    /// `isWanted` is asked again if the request has to wait for its turn; when it says no, nothing is sent.
+    func sendCode(to offer: MfaFactorOffer, while isWanted: () -> Bool) async throws -> PhoneCodeSent
+    func verify(code: String, for offer: MfaFactorOffer, while isWanted: () -> Bool) async throws
+        -> PhoneCodeVerification
+    /// No other challenge was sent since this offer's code.
+    func isCodePending(for offer: MfaFactorOffer) -> Bool
 }
