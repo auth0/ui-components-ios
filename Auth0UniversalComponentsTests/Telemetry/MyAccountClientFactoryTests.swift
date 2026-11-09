@@ -3,7 +3,7 @@ import Foundation
 @testable import Auth0UniversalComponents
 import Auth0
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 struct MyAccountClientFactoryTests {
 
     private let mockDomain = "test-tenant.auth0.com"

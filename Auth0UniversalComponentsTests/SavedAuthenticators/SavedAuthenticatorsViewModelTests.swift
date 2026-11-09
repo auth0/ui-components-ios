@@ -6,7 +6,7 @@ import Auth0
 import Foundation
 import Testing
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 // swiftlint:disable:next type_body_length
 struct SavedAuthenticatorsViewModelTests {
     private let mockToken = "mock_access_token_123"

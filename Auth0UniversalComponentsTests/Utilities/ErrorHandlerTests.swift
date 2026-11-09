@@ -3,7 +3,7 @@ import Foundation
 @testable import Auth0UniversalComponents
 import Auth0
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 struct ErrorHandlerTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"
@@ -28,8 +28,21 @@ struct ErrorHandlerTests {
     }
 
     @MainActor
+    private func initializeSDK() {
+        Auth0UniversalComponentsSDKInitializer.initialize(
+            session: makeMockSession(),
+            bundle: Bundle.main,
+            domain: mockDomain,
+            clientId: mockClientId,
+            audience: mockAudience,
+            tokenProvider: MockTokenProvider()
+        )
+    }
+
+    @MainActor
     @Test("ErrorHandler initializes with default dependencies")
     func testInit_withDefaultDependencies() async throws {
+        initializeSDK()
         _ = ErrorHandler()
         // Test passes if no crash occurs
     }
@@ -245,6 +258,7 @@ struct ErrorHandlerTests {
 
         // Create a simple test error
         let testError = NSError(domain: "TestDomain", code: 1, userInfo: nil)
+        initializeSDK()
         let errorHandler = ErrorHandler()
 
         await errorHandler.handle(

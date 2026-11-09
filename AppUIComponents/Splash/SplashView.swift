@@ -20,14 +20,16 @@ struct SplashView: View {
         .background(theme.colors.background.layerBase)
         .ignoresSafeArea()
         .onAppear {
-            withAnimation(.easeInOut.delay(2)) {
-                navigateToLoginOptions()
-            }
+            navigateToLoginOptions()
         }
     }
-    
+
     // MARK: - Handle navigation
     func navigateToLoginOptions() {
-        router.navigate(to: .loginOptions)
+        // `onAppear` can re-fire on the stack root; only push from an empty path.
+        guard router.path.isEmpty else { return }
+        withAnimation(.easeInOut.delay(2)) {
+            router.navigate(to: .loginOptions)
+        }
     }
 }

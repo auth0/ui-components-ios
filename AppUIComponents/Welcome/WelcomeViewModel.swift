@@ -20,29 +20,34 @@ class WelcomeViewModel: ObservableObject {
     init() {
         self.options = [
             WelcomeOptionsModel(icon: "ic_login_and_security", title: "Login & Security", route: .landing)]
-        userName = credentialsManager.user?.name ?? ""
+        userName = (try? credentialsManager.userProfile())?.name ?? ""
         
         fetchAndUpdateOptions()
     }
     
-    /// Method to perform logout
+    /// Embedded Login has no browser session, so it only clears local credentials.
     func performLogout(withCompletion completion: @escaping () -> Void) {
-        // Clear the web browser cookies
+        guard LoginSession.method != .embedded else {
+            clearLocalSession()
+            completion()
+            return
+        }
+
         Auth0.webAuth()
-            .clearSession(federated: false) { [weak self] result in
+            .logout(federated: false) { [weak self] result in
                 switch result {
-                case .success(_):
-                    
-                    // Clears the crendtials stored in keychain after the web session is successfully cleared
-                    _ = self?.credentialsManager.clear()
-                    
+                case .success:
+                    self?.clearLocalSession()
                     completion()
-                    break
                 case .failure(let error):
                     debugPrint("Error: \(error.localizedDescription)")
-                    break
                 }
             }
+    }
+
+    private func clearLocalSession() {
+        try? credentialsManager.clear()
+        LoginSession.clear()
     }
     
     /// Method to fetch available options
@@ -52,7 +57,7 @@ class WelcomeViewModel: ObservableObject {
     }
     
     func checkAndAddProfileOption() {
-        let user = credentialsManager.user
+        let user = try? credentialsManager.userProfile()
         let displayName = user?.name ?? user?.email ?? ""
         options.append(WelcomeOptionsModel(
             icon: "ic_person",

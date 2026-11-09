@@ -80,6 +80,15 @@ public class Router<Route: Hashable>: ObservableObject {
         }
     }
 
+    /// Replaces the top destination with `route` in one path mutation (appends at the root).
+    /// Prefer this over `pop()` + `navigate(to:)`, which `NavigationStack` can mis-diff into a double push.
+    public func replaceTop(with route: Route) {
+        var newPath = externalPath?.wrappedValue ?? path
+        if !newPath.isEmpty { newPath.removeLast() }
+        newPath.append(route)
+        if let externalPath { externalPath.wrappedValue = newPath } else { path = newPath }
+    }
+
     /// Pops only the routes pushed by the SDK, returning to `MyAccountAuthMethodsView`.
     ///
     /// In standalone mode, clears the entire internal path so the root content

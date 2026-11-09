@@ -11,7 +11,8 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
-        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "2.21.0")
+        // Embedded Login MFA (Guardian push) needs the Flow 2 APIs, first shipped in this beta.
+        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "4.0.0-beta.1")
     ],
     targets: [
         .target(
@@ -21,7 +22,9 @@ let package = Package(
             ],
             path: "Auth0UniversalComponents",
             exclude: ["Info.plist"],
-            resources: [.copy("PrivacyInfo.xcprivacy"), .process("Resources/Media/Media.xcassets"), .process("Resources/Colors/Colors.xcassets"), .copy("Resources/Fonts")],
+            resources: [.copy("PrivacyInfo.xcprivacy"), .process("Resources/Media/Media.xcassets"), .process("Resources/Colors/Colors.xcassets"), .copy("Resources/Fonts"),
+                        // The phone field's country list; without it the picker is empty under SwiftPM.
+                        .copy("Core/Utils/CountryCodePicker/CountryCodes.json")],
             swiftSettings: swiftSettings),
         .testTarget(
             name: "Auth0UniversalComponentsTests",

@@ -5,9 +5,11 @@ struct LoginOptionsView: View {
 
     // MARK: - Properties
     @StateObject private var viewModel: LoginOptionsViewModel
-    @State private var selectedOption: LoginOption? = .hostedLogin
+    @State private var selectedOption: LoginOption? = .embeddedLogin
     @State private var showAlert: Bool = false
     @State private var showComingSoonDialog: Bool = false
+    /// `.task` re-runs on re-insertion; resolve the initial route only once to avoid a double push.
+    @State private var didResolveInitialRoute = false
 
     // MARK: - Router
     @EnvironmentObject var router: Router<SampleAppRoute>
@@ -53,7 +55,6 @@ struct LoginOptionsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: theme.sizes.buttonHeight)
-                    .padding(.bottom, theme.spacing.xl)
                     .padding(.top, theme.spacing.xxs)
                 }
             }
@@ -68,6 +69,10 @@ struct LoginOptionsView: View {
         .navigationBarBackButtonHidden()
         #endif
         .task {
+            // Set before the first `await` so a re-entrant run is a no-op.
+            guard !didResolveInitialRoute else { return }
+            didResolveInitialRoute = true
+
             let route = await viewModel.checkAuthentication()
 
             if let route = route {
@@ -91,6 +96,8 @@ struct LoginOptionsView: View {
         }
         .onReceive(viewModel.$navigationRoute) { route in
             guard let route = route else { return }
+            // Consume it: `@Published` replays its value to each re-subscription, which would push again.
+            viewModel.navigationRoute = nil
             router.navigate(to: route)
         }
     }
@@ -167,6 +174,8 @@ struct LoginOptionsView: View {
                         switch selectedOption {
                         case .hostedLogin:
                             viewModel.performUniversalLogin()
+                        case .embeddedLogin:
+                            viewModel.performEmbeddedLogin()
                         default:
                             showComingSoonDialog = true
                         }
@@ -213,10 +222,8 @@ struct LoginOptionsView: View {
                     )
             }
             .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
-            .disabled(option.type == .embeddedLogin)
-            .opacity(option.type != .embeddedLogin ? 1 : 0.4)
             .onTapGesture {
-                guard !viewModel.isLoading, option.type != .embeddedLogin else { return }
+                guard !viewModel.isLoading else { return }
                 selectedOption = option.type
             }
     }
