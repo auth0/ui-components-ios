@@ -37,4 +37,16 @@ extension View {
         self
         #endif
     }
+
+    /// Phone keypad, offering the user's own number for autofill.
+    @ViewBuilder
+    func phoneInput() -> some View {
+        #if os(iOS) || os(visionOS)
+        self.keyboardType(.phonePad)
+            .textContentType(.telephoneNumber)
+            .autocorrectionDisabled(true)
+        #else
+        self
+        #endif
+    }
 }

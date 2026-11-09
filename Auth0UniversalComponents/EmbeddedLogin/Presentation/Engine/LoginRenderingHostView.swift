@@ -22,12 +22,10 @@ struct LoginRenderingHostView: View {
 
     private let renderer = LoginRenderer() // TODO: Move into a view model.
 
-    /// Called once credentials are stored in the Keychain.
-    private let onAuthenticated: () -> Void
-
-    init(interactor: any AuthInteracting, onAuthenticated: @escaping () -> Void = {}) {
-        _coordinator = StateObject(wrappedValue: LoginFlowCoordinator(interactor: interactor))
-        self.onAuthenticated = onAuthenticated
+    /// `interactor` is built once, with the coordinator: a parent re-rendering doesn't build another.
+    init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil) {
+        _coordinator = StateObject(
+            wrappedValue: LoginFlowCoordinator(interactor: interactor(), additionalStep: additionalStep))
     }
 
     var body: some View {
@@ -41,8 +39,7 @@ struct LoginRenderingHostView: View {
         // Horizontal only, so backgrounds still reach under the home indicator.
         .clipShape(HorizontalClip())
         .safeAreaInset(edge: .top, spacing: 0) {
-            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting && !coordinator.isDrainingPush,
-                               onBack: handleBack)
+            LoginNavigationBar(title: "Log in", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
         }
         .systemNavigationBarHidden()
         .task {
@@ -54,7 +51,6 @@ struct LoginRenderingHostView: View {
         }
         .onChangeCompat(of: coordinator.step) { newStep in
             trackInputStep(newStep)
-            if case .authenticated = newStep { onAuthenticated() }
             syncDisplay()
         }
     }
@@ -67,13 +63,13 @@ struct LoginRenderingHostView: View {
     }
 
     private var currentPlan: ScreenPlan {
-        renderer.plan(for: displayStep)
+        renderer.plan(for: displayStep, channels: coordinator.channels)
     }
 
     private var context: RenderContext {
         RenderContext(
-            pushController: coordinator.pushController,
-            email: coordinator.enteredEmail,
+            additionalStepView: coordinator.additionalStep?.view,
+            identifier: coordinator.enteredIdentifier,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
             dispatch: { send($0) },

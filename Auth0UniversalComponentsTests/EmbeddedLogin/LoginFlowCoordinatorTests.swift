@@ -17,8 +17,12 @@ struct LoginFlowCoordinatorTests {
     private func atCodeEntry(_ interactor: ScriptedAuthInteractor) async -> LoginFlowCoordinator {
         let sut = LoginFlowCoordinator(interactor: interactor)
         await sut.send(.start)
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
         return sut
+    }
+
+    private func startOTPCount(_ interactor: ScriptedAuthInteractor) -> Int {
+        interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", identifier: .email(email)) }.count
     }
 
     // MARK: Discovery
@@ -26,7 +30,7 @@ struct LoginFlowCoordinatorTests {
     @Test func emailOption_advancesToIdentifier() async {
         let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: emailDiscovery()))
         await sut.send(.start)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     @Test func noOptions_reportsNoMethods() async {
@@ -47,7 +51,7 @@ struct LoginFlowCoordinatorTests {
             startOTP: .success(())
         )
         _ = await atCodeEntry(interactor)
-        #expect(interactor.receivedRequests.contains(.startOTP(connection: "first", email: email)))
+        #expect(interactor.receivedRequests.contains(.startOTP(connection: "first", identifier: .email(email))))
     }
 
     @Test func discoveryFailure_retry_reRunsDiscovery() async {
@@ -60,7 +64,7 @@ struct LoginFlowCoordinatorTests {
         interactor.discoverResult = emailDiscovery()
         await sut.send(.retry)
         #expect(interactor.receivedRequests == [.discover, .discover])
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     // MARK: Email OTP
@@ -69,12 +73,12 @@ struct LoginFlowCoordinatorTests {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
                                                 verifyOTP: .success(.authenticated))
         let sut = await atCodeEntry(interactor)
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
 
         await sut.send(.submitOTP(code: "112233"))
         #expect(sut.step == .authenticated)
         #expect(interactor.receivedRequests == [
-            .discover, .startOTP(connection: "email", email: email), .verifyOTP(code: "112233"),
+            .discover, .startOTP(connection: "email", identifier: .email(email)), .verifyOTP(code: "112233"),
         ])
     }
 
@@ -83,8 +87,8 @@ struct LoginFlowCoordinatorTests {
         let sut = await atCodeEntry(interactor)
 
         await sut.resendOTP()
-        #expect(sut.step == .collectOTPCode(identifier: email))
-        #expect(interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", email: email) }.count == 2)
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(startOTPCount(interactor) == 2)
     }
 
     @Test func startOTPFailure_retry_returnsToIdentifier() async {
@@ -94,23 +98,23 @@ struct LoginFlowCoordinatorTests {
         #expect(sut.step == .failed(message: "network down"))
 
         await sut.send(.retry)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
 
         interactor.startOTPResult = .success(())
-        await sut.send(.submitIdentifier(email))
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        await sut.send(.submitIdentifier(.email(email)))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
     }
 
     @Test func codeNotSent_staysOnIdentifierWithInlineError() async {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(),
                                                 startOTP: .failure(AuthFailure.codeNotSent))
         let sut = await atCodeEntry(interactor)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
         #expect(sut.inputError == .codeNotSent)
 
         interactor.startOTPResult = .success(())
-        await sut.send(.submitIdentifier(email))
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        await sut.send(.submitIdentifier(.email(email)))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
         #expect(sut.inputError == nil)
     }
 
@@ -130,7 +134,7 @@ struct LoginFlowCoordinatorTests {
         let sut = await atCodeEntry(interactor)
 
         await sut.send(.submitOTP(code: "000000"))
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
         #expect(sut.inputError == failure)
     }
 
@@ -144,7 +148,7 @@ struct LoginFlowCoordinatorTests {
         #expect(sut.inputError == nil)
 
         await sut.send(.retry)
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
     }
 
     @Test func resubmit_clearsInlineError() async {
@@ -165,13 +169,13 @@ struct LoginFlowCoordinatorTests {
     @Test func back_fromCodeEntry_returnsToIdentifier() async {
         let sut = await atCodeEntry(ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(())))
         #expect(sut.goBack() == .movedBack)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     @Test func back_fromCodeEntry_keepsTheEmail() async {
         let sut = await atCodeEntry(ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(())))
         sut.goBack()
-        #expect(sut.enteredEmail == email)
+        #expect(sut.enteredIdentifier == .email(email))
     }
 
     @Test func failedSubmit_retry_keepsTheTypedEmail() async {
@@ -179,8 +183,8 @@ struct LoginFlowCoordinatorTests {
                                              startOTP: .failure(Scripted.scripted(message: "network down")))
         let sut = await atCodeEntry(failing)
         await sut.send(.retry)
-        #expect(sut.step == .collectOTPIdentifier)
-        #expect(sut.enteredEmail == email)
+        #expect(sut.step == .collectOTPIdentifier(.email))
+        #expect(sut.enteredIdentifier == .email(email))
     }
 
     @Test func back_fromIdentifier_exitsFlow() async {
@@ -242,14 +246,14 @@ struct LoginFlowCoordinatorTests {
         let sut = LoginFlowCoordinator(interactor: interactor)
         await sut.send(.start)
 
-        let first = Task { await sut.send(.submitIdentifier(email)) }
+        let first = Task { await sut.send(.submitIdentifier(.email(email))) }
         await interactor.waitUntilHeld(.startOTP)
-        await sut.send(.submitIdentifier(email))
+        await sut.send(.submitIdentifier(.email(email)))
 
         interactor.release(.startOTP)
         await first.value
-        #expect(interactor.receivedRequests == [.discover, .startOTP(connection: "email", email: email)])
-        #expect(sut.step == .collectOTPCode(identifier: email))
+        #expect(interactor.receivedRequests == [.discover, .startOTP(connection: "email", identifier: .email(email))])
+        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
     }
 
     @Test func doubleSubmitOTP_verifiesOnce() async {
@@ -266,7 +270,7 @@ struct LoginFlowCoordinatorTests {
         interactor.release(.verifyOTP)
         await first.value
         #expect(interactor.receivedRequests.filter { $0 == .verifyOTP(code: "112233") }.count == 1)
-        #expect(interactor.receivedRequests.filter { $0 == .startOTP(connection: "email", email: email) }.count == 1)
+        #expect(startOTPCount(interactor) == 1)
         #expect(sut.step == .authenticated)
     }
 
@@ -281,6 +285,6 @@ struct LoginFlowCoordinatorTests {
         #expect(sut.step == .failed(message: "We couldn't save your sign-in on this device. Please try again."))
 
         await sut.send(.retry)
-        #expect(sut.step == .collectOTPIdentifier)
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 }

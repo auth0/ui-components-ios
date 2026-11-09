@@ -23,7 +23,7 @@ extension View {
 
     /// Padding and background for an input screen. Only the background ignores the safe area.
     /// - Parameters:
-    ///   - horizontalPadding: Side margin; defaults to `spacing.lg`. Second-factor screens use `spacing.xl`.
+    ///   - horizontalPadding: Side margin; defaults to `spacing.lg`. Factor screens use `spacing.xl`.
     ///   - topPadding: Space under the navigation bar; defaults to `spacing.lg`.
     func embeddedScreenChrome(theme: Auth0Theme, horizontalPadding: CGFloat? = nil,
                               topPadding: CGFloat? = nil) -> some View {

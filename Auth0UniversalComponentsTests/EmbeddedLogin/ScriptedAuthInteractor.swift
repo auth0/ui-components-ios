@@ -12,7 +12,7 @@ final class ScriptedAuthInteractor: AuthInteracting {
 
     enum Request: Equatable {
         case discover
-        case startOTP(connection: String, email: String)
+        case startOTP(connection: String, identifier: LoginIdentifier)
         case verifyOTP(code: String)
     }
 
@@ -32,10 +32,9 @@ final class ScriptedAuthInteractor: AuthInteracting {
 
     var discoverResult: Result<[LoginOption], Error>?
     var startOTPResult: Result<Void, Error>?
+    /// What a successful `startOTP` says the code went to (the server's masked number).
+    var startOTPSentTo: String?
     var verifyOTPResult: Result<AuthProgress, Error>?
-    /// What `makeGuardianPushClient()` hands out.
-    var pushClient = AnyGuardianPushClient<Void>(sendPush: { _ in GuardianPushPending(retryAfter: 1_000) },
-                                                  checkApproval: { .approved(()) })
 
     var held: Set<Call> = []
     private var gates: [Call: CheckedContinuation<Void, Never>] = [:]
@@ -56,10 +55,12 @@ final class ScriptedAuthInteractor: AuthInteracting {
         return try resolve(discoverResult, call: "discover")
     }
 
-    func startOTP(connection: String, email: String) async throws {
-        receivedRequests.append(.startOTP(connection: connection, email: email))
+    @discardableResult
+    func startOTP(connection: String, identifier: LoginIdentifier) async throws -> String? {
+        receivedRequests.append(.startOTP(connection: connection, identifier: identifier))
         await gate(.startOTP)
         try resolve(startOTPResult, call: "startOTP")
+        return startOTPSentTo
     }
 
     func verifyOTP(code: String) async throws -> AuthProgress {
@@ -67,8 +68,6 @@ final class ScriptedAuthInteractor: AuthInteracting {
         await gate(.verifyOTP)
         return try resolve(verifyOTPResult, call: "verifyOTP")
     }
-
-    func makeGuardianPushClient() -> AnyGuardianPushClient<Void> { pushClient }
 
     /// Suspends until `call` is held at its gate.
     func waitUntilHeld(_ call: Call) async {

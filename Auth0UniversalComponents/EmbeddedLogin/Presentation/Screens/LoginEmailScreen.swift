@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Collects the email the code is sent to.
+/// Collects the email the code is sent to. Continue sits at the bottom of the screen.
 public struct LoginEmailScreen: View {
     let title: String
     let isLoading: Bool
@@ -10,9 +10,6 @@ public struct LoginEmailScreen: View {
 
     @Environment(\.auth0Theme) private var theme
     @State private var email: String
-    @State private var validationError: String?
-    @State private var suppressServerError = false
-    @FocusState private var isFocused: Bool
 
     public init(title: String = "Enter your email to get started",
                 email: String = "",
@@ -26,46 +23,13 @@ public struct LoginEmailScreen: View {
         self.onContinue = onContinue
     }
 
-    private var activeError: String? { validationError ?? (suppressServerError ? nil : errorMessage) }
-
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             LoginScreenHeader(title: title)
-
-            LoginFieldLabel("Email")
-            LoginInputField(isInvalid: activeError != nil) {
-                TextField("", text: $email)
-                    .emailInput()
-                    .focused($isFocused)
-                    .onSubmit(submit)
-            }
-
-            if let activeError {
-                LoginInlineError(activeError)
-                    .padding(.top, theme.spacing.xs)
-            }
-
-            Spacer(minLength: theme.spacing.xl)
-
-            LoginPrimaryButton("Continue", isLoading: isLoading, isEnabled: !email.isEmpty, action: submit)
+            LoginEmailForm(email: $email, isLoading: isLoading, serverError: errorMessage, pinsContinueToBottom: true,
+                           onContinue: onContinue)
         }
         .embeddedScreenChrome(theme: theme)
-        .onAppear { isFocused = true }
-        .onChangeCompat(of: email) { _ in
-            validationError = nil
-            suppressServerError = true
-        }
-        .onChangeCompat(of: errorMessage) { if $0 != nil { suppressServerError = false } }
-    }
-
-    private func submit() {
-        // Return on the keyboard bypasses the button's loading guard.
-        guard !isLoading else { return }
-        guard EmailValidator.isValid(email) else {
-            validationError = "Please enter a valid email address."
-            return
-        }
-        onContinue(email.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 }
 
@@ -74,5 +38,5 @@ public struct LoginEmailScreen: View {
 }
 
 #Preview("Email – send failed") {
-    LoginEmailScreen(email: "sarah.doe@atko.email", errorMessage: AuthFailure.codeNotSent.message) { _ in }
+    LoginEmailScreen(email: "sarah.doe@atko.email", errorMessage: AuthFailure.codeNotSent.message(for: .email)) { _ in }
 }

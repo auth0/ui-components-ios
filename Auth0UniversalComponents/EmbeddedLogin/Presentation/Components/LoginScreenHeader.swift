@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Screen title with an optional subtitle and "Edit" action.
+/// Screen title with an optional subtitle and "Edit" action. A masked subtitle (`From (4**)***-*900`) draws its `*`
+/// smaller and top-aligned.
 public struct LoginScreenHeader: View {
     let title: String
     let subtitle: String?
@@ -22,10 +23,11 @@ public struct LoginScreenHeader: View {
                 .auth0TextStyle(theme.typography.body)
                 .foregroundStyle(theme.colors.text.bold)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
 
             if let subtitle {
                 HStack(spacing: theme.spacing.sm) {
-                    Text(subtitle)
+                    MaskedText(subtitle)
                         .auth0TextStyle(theme.typography.body)
                         .foregroundStyle(theme.colors.text.regular)
                         .lineLimit(1)

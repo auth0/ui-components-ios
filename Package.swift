@@ -22,7 +22,9 @@ let package = Package(
             ],
             path: "Auth0UniversalComponents",
             exclude: ["Info.plist"],
-            resources: [.copy("PrivacyInfo.xcprivacy"), .process("Resources/Media/Media.xcassets"), .process("Resources/Colors/Colors.xcassets"), .copy("Resources/Fonts")],
+            resources: [.copy("PrivacyInfo.xcprivacy"), .process("Resources/Media/Media.xcassets"), .process("Resources/Colors/Colors.xcassets"), .copy("Resources/Fonts"),
+                        // The phone field's country list; without it the picker is empty under SwiftPM.
+                        .copy("Core/Utils/CountryCodePicker/CountryCodes.json")],
             swiftSettings: swiftSettings),
         .testTarget(
             name: "Auth0UniversalComponentsTests",
