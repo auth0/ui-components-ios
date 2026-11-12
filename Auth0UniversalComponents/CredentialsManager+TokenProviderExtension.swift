@@ -19,7 +19,8 @@ extension CredentialsManager: TokenProvider {
     ///
     /// - Parameter credentials: The credentials to store
     public func storeCredentials(credentials: Credentials) {
-        _ = store(credentials: credentials)
+        // Non-throwing conformance; failures are ignored as before.
+        try? store(credentials: credentials)
     }
 
     /// Stores API credentials for a specific audience and scope in the credentials manager.
@@ -29,7 +30,8 @@ extension CredentialsManager: TokenProvider {
     ///   - audience: The API audience (e.g., "https://api.example.com")
     ///   - scope: The scopes associated with the credentials (space-separated)
     public func store(apiCredentials: APICredentials, for audience: String, andScope scope: String) {
-        _ = store(apiCredentials: apiCredentials, forAudience: audience, forScope: scope)
+        // Non-throwing conformance; failures are ignored as before.
+        try? store(apiCredentials: apiCredentials, forAudience: audience, forScope: scope)
     }
 
     /// Fetches API credentials for a specific audience and scope from the credentials manager.

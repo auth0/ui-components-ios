@@ -4,7 +4,7 @@ import Auth0
 import Testing
 import AuthenticationServices
 
-@Suite(.serialized)
+@Suite(.serialized, .mockNetwork)
 struct PasskeysEnrollmentViewModelTests {
     private let mockToken = "mock_access_token_123"
     private let mockDomain = "test-tenant.auth0.com"

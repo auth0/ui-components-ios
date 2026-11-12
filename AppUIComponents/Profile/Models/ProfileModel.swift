@@ -1,5 +1,4 @@
 import Foundation
-import Auth0
 
 public struct ProfileModel: Hashable {
     // MARK: - Properties
@@ -18,14 +17,5 @@ public struct ProfileModel: Hashable {
         self.email = email
         self.emailVerified = emailVerified
         self.lastUpdatedAt = lastUpdatedAt
-    }
-    
-    init(fromUserInfo userInfo: UserInfo, withName name: String) {
-        self.name = name
-        self.givenName = userInfo.givenName
-        self.familyName = userInfo.familyName
-        self.email = userInfo.email
-        self.emailVerified = userInfo.emailVerified
-        self.lastUpdatedAt = userInfo.updatedAt
     }
 }
