@@ -51,6 +51,8 @@ protocol EmbeddedAuthClient {
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials
     func challengePush(index: Int) async throws
     func verifyOob() async throws -> Credentials
+    func verifyRecoveryCode(_ code: String) async throws
+    func confirmRecoveryCode() async throws -> Credentials
 }
 
 struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
@@ -93,6 +95,8 @@ struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
     }
     func challengePush(index: Int) async throws { try await auth.challengePush(index: index).start() }
     func verifyOob() async throws -> Credentials { try await auth.verifyOob().start() }
+    func verifyRecoveryCode(_ code: String) async throws { try await auth.verifyRecoveryCode(code).start() }
+    func confirmRecoveryCode() async throws -> Credentials { try await auth.confirmRecoveryCode().start() }
 }
 
 /// Where a finished sign-in's credentials go. The SDK keeps nothing: the app that embeds the login receives them.

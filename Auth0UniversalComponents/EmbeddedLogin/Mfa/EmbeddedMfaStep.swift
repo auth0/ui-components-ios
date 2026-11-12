@@ -23,7 +23,8 @@ final class EmbeddedMfaStep: ObservableObject, AdditionalStepProviding {
         self.configuration = configuration
         self.clock = clock
         self.bindings = bindings ?? [EmbeddedPushBinding(), EmbeddedPhoneCodeBinding(delivery: .text),
-                                 EmbeddedPhoneCodeBinding(delivery: .voice)]
+                                 EmbeddedPhoneCodeBinding(delivery: .voice),
+                                 EmbeddedRecoveryCodeBinding()]
     }
 
     /// What to advertise to `authorize` so the server only routes to factors that are plugged in.

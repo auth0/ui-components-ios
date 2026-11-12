@@ -64,6 +64,8 @@ final class GatedEmbeddedAuthClient: EmbeddedAuthClient {
     func challengeEmail(index: Int) async throws { throw Fix.noActiveSession }
     func challengePhone(index: Int, deliveryMethod: PhoneDeliveryMethod) async throws { throw Fix.noActiveSession }
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials { throw Fix.noActiveSession }
+    func verifyRecoveryCode(_ code: String) async throws { throw Fix.noActiveSession }
+    func confirmRecoveryCode() async throws -> Credentials { throw Fix.noActiveSession }
 
     private func begin(_ call: Call) {
         calls.append(call)

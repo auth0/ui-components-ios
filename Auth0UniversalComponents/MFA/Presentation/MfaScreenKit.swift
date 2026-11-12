@@ -18,6 +18,14 @@ typealias MfaCodeHeader = LoginScreenHeader
 typealias MfaCodeEntryForm<Actions: View> = CodeEntryForm<Actions>
 /// A value as the server masked it, with each `*` drawn small and top-aligned.
 typealias MfaMaskedText = MaskedText
+/// A label, a field for a secret the user types (hidden, with an eye to show it) and its error.
+typealias MfaSecretField = LoginSecretField
+/// A label, a value shown rather than typed, and a button that copies it with a brief "Copied" bubble.
+typealias MfaCopyField = LoginCopyField
+/// A box and its label that toggle together.
+typealias MfaCheckbox = LoginCheckbox
+/// Red helper text under a field.
+typealias MfaInlineError = LoginInlineError
 
 extension View {
     /// Padding and background for an MFA screen.

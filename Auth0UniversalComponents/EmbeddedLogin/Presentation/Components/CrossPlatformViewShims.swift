@@ -38,6 +38,17 @@ extension View {
         #endif
     }
 
+    /// No autocorrect or autocapitalization, for a code the user copied or wrote down.
+    @ViewBuilder
+    func secretInput() -> some View {
+        #if os(iOS) || os(visionOS)
+        self.textInputAutocapitalization(.never)
+            .autocorrectionDisabled(true)
+        #else
+        self.autocorrectionDisabled(true)
+        #endif
+    }
+
     /// Phone keypad, offering the user's own number for autofill.
     @ViewBuilder
     func phoneInput() -> some View {
