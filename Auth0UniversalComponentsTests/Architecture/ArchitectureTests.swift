@@ -56,6 +56,7 @@ struct ArchitectureTests {
         #expect(try code(in: "EmbeddedLogin/Domain").count >= 4)
         #expect(try code(in: "MFA/Factors/Push").count >= 5)
         #expect(try code(in: "MFA/Factors/PhoneCode").count >= 7)
+        #expect(try code(in: "MFA/Factors/EmailCode").count >= 5)
         #expect(Self.factorFolders.count >= 2, "\(Self.factorFolders)")
         #expect(try code(in: "EmbeddedLogin").count >= 10)
     }
@@ -105,6 +106,16 @@ struct ArchitectureTests {
             let found = try violations(in: code(in: folder), matching: #"URLSession|URLRequest|\.authorize\(|challengePush\(|verifyOob\(|challengePhone\(|verifyOtp\("#)
             #expect(found.isEmpty, "\(folder): \(found)")
         }
+    }
+
+    /// The email factor runs on the phone code engine as it is. One file says so; the rest of the folder speaks only of
+    /// email, so renaming the engine later touches that file alone.
+    @Test func emailCode_namesThePhoneCodeEngine_onlyInItsSeam() throws {
+        let rest = try code(in: "MFA/Factors/EmailCode", except: ["EmailCodeEngine.swift"])
+        let found = try violations(in: rest, matching: #"\bPhone[A-Z]\w*"#)
+        #expect(found.isEmpty, "\(found)")
+        let seam = try code(in: "MFA/Factors/EmailCode").filter { $0.file == "EmailCodeEngine.swift" }
+        #expect(seam.count == 1, "the rule would pass vacuously if the seam were renamed")
     }
 
     @Test func screenKit_isTheOnlyCorePresentationFileThatNamesSharedComponents() throws {
