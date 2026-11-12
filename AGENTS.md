@@ -267,6 +267,19 @@ Embedded Login (email or SMS code) and MFA are separate layers. `ArchitectureTes
 4. **Security**: Secure handling of OTP codes, tokens, and recovery codes
 5. **Cross-Platform**: Works seamlessly on iOS, macOS, and visionOS
 
+### Loading Indicators
+
+When the user triggers a request (Continue, Verify, Send, Resend), show progress **on the button that triggered it**, and
+keep the screen as it is. This is the same everywhere in the flow, so no screen feels different from the next.
+
+- Use the button's loader: `LoginPrimaryButton(_, isLoading:)` (`MfaPrimaryButton` in MFA screens). The shared
+  `CodeEntryForm(isVerifying:)` already does this, and also locks the digit boxes.
+- Lock what the request makes meaningless (inputs, the other actions on the screen) instead of hiding it.
+- Don't replace a screen's content with a full-screen or centered spinner, and don't add a "verifying" body or view for
+  an action. A new factor's code screen is `CodeEntryForm` with `isVerifying` bound to the model.
+- Existing exceptions are not action loaders and stay as they are: the Core's `MfaLoadingScreen` (a step with nothing
+  to show yet) and the push waiting screen (a waiting state the design specifies).
+
 ### ViewModel Guidelines
 
 ```swift
