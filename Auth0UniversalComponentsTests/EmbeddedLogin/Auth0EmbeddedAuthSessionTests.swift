@@ -70,6 +70,45 @@ struct Auth0EmbeddedAuthSessionTests {
         await #expect(throws: AuthFailure.tooManyAttempts) { try await sut.verifyPassword("first") }
     }
 
+    // MARK: A re-open that doesn't get through
+
+    @Test func aReopenThatTheServerRefuses_isTriedAgainOnTheNextPassword() async throws {
+        script()
+        // The sign-in opens, the password is limited, the re-open is limited at identify, the next re-open works.
+        client.scripted.identifyResults = [Fix.needs([Fix.verifyPassword, Fix.challengeEmail]), Fix.rateLimited,
+                                           Fix.needs([Fix.verifyPassword, Fix.challengeEmail])]
+        client.scripted.verifyPasswordResults = [.failure(Fix.rateLimited), .success(Credentials(accessToken: "pw"))]
+        let sut = makeSUT()
+        _ = try await sut.identify(connection: "db", identifier: .email(email))
+        _ = try? await sut.verifyPassword("first")
+
+        await #expect(throws: AuthFailure.tooManyAttempts) { try await sut.verifyPassword("second") }
+        #expect(try await sut.verifyPassword("third") == .authenticated)
+
+        #expect(client.calls == [
+            .authorize(connection: "db"), .identify(email, type: .email), .verifyPassword("first"),
+            .authorize(connection: "db"), .identify(email, type: .email),
+            .authorize(connection: "db"), .identify(email, type: .email), .verifyPassword("third")
+        ], "the password is never sent on a sign-in the server hasn't identified")
+    }
+
+    @Test func aReopenThatLosesTheConnection_identifiesAgainBeforeThePassword() async throws {
+        script()
+        client.scripted.identifyResults = [Fix.needs([Fix.verifyPassword, Fix.challengeEmail]), Fix.network,
+                                           Fix.needs([Fix.verifyPassword, Fix.challengeEmail])]
+        client.scripted.verifyPasswordResults = [.failure(Fix.rateLimited), .success(Credentials(accessToken: "pw"))]
+        let sut = makeSUT()
+        _ = try await sut.identify(connection: "db", identifier: .email(email))
+        _ = try? await sut.verifyPassword("first")
+
+        await #expect(throws: (any Error).self) { try await sut.verifyPassword("second") }
+        #expect(try await sut.verifyPassword("third") == .authenticated)
+
+        #expect(client.calls.suffix(3) == [
+            .identify(email, type: .email), .identify(email, type: .email), .verifyPassword("third")
+        ], "the sign-in lived, so it is identified again rather than opened again")
+    }
+
     // MARK: A code after the sign-in ended
 
     @Test func aCode_afterAPasswordRateLimit_startsFromTheTop() async throws {

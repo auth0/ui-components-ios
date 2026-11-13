@@ -22,6 +22,14 @@ enum LoginStep: Equatable {
     case authenticated
     case failed(message: String)
     case noMethodsAvailable
+
+    /// Whether the user types or taps here, as opposed to waiting or being told something.
+    var isInputScreen: Bool {
+        switch self {
+        case .collectOTPIdentifier, .collectOTPCode, .collectPassword: return true
+        default: return false
+        }
+    }
 }
 
 /// User input the renderer sends back to the coordinator.

@@ -1,7 +1,7 @@
 import Foundation
 
-/// A way to sign in: what the identifier screen asks for, and what follows it. An email or a phone number is sent a
-/// code; a username is followed by the password.
+/// A way to sign in: what the identifier screen asks for. An email or a phone number is followed by a code or a
+/// password, whichever the server offers (see `IdentifierOutcome`); a username is followed by its password.
 enum LoginChannel: Hashable, Sendable {
     case email
     case phone

@@ -27,30 +27,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
     private let connection: String?
     private let preference: EmbeddedLoginPreference
 
-    /// Who a sign-in is for and the connection it was opened on: what it takes to open it again.
-    private struct Identity: Equatable {
-        let identifier: LoginIdentifier
-        let connection: String
-    }
-
-    /// Where the sign-in stands with the server, in one place. The SDK ends it on every failure except a continuation
-    /// or a network error (`record(_:)`), so this says whether there is anything left to continue.
-    private enum Loop: Equatable {
-        /// Nothing to continue: the next identifier opens a sign-in.
-        case closed
-        /// `authorize` is done (by discovery) and nobody is identified yet.
-        case opened
-        /// The server has the identifier and has said everything it offers (`lastNextActions`).
-        case identified(Identity)
-        /// Alive, but a wrong password narrowed the offer to the password alone, so a code needs a new sign-in.
-        case passwordOnly(Identity)
-        /// A code was sent on this sign-in, which is where it is checked.
-        case codeSent(Identity)
-        /// The server ended it. Only a new sign-in for the same person continues.
-        case ended(Identity)
-    }
-
-    private var loop: Loop = .closed
+    private var loop: SignInLoop = .closed
     /// What the server offered last.
     private var lastNextActions: [NextAction] = []
 
@@ -82,12 +59,12 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
     func discover() async throws -> [LoginOption] {
         guard let connection else { throw Auth0EmbeddedAuthError.discoveryConnectionMissing }
         try await runStep { try await client.authorize(connection: connection) }
-        loop = .opened
+        loop = .opened(nil)
         return lastNextActions.map { Self.option(for: $0, connection: connection) }
     }
 
     func identify(connection: String, identifier: LoginIdentifier) async throws -> IdentifierOutcome {
-        try await submit(Identity(identifier: identifier, connection: connection))
+        try await submit(SignInIdentity(identifier: identifier, connection: connection))
         let password = lastNextActions.firstIndex(of: .verifyPassword)
         let code = lastNextActions.firstIndex { offersCode($0, to: identifier) }
         switch (code, password) {
@@ -105,7 +82,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
 
     @discardableResult
     func startOTP(connection: String, identifier: LoginIdentifier) async throws -> String? {
-        let identity = Identity(identifier: identifier, connection: connection)
+        let identity = SignInIdentity(identifier: identifier, connection: connection)
         let destination: String?
         switch identifier {
         case .email:
@@ -129,8 +106,9 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
     }
 
     func verifyPassword(_ password: String) async throws -> AuthProgress {
-        // The server ended the sign-in (a rate limit, a breach, a timeout): the password goes on a new one.
-        if case let .ended(identity) = loop { try await submit(identity) }
+        // Anything but a sign-in the server has identified (it ended on a rate limit, a breach or a timeout, or a
+        // re-open stopped half way) gets a new one for the same person first.
+        if let identity = loop.identity, !loop.isReadyForPassword { try await submit(identity) }
         do {
             return try await settle(attempt: { try await client.verifyPassword(password) },
                                     rejection: Self.rejectedPassword)
@@ -226,17 +204,18 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
 
     /// `identify` is good for one code: a code right after it goes on the same sign-in, and anything else (a resend, or
     /// a code after a wrong password or an ended sign-in) starts over.
-    private func continueOrReopen(_ identity: Identity) async throws {
+    private func continueOrReopen(_ identity: SignInIdentity) async throws {
         if loop != .identified(identity) { try await submit(identity) }
     }
 
     /// Opens the sign-in (the one `discover()` opened, the first time) and submits who it is for, keeping what the
     /// server asks for next.
-    private func submit(_ identity: Identity) async throws {
-        if loop != .opened {
+    private func submit(_ identity: SignInIdentity) async throws {
+        if !loop.isOpened {
             try await runStep { try await client.authorize(connection: identity.connection) }
         }
-        loop = .opened
+        // From here a failure still knows who this is for, so the next try can open it again.
+        loop = .opened(identity)
         lastNextActions = []
         let identifier = identity.identifier
         try await runStep { try await client.identify(identifier.value, type: identifier.identifierType) }
@@ -263,17 +242,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         case .insufficientAuthorization, .network:
             return
         default:
-            loop = currentIdentity.map(Loop.ended) ?? .closed
-        }
-    }
-
-    /// Who the sign-in is for, once the server knows.
-    private var currentIdentity: Identity? {
-        switch loop {
-        case let .identified(identity), let .passwordOnly(identity), let .codeSent(identity), let .ended(identity):
-            return identity
-        case .closed, .opened:
-            return nil
+            loop = loop.identity.map(SignInLoop.ended) ?? .closed
         }
     }
 
@@ -290,12 +259,13 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
         lastNextActions.contains { if case .verifyOTP(channel, _) = $0 { return true } else { return false } }
     }
 
-    /// Whether `action` is how a code is sent to this email or number. A number that only takes calls isn't: this flow
-    /// doesn't offer them.
+    /// Whether `action` is how a code gets to this email or number: asking for it, or the server having sent it
+    /// already. A number that only takes calls isn't: this flow doesn't offer them.
     private func offersCode(_ action: NextAction, to identifier: LoginIdentifier) -> Bool {
         switch (action, identifier) {
-        case (.challengeEmail, .email): return true
+        case (.challengeEmail, .email), (.verifyOTP(.email, _), .email): return true
         case let (.challengePhone(_, _, methods), .phone): return methods.contains(.text)
+        case (.verifyOTP(.sms, _), .phone): return true
         default: return false
         }
     }
@@ -322,7 +292,7 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
 
     // MARK: SDK → engine mapping
 
-    /// Rate limits stay inline (Resend reopens the loop); anything else goes full-screen.
+    /// Rate limits stay inline, where the next try opens a new sign-in; anything else goes full-screen.
     private static func failure(for error: EmbeddedAuthError) -> Error {
         switch error.reason {
         case .tooManyWrongOtpAttempts, .tooManyAttempts, .tooManyLogins: return AuthFailure.tooManyAttempts

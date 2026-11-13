@@ -54,6 +54,7 @@ struct CodeEntryForm<Actions: View>: View {
             actions()
                 .padding(.top, theme.spacing.lg)
         }
+        .announcing(error)
     }
 
     private var isComplete: Bool { code.count == digitCount }

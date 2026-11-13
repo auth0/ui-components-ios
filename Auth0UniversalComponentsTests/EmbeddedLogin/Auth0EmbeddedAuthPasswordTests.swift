@@ -188,10 +188,13 @@ struct Auth0EmbeddedAuthPasswordTests {
 
     // MARK: Words
 
-    @Test func theWrongPasswordMessage_saysNothingAboutWhichPartWasWrong() {
-        let message = AuthFailure.invalidPassword.message(for: .password)
-        #expect(message == "Incorrect username or password. Please try again.")
-        #expect(AuthFailure.invalidPassword.message(for: .email) == message, "the same words wherever it shows")
+    @Test func theWrongPasswordMessage_namesWhatWasTyped_butNeverWhichPartWasWrong() {
+        for channel in [LoginChannel.password, .email, .phone] {
+            let message = AuthFailure.invalidPassword.message(for: channel)
+            #expect(message.hasPrefix("Incorrect ") && message.contains(" or password."), "either could be wrong")
+        }
+        #expect(AuthFailure.invalidPassword.message(for: .password)
+                == "Incorrect username or password. Please try again.")
     }
 
     @Test func aUsername_hasNoCodeToFail() {

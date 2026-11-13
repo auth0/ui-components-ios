@@ -29,7 +29,21 @@ struct LoginCooldownTests {
         #expect(LoginCodeAlternativeButton.title("Email me a code", remaining: 42) == "Email me a code in 42s")
     }
 
-    @Test func theCoordinatorsWait_isTheResendWait() {
-        #expect(ResendCooldown.defaultSeconds == 60)
+    @Test func theButtonRedrawsEverySecondUpToTheEndOfTheWait_andNotAfter() {
+        let end = start.addingTimeInterval(3)
+        let ticks = LoginCodeAlternativeButton.ticks(until: end, from: start)
+        #expect(ticks == [start, start.addingTimeInterval(1), start.addingTimeInterval(2), end])
+    }
+
+    @Test func aPartialSecondIsRoundedUp_soTheLastRedrawIsExactlyTheEnd() {
+        let end = start.addingTimeInterval(2.4)
+        let ticks = LoginCodeAlternativeButton.ticks(until: end, from: start)
+        #expect(ticks.last == end)
+        #expect(ticks.count == 4)
+    }
+
+    @Test func aWaitThatIsOver_hasOneRedraw() {
+        let end = start.addingTimeInterval(-5)
+        #expect(LoginCodeAlternativeButton.ticks(until: end, from: start) == [end])
     }
 }

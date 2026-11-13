@@ -6,9 +6,6 @@ struct LoginRenderingHostView: View {
     @Environment(\.auth0Theme) private var theme
     @Environment(\.dismiss) private var dismiss
 
-    /// Kept on screen (with a button spinner) while the coordinator is `.loading` mid-flow.
-    @State private var inputSteps = InputStepMemory()
-
     /// Held locally so screen changes can be committed inside `withAnimation`.
     @State private var displayedPlan: ScreenPlan = .loading
 
@@ -52,16 +49,13 @@ struct LoginRenderingHostView: View {
             displayedPlan = currentPlan
             lastDepth = displayedPlan.navigationDepth
         }
-        .onChangeCompat(of: coordinator.step) { newStep in
-            inputSteps.track(newStep)
-            syncDisplay()
-        }
+        .onChangeCompat(of: coordinator.step) { _ in syncDisplay() }
     }
 
     // MARK: Engine wiring
 
     private var currentPlan: ScreenPlan {
-        renderer.plan(for: inputSteps.displayed(for: coordinator.step), channels: coordinator.channels)
+        renderer.plan(for: coordinator.displayedStep, channels: coordinator.channels)
     }
 
     private var context: RenderContext {

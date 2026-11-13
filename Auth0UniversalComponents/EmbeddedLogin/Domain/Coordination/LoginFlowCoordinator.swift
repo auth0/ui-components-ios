@@ -6,7 +6,9 @@ import Foundation
 @MainActor
 final class LoginFlowCoordinator: ObservableObject {
 
-    @Published private(set) var step: LoginStep = .loading
+    @Published private(set) var step: LoginStep = .loading {
+        didSet { inputSteps.track(step) }
+    }
     /// A recoverable failure, shown inline on the current input screen.
     @Published private(set) var inputError: AuthFailure?
     /// True while an identifier submit, resend or verify is in flight. Blocks re-entry and Back.
@@ -18,6 +20,11 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private(set) var channels: [LoginChannel] = []
     /// What the user last submitted. Pre-fills its screen when the user comes back to it.
     private(set) var enteredIdentifier: LoginIdentifier?
+    private var inputSteps = InputStepMemory()
+
+    /// What to show: `step`, except that while a request is in flight (`.loading`) the input screen it came from stays,
+    /// with the alternative it offers, so it keeps its shape and shows progress in its button.
+    var displayedStep: LoginStep { inputSteps.displayed(for: step) }
 
     /// The last code asked for, and when another may be: a code asked for from the password screen waits as long as
     /// Resend does, so switching between the two can't send one on every tap.
@@ -201,7 +208,8 @@ final class LoginFlowCoordinator: ObservableObject {
     }
 
     /// A request made for `identifier` from the screen the user is on: it shows progress, `work` says which screen
-    /// follows, and a failure goes back to the email, number or username screen.
+    /// follows, and a failure goes back to the email, number or username screen. A rate limit stays where it was: that
+    /// screen still works once the wait is over.
     private func request(for identifier: LoginIdentifier, _ work: (String) async throws -> LoginStep) async {
         guard let connection, !isSubmitting else { return }
         isSubmitting = true
@@ -211,12 +219,14 @@ final class LoginFlowCoordinator: ObservableObject {
         // A check in flight may have completed the sign-in.
         if step == .authenticated { return }
         inputError = nil
+        let screen = step
         step = .loading
         do {
             step = try await work(connection)
         } catch let failure as AuthFailure {
             inputError = failure
-            step = .collectOTPIdentifier(identifier.channel)
+            let staysPut = failure == .tooManyAttempts && screen.isInputScreen
+            step = staysPut ? screen : .collectOTPIdentifier(identifier.channel)
         } catch {
             fail(error, returningTo: .collectOTPIdentifier(identifier.channel))
         }

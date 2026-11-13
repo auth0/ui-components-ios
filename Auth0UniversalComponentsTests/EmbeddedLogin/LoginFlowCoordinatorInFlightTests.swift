@@ -1,9 +1,9 @@
 @testable import Auth0UniversalComponents
 import Testing
 
-/// While a request is on its way the coordinator is `.loading` and the host keeps the screen on display
-/// (`InputStepMemory`), with the alternative it offers, so Continue, OR and the other button don't jump. When the
-/// answer arrives, the screen it leads to carries its own alternative.
+/// While a request is on its way the coordinator is `.loading` and `displayedStep` keeps the screen on display, with
+/// the alternative it offers, so Continue, OR and the other button don't jump. When the answer arrives, the screen it
+/// leads to carries its own alternative.
 @Suite
 @MainActor
 struct LoginFlowCoordinatorInFlightTests {
@@ -30,13 +30,10 @@ struct LoginFlowCoordinatorInFlightTests {
     private func shown(whileHolding call: ScriptedAuthInteractor.Call, on sut: LoginFlowCoordinator,
                        _ interactor: ScriptedAuthInteractor,
                        during action: @escaping @MainActor () async -> Void) async -> LoginStep {
-        var memory = InputStepMemory()
-        memory.track(sut.step)
         interactor.held = [call]
         let task = Task { await action() }
         await interactor.waitUntilHeld(call)
-        memory.track(sut.step)
-        let displayed = memory.displayed(for: sut.step)
+        let displayed = sut.displayedStep
         #expect(sut.step == .loading)
         #expect(sut.isSubmitting)
         interactor.release(call)
@@ -109,6 +106,57 @@ struct LoginFlowCoordinatorInFlightTests {
         await sut.resendOTP()
 
         #expect(!sut.canUsePassword)
+    }
+
+    @Test func afterTheRequest_theNewScreenIsTheOneOnDisplay() async {
+        let (sut, _) = await coordinator(.passwordOffered(canSendCode: true))
+
+        await sut.send(.sendCodeInstead)
+
+        #expect(sut.displayedStep == sut.step)
+    }
+
+    // MARK: A rate limit stays where it was
+
+    @Test func aRateLimitOnANewCode_keepsThePasswordScreen_withItsCodeButton() async {
+        let (sut, interactor) = await coordinator(.passwordOffered(canSendCode: true))
+        interactor.startOTPResult = .failure(AuthFailure.tooManyAttempts)
+
+        await sut.send(.sendCodeInstead)
+
+        #expect(sut.step == .collectPassword(identifier: .email(email), canSendCode: true))
+        #expect(sut.inputError == .tooManyAttempts)
+    }
+
+    @Test func aRateLimitOnAResend_keepsTheCodeScreen_withItsPasswordButton() async {
+        let (sut, interactor) = await coordinator(.codeOffered(canUsePassword: true))
+        interactor.startOTPResult = .failure(AuthFailure.tooManyAttempts)
+
+        await sut.resendOTP()
+
+        #expect(sut.step == .collectOTPCode(identifier: .email(email), sentTo: sentTo, canUsePassword: true))
+        #expect(sut.inputError == .tooManyAttempts)
+    }
+
+    @Test func aRateLimitOnTheEmail_staysOnTheEmailScreen() async {
+        let interactor = ScriptedAuthInteractor(discover: .success([.emailOTP(connection: "db")]))
+        interactor.identifyResult = .failure(AuthFailure.tooManyAttempts)
+        let sut = LoginFlowCoordinator(interactor: interactor)
+        await sut.send(.start)
+
+        await sut.send(.submitIdentifier(.email(email)))
+
+        #expect(sut.step == .collectOTPIdentifier(.email))
+        #expect(sut.inputError == .tooManyAttempts)
+    }
+
+    @Test func aCodeThatCouldNotBeSent_stillSendsTheUserBackToTheEmail() async {
+        let (sut, interactor) = await coordinator(.codeOffered(canUsePassword: true))
+        interactor.startOTPResult = .failure(AuthFailure.codeNotSent)
+
+        await sut.resendOTP()
+
+        #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
     @Test func afterAFailedRequest_theEmailScreenOffersNothing() async {

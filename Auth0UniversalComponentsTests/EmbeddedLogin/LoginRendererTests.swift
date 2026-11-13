@@ -150,6 +150,31 @@ struct LoginRendererTests {
         #expect(LoginChannel.password.fieldLabel == "Username")
     }
 
+    @Test func aNumber_isShownOnThePasswordScreenAsItWasTyped() {
+        #expect(LoginIdentifier.phone("+14233530900").displayValue == "+1 (423)353-0900")
+        #expect(LoginIdentifier.email("sarah.doe@atko.email").displayValue == "sarah.doe@atko.email")
+        #expect(LoginIdentifier.username("sarah.doe").displayValue == "sarah.doe")
+    }
+
+    @Test func aNumberWithNoKnownCountry_isShownAsGiven() {
+        #expect(LoginIdentifier.phone("not a number").displayValue == "not a number")
+    }
+
+    @Test func aWrongPassword_isWordedForWhatWasTyped() {
+        #expect(AuthFailure.invalidPassword.message(for: .email) == "Incorrect email or password. Please try again.")
+        #expect(AuthFailure.invalidPassword.message(for: .phone)
+                == "Incorrect phone number or password. Please try again.")
+        #expect(AuthFailure.invalidPassword.message(for: .password)
+                == "Incorrect username or password. Please try again.")
+    }
+
+    @Test func aCodeThatCannotBeChecked_needsANewOne() {
+        #expect(AuthFailure.codeExpired.needsNewCode)
+        #expect(AuthFailure.codeNoLongerValid.needsNewCode)
+        #expect(!AuthFailure.invalidCode.needsNewCode)
+        #expect(!AuthFailure.tooManyAttempts.needsNewCode)
+    }
+
     @Test func aUsername_isTheIdentifierOfThePasswordWay() {
         #expect(LoginIdentifier.username("sarah.doe").channel == .password)
         #expect(LoginIdentifier.username("sarah.doe").value == "sarah.doe")

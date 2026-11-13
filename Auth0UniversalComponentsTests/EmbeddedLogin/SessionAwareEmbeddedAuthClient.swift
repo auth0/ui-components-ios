@@ -15,9 +15,16 @@ final class SessionAwareEmbeddedAuthClient: EmbeddedAuthClient {
 
     var calls: [StubEmbeddedAuthClient.Call] { scripted.calls }
 
+    /// Clears the session first, as the SDK does: a new one exists only if the server answers with a continuation.
     func authorize(connection: String) async throws {
-        hasSession = true
-        try await run { try await scripted.authorize(connection: connection) }
+        hasSession = false
+        do {
+            try await scripted.authorize(connection: connection)
+            hasSession = true
+        } catch {
+            hasSession = Self.isContinuation(error)
+            throw error
+        }
     }
 
     func identify(_ identifier: String, type: IdentifierType) async throws {
@@ -74,5 +81,11 @@ final class SessionAwareEmbeddedAuthClient: EmbeddedAuthClient {
         case .insufficientAuthorization, .network: return true
         default: return false
         }
+    }
+
+    private static func isContinuation(_ error: Error) -> Bool {
+        guard let error = error as? EmbeddedAuthError else { return false }
+        if case .insufficientAuthorization = error.reason { return true }
+        return false
     }
 }

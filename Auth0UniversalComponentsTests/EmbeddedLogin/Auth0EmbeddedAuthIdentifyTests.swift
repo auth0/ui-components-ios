@@ -50,6 +50,32 @@ struct Auth0EmbeddedAuthIdentifyTests {
                 == .passwordOffered(canSendCode: true), "the password is listed before the email")
     }
 
+    // MARK: A code the server has already sent
+
+    @Test func anEmailTheServerHasAlreadySentACodeTo_leadsWithTheCode_andSendsNoSecondOne() async throws {
+        script(afterIdentify: [Fix.verifyEmail, Fix.verifyPassword])
+        let sut = makeSUT()
+
+        let outcome = try await sut.identify(connection: "db", identifier: .email(email))
+        try await sut.startOTP(connection: "db", identifier: .email(email))
+
+        #expect(outcome == .codeOffered(canUsePassword: true))
+        #expect(client.calls == [.authorize(connection: "db"), .identify(email, type: .email)],
+                "nothing is asked for: the code is on its way")
+    }
+
+    @Test func aNumberTheServerHasAlreadyTextedACodeTo_leadsWithTheCode() async throws {
+        script(afterIdentify: [Fix.verifySMS, Fix.verifyPassword])
+        #expect(try await makeSUT().identify(connection: "db", identifier: .phone(phone))
+                == .codeOffered(canUsePassword: true))
+    }
+
+    @Test func aCodeThatWillBeCalledIn_isNotACodeThisFlowOffers() async throws {
+        script(afterIdentify: [Fix.verifyVoice, Fix.verifyPassword])
+        #expect(try await makeSUT().identify(connection: "db", identifier: .phone(phone))
+                == .passwordOffered(canSendCode: false))
+    }
+
     @Test func anEmailOfferedOnlyAPassword_cannotBeSentACode() async throws {
         script(afterIdentify: [Fix.verifyPassword])
         #expect(try await makeSUT().identify(connection: "db", identifier: .email(email))

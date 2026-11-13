@@ -25,7 +25,7 @@ struct LoginPasswordScreen: View {
     @Environment(\.auth0Theme) private var theme
     @State private var password = ""
     @State private var errors = LoginFieldErrors()
-    /// The request in flight is the code's, not the password's: the code button shows the progress.
+    /// The last tap was the code button, so it, not Continue, answers the request in flight. Continue clears it.
     @State private var isSendingCode = false
     @FocusState private var isFocused: Bool
 
@@ -98,6 +98,7 @@ struct LoginPasswordScreen: View {
     private func submit() {
         // Return on the keyboard bypasses the button's guards.
         guard !isLoading, !password.isEmpty else { return }
+        isSendingCode = false
         onContinue(password)
         // Emptied whatever the answer: a rejected password can't be sent again by a second tap, and none is left on
         // screen.

@@ -51,7 +51,7 @@ struct LoginIdentifierScreen: View {
                 }
             }
         }
-        .embeddedScreenChrome(theme: theme)
+        .embeddedScreenChrome(theme: theme, scrolls: true)
     }
 
     @ViewBuilder

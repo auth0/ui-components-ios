@@ -5,12 +5,9 @@ struct InputStepMemory: Equatable {
     private(set) var last: LoginStep?
 
     mutating func track(_ step: LoginStep) {
-        switch step {
-        case .collectOTPIdentifier, .collectOTPCode, .collectPassword:
+        if step.isInputScreen {
             last = step
-        case .loading:
-            break
-        default:
+        } else if step != .loading {
             last = nil
         }
     }

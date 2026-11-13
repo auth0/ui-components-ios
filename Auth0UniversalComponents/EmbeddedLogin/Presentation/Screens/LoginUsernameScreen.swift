@@ -29,7 +29,7 @@ struct LoginUsernameScreen: View {
             LoginUsernameForm(username: $username, isLoading: isLoading, serverError: errorMessage,
                               pinsContinueToBottom: true, onContinue: onContinue)
         }
-        .embeddedScreenChrome(theme: theme)
+        .embeddedScreenChrome(theme: theme, scrolls: true)
     }
 }
 

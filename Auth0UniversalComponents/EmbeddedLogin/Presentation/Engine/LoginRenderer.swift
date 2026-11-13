@@ -114,7 +114,7 @@ struct LoginRenderer {
 
         case let .password(identifier, canSendCode):
             LoginPasswordScreen(
-                username: identifier.value,
+                username: identifier.displayValue,
                 identifierLabel: identifier.channel.fieldLabel,
                 isLoading: ctx.isSubmitting,
                 errorMessage: ctx.inputError?.message(for: identifier.channel),
