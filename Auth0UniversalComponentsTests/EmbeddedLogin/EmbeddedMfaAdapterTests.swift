@@ -33,7 +33,8 @@ struct EmbeddedPushBindingTests {
 
     @Test func theAdditionalStep_advertisesTheUnionOfItsBindings_withoutRepeats() {
         #expect(EmbeddedMfaStep().capabilities
-                == [.challengePush, .verifyOob, .challengePhone, .verifyOTP, .verifyRecoveryCode, .confirmRecoveryCode, .challengeEmail])
+                == [.challengePush, .verifyOob, .challengePhone, .verifyOTP, .challengeEmail,
+                    .verifyRecoveryCode, .confirmRecoveryCode])
         #expect(EmbeddedMfaStep(bindings: []).capabilities.isEmpty)
         #expect(EmbeddedMfaStep(bindings: [EmbeddedPushBinding(), EmbeddedPushBinding()]).capabilities
                 == [.challengePush, .verifyOob])
