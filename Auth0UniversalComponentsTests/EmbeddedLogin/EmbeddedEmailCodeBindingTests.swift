@@ -1,4 +1,5 @@
 @testable import Auth0UniversalComponents
+// swiftlint:disable file_length
 import Auth0
 import Foundation
 import Testing
@@ -238,6 +239,14 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
         return nil
     }
 
+    /// Waits for `condition` and, if it never comes true, names the step: a failure then points at the step that
+    /// stalled, not at the count that was off two steps later.
+    private func reach(_ step: String, sourceLocation: SourceLocation = #_sourceLocation,
+                       _ condition: () -> Bool) async {
+        await eventually(condition)
+        #expect(condition(), "never reached: \(step)", sourceLocation: sourceLocation)
+    }
+
     private func pushModel(_ sut: LoginFlowCoordinator) -> PushChallengeModel? {
         if case let .factor(step)? = mfaStep(sut) { return step.model as? PushChallengeModel }
         return nil
@@ -327,9 +336,9 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
         ]
 
         let sut = await signIn(afterTheCode: Fix.needs([emailOffer()]))
-        await eventually { codeModel(sut) != nil }
+        await reach("the code screen") { codeModel(sut) != nil }
         codeModel(sut)?.submit("123456")
-        await eventually { codeModel(sut)?.isCodeExpired == true }
+        await reach("the expired-code state") { codeModel(sut)?.isCodeExpired == true }
         #expect(sut.step == .additionalStep, "no error screen")
         #expect(codeModel(sut)?.canResend == true)
         #expect(store.delivered.isEmpty)
@@ -339,11 +348,11 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
         #expect(codeChecks.count == 1, "the expired code was the only check")
 
         codeModel(sut)?.resend()
-        await eventually { emailSends.count == 2 }
-        await eventually { codeModel(sut)?.isCodeExpired == false }
+        await reach("a second email being sent") { emailSends.count == 2 }
+        await reach("the new code replacing the expired one") { codeModel(sut)?.isCodeExpired == false }
         #expect(emailSends == [.challengeEmail(index: 2), .challengeEmail(index: 2)], "the server's index, both times")
         codeModel(sut)?.submit("654321")
-        await eventually { sut.step == .authenticated }
+        await reach("the sign-in completing") { sut.step == .authenticated }
         #expect(store.delivered.map(\.accessToken) == ["email"])
     }
 
@@ -357,12 +366,12 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
 
         let sut = await signIn(afterTheCode: Fix.needs([emailOffer(), Fix.challengePush]), emailWait: 60)
         list(sut)?.select("email:2")
-        await eventually { codeModel(sut) != nil }
+        await reach("the code screen") { codeModel(sut) != nil }
         codeModel(sut)?.switchFactor()
-        await eventually { list(sut) != nil }
+        await reach("the factor list") { list(sut) != nil }
 
         list(sut)?.select("email:2")
-        await eventually { codeModel(sut) != nil }
+        await reach("the code screen") { codeModel(sut) != nil }
         #expect(codeModel(sut)?.canResend == true)
         #expect(codeModel(sut)?.resendAvailableIn ?? 0 > 0, "the wait carried over")
         await settle()
@@ -379,16 +388,18 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
 
         let sut = await signIn(afterTheCode: Fix.needs([emailOffer(), Fix.challengePush]), emailWait: 60)
         list(sut)?.select("email:2")
-        await eventually { codeModel(sut) != nil }
+        await reach("the code screen") { codeModel(sut) != nil }
         codeModel(sut)?.switchFactor()
-        await eventually { list(sut) != nil }
+        await reach("the factor list") { list(sut) != nil }
         list(sut)?.select("push:0")
-        await eventually { pushModel(sut) != nil }
+        await reach("the push screen") { pushModel(sut) != nil }
         pushModel(sut)?.switchFactor()
-        await eventually { list(sut) != nil }
+        await reach("the factor list") { list(sut) != nil }
 
         list(sut)?.select("email:2")
-        await eventually { emailSends.count == 2 && (codeModel(sut)?.resendAvailableIn ?? 0) > 0 }
+        await reach("a second email, with a wait of its own") {
+            emailSends.count == 2 && (codeModel(sut)?.resendAvailableIn ?? 0) > 0
+        }
         #expect(emailSends == [.challengeEmail(index: 2), .challengeEmail(index: 2)])
         #expect((codeModel(sut)?.resendAvailableIn ?? 0) > 0, "with a wait of its own")
     }
