@@ -5,6 +5,9 @@ import Foundation
 /// first, so it is offered whenever the menu asks for a code from an authenticator app.
 @MainActor
 struct EmbeddedTotpBinding: EmbeddedFactorBinding {
+    /// The one offer's id. The gate records it when a code is checked.
+    static let offerID = "totp"
+
     var capabilities: [EmbeddedCapability] { [.verifyOTP] }
 
     /// One offer when the server asks for an authenticator app's code. The app is the user's, so there is no number or
@@ -13,7 +16,7 @@ struct EmbeddedTotpBinding: EmbeddedFactorBinding {
         let asksForCode = nextActions.contains { action in
             if case .verifyOTP(.totp, _) = action { return true } else { return false }
         }
-        return asksForCode ? [MfaFactorOffer(id: "totp", factor: .totp, label: nil)] : []
+        return asksForCode ? [MfaFactorOffer(id: Self.offerID, factor: .totp, label: nil)] : []
     }
 
     func makeFactor(_ services: EmbeddedFactorServices) -> any MfaFactor {
@@ -41,8 +44,12 @@ final class EmbeddedTotpTransport: TotpTransport {
 
     func verify(code: String, while isWanted: () -> Bool = { true }) async throws -> TotpVerification {
         do {
-            // The server accepted: stage the credentials. The Core says whether the sign-in is still live.
-            try stager.stage(try await gate.run(while: isWanted) { try await client.verifyOtp(code, type: .totp) })
+            // The server accepted: stage the credentials. The Core says whether the sign-in is still live. Recorded on
+            // the gate like a challenge: the check moves the sign-in's session on, so a text or call sent before it is
+            // no longer the code the server waits for, and coming back to that phone sends a new one.
+            try stager.stage(try await gate.run(challenging: EmbeddedTotpBinding.offerID, while: isWanted) {
+                try await client.verifyOtp(code, type: .totp)
+            })
             return .verified
         } catch let error as EmbeddedAuthError {
             guard case let .insufficientAuthorization(reason, nextActions) = error.reason else {

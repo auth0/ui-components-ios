@@ -47,7 +47,8 @@ ui-components-ios/
 │   │   ├── Factors/Push/               # Guardian push: state machine, session, model, screen, transport protocol
 │   │   ├── Factors/PhoneCode/          # Texted or spoken code (one factor per delivery): state machine, session, model, screen, transport protocol
 │   │   ├── Factors/RecoveryCode/       # Recovery code: check it, then save the new one: state machine, session, model, screen, transport protocol
-│   │   └── Factors/EmailCode/          # Emailed code: its own model, words and screen over the PhoneCode engine (one seam file, `EmailCodeEngine.swift`)
+│   │   ├── Factors/EmailCode/          # Emailed code: its own model, words and screen over the PhoneCode engine (one seam file, `EmailCodeEngine.swift`)
+│   │   └── Factors/Totp/               # Authenticator app code: state machine, session, model, screen, transport protocol (nothing is sent first)
 │   ├── Core/Utils/                     # Shared utilities
 │   │   ├── OTPTextField.swift          # OTP code input component
 │   │   ├── CountryCodePicker/          # Phone number country selection
@@ -199,12 +200,28 @@ Embedded Login (email or SMS code) and MFA are separate layers. `ArchitectureTes
 | A factor (`MFA/Factors/<Name>`) | The engine's contract | The login, Auth0.swift, how requests are sent (it uses its own transport protocol) |
 | Adapter (`EmbeddedLogin/Mfa`) | Everything above | — |
 
-- **Screens only render the current step.** Decisions live in pure state machines (`MfaFlowReducer`, `PushApprovalMachine`, `PhoneCodeMachine`, `RecoveryCodeMachine`); a screen renders a model and calls its actions.
+- **Screens only render the current step.** Decisions live in pure state machines (`MfaFlowReducer`, `PushApprovalMachine`, `PhoneCodeMachine`, `RecoveryCodeMachine`, `TotpMachine`); a screen renders a model and calls its actions.
 - **One request at a time per sign-in, across factors.** Every factor's Embedded Login transport goes through the sign-in's shared `EmbeddedRequestGate`.
 - **Adding a factor never edits the engine or the login:** an id, a model, a session, a transport protocol, words (`MfaFactorMessages` + an extension on `MfaMessages`), a screen, and a binding listed in `EmbeddedMfaStep`. `AddingAFactorTests` shows the shape.
 - **Credentials are staged, then handed to the app once by the engine** (`EmbeddedMfaStager`). The SDK stores nothing: neither a factor nor the login touches the Keychain or `CredentialsManager`, and `ArchitectureTests` fails the build if one does. The app's `onAuthenticated(credentials)` closure decides where they go; if it throws, the sign-in ends as `credentialsNotSaved`.
 - **Public API is the app's contract:** `MfaConfiguration`, `MfaStep`, `MfaError`, the standard screens and `.onMfaError`. The factor contract is internal.
 - Use "additional step" for what the login hands over, and "eligible factors" for what the user can choose from. Don't call MFA the "second" step or factor.
+
+### Loading Indicators
+
+On the Embedded Login and MFA screens (`EmbeddedLogin/Presentation`, `MFA/Presentation` and `MFA/Factors/*/Screens`), when
+the user triggers a request (Continue, Verify, Send, Resend), show progress **on the button that triggered it**, and keep
+the screen as it is. This is the same everywhere in the flow, so no screen feels different from the next. It doesn't apply
+to the My Account screens (their ViewModel pattern is described under "Development Guidelines" and in the examples at
+the end).
+
+- Use the button's loader: `LoginPrimaryButton(_, isLoading:)` (`MfaPrimaryButton` in MFA screens). The shared
+  `CodeEntryForm(isVerifying:)` already does this, and also locks the digit boxes.
+- Lock what the request makes meaningless (inputs, the other actions on the screen) instead of hiding it.
+- Don't replace a screen's content with a full-screen or centered spinner, and don't add a "verifying" body or view for
+  an action. A new factor's code screen is `CodeEntryForm` with `isVerifying` bound to the model.
+- Existing exceptions are not action loaders and stay as they are: the Core's `MfaLoadingScreen` (a step with nothing
+  to show yet) and the push waiting screen (a waiting state the design specifies).
 
 ## Key Technical Decisions
 
@@ -266,19 +283,6 @@ Embedded Login (email or SMS code) and MFA are separate layers. `ArchitectureTes
 3. **Accessibility**: Full VoiceOver and Dynamic Type support
 4. **Security**: Secure handling of OTP codes, tokens, and recovery codes
 5. **Cross-Platform**: Works seamlessly on iOS, macOS, and visionOS
-
-### Loading Indicators
-
-When the user triggers a request (Continue, Verify, Send, Resend), show progress **on the button that triggered it**, and
-keep the screen as it is. This is the same everywhere in the flow, so no screen feels different from the next.
-
-- Use the button's loader: `LoginPrimaryButton(_, isLoading:)` (`MfaPrimaryButton` in MFA screens). The shared
-  `CodeEntryForm(isVerifying:)` already does this, and also locks the digit boxes.
-- Lock what the request makes meaningless (inputs, the other actions on the screen) instead of hiding it.
-- Don't replace a screen's content with a full-screen or centered spinner, and don't add a "verifying" body or view for
-  an action. A new factor's code screen is `CodeEntryForm` with `isVerifying` bound to the model.
-- Existing exceptions are not action loaders and stay as they are: the Core's `MfaLoadingScreen` (a step with nothing
-  to show yet) and the push waiting screen (a waiting state the design specifies).
 
 ### ViewModel Guidelines
 
@@ -638,6 +642,11 @@ When assisting with this codebase:
 ### Adding a New MFA Factor Type
 
 Let's say you need to add support for a new MFA factor type (e.g., WebAuthn):
+
+> **Scope:** this example is a My Account enrollment screen (ViewModel + UseCases), where a full-screen `ProgressView`
+> is the pattern today. A factor in **Embedded Login** is built differently: a state machine, a session, a model and a
+> screen (see "MFA in Embedded Login: Layering Rules"), and its screens show progress on the button that triggered
+> the request (see "Loading Indicators" there).
 
 ```swift
 // 1. Define Domain Use Cases

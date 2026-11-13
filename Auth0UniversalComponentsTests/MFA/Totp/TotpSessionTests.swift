@@ -5,6 +5,10 @@ import Testing
 final class ScriptedTotpTransport: TotpTransport {
     var verifies: [Result<TotpVerification, MfaError>]
     private(set) var log: [String] = []
+    /// When set, a check waits where it is, like a request on the wire, until `letItAnswer()`.
+    var holds = false
+    private(set) var isHolding = false
+    private var held: CheckedContinuation<Void, Never>?
 
     init(verify: [Result<TotpVerification, MfaError>] = []) {
         verifies = verify
@@ -12,8 +16,25 @@ final class ScriptedTotpTransport: TotpTransport {
 
     func verify(code: String, while isWanted: () -> Bool) async throws -> TotpVerification {
         log.append("verify \(code)")
+        if holds {
+            isHolding = true
+            await withCheckedContinuation { held = $0 }
+            isHolding = false
+        }
         return try (verifies.isEmpty ? .success(.verified) : verifies.removeFirst()).get()
     }
+
+    /// Lets the held check answer.
+    func letItAnswer() {
+        held?.resume()
+        held = nil
+    }
+}
+
+/// Whether something finished, readable from a task.
+@MainActor
+private final class Done {
+    var isSet = false
 }
 
 /// The authenticator app session on its own, with a fake Core around it.
@@ -136,5 +157,32 @@ struct TotpSessionTests {
         await settle()
         #expect(transport.log.isEmpty)
         #expect(host.events.isEmpty)
+    }
+
+    /// The server allows one request at a time and the next sign-in must not start while a reply is still due, so the
+    /// flow ending waits for a code already on its way. Its late answer is dropped.
+    @Test func cancelAndWait_waitsForACodeOnItsWay_andDropsItsLateAnswer() async {
+        let transport = ScriptedTotpTransport(verify: [.success(.verified)])
+        transport.holds = true
+        let sut = session(transport)
+        sut.start()
+        model(sut)?.submit("123456")
+        await eventually { transport.isHolding }
+        let changes = host.changes
+
+        let finished = Done()
+        let leaving = Task {
+            await sut.cancelAndWait()
+            finished.isSet = true
+        }
+        await settle()
+        #expect(transport.isHolding, "the code is still on its way")
+        #expect(finished.isSet == false, "so the flow's end waits for it")
+
+        transport.letItAnswer()
+        await leaving.value
+        #expect(finished.isSet)
+        #expect(host.events.isEmpty, "the late answer reaches no one")
+        #expect(host.changes == changes, "and redraws nothing")
     }
 }

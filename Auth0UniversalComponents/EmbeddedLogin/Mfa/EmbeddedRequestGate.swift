@@ -7,7 +7,9 @@ import Foundation
 final class EmbeddedRequestGate {
     private var isBusy = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
-    /// The offer whose challenge went out last. A code is only ever checked against that one.
+    /// The offer whose request went out last: a challenge (a code sent, a push sent) or a code checked. The SDK keeps
+    /// one `auth_session` for the whole sign-in and a code names no challenge, so a code is only ever checked against
+    /// the last one: sending another challenge, or checking another factor's code, replaces it.
     private(set) var lastChallenge: String?
 
     /// Runs `call` once no other request of this sign-in is on its way. Waiting calls run in the order they arrived.
