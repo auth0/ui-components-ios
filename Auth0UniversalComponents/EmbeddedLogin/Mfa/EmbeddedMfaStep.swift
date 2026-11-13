@@ -25,6 +25,7 @@ final class EmbeddedMfaStep: ObservableObject, AdditionalStepProviding {
         self.bindings = bindings ?? [EmbeddedPushBinding(), EmbeddedPhoneCodeBinding(delivery: .text),
                                      EmbeddedPhoneCodeBinding(delivery: .voice),
                                      EmbeddedEmailCodeBinding(),
+                                     EmbeddedTotpBinding(),
                                      EmbeddedRecoveryCodeBinding()]
     }
 

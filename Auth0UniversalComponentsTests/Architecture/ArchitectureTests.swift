@@ -57,7 +57,8 @@ struct ArchitectureTests {
         #expect(try code(in: "MFA/Factors/Push").count >= 5)
         #expect(try code(in: "MFA/Factors/PhoneCode").count >= 7)
         #expect(try code(in: "MFA/Factors/EmailCode").count >= 5)
-        #expect(Self.factorFolders.count >= 2, "\(Self.factorFolders)")
+        #expect(try code(in: "MFA/Factors/Totp").count >= 7)
+        #expect(Self.factorFolders.count >= 3, "\(Self.factorFolders)")
         #expect(try code(in: "EmbeddedLogin").count >= 10)
     }
 

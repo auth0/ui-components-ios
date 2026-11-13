@@ -116,7 +116,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
 
     /// GP-03: the menu has nothing this flow can run: the "verification method not available" screen shows.
     @Test func gp03_noPushOnOffer_isTerminal() async {
-        let sut = await signIn(afterTheCode: menu([Fix.verifyTOTP, Fix.verifySMS]))
+        let sut = await signIn(afterTheCode: menu([Fix.verifyEmail, Fix.verifySMS]))
 
         #expect(sut.step == .additionalStepUnavailable)
         #expect(pushCalls.isEmpty)
@@ -127,7 +127,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
     /// Login). The SDK shows nothing more.
     @Test func gp03_withAHandlerThatTakesOver_theAppRoutesTheUser() async {
         var reported: [MfaError] = []
-        let sut = await signIn(afterTheCode: menu([Fix.verifyTOTP]), handler: { reported.append($0); return .handled })
+        let sut = await signIn(afterTheCode: menu([Fix.verifyEmail]), handler: { reported.append($0); return .handled })
 
         #expect(reported == [.noEligibleFactors])
         #expect(sut.step == .additionalStep)
@@ -138,7 +138,7 @@ struct EmbeddedMfaEndToEndTests { // swiftlint:disable:this type_body_length
     /// be left on a spinner with no way to cancel.
     @Test func gp03_withAHandlerThatOnlyObserves_theUnavailableScreenStillShows() async {
         var reported: [MfaError] = []
-        let sut = await signIn(afterTheCode: menu([Fix.verifyTOTP]),
+        let sut = await signIn(afterTheCode: menu([Fix.verifyEmail]),
                                handler: { reported.append($0); return .notHandled })
 
         #expect(reported == [.noEligibleFactors], "it is still told")
