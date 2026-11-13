@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // Platform-specific modifiers; each falls back to a working equivalent elsewhere.
 extension View {
@@ -47,6 +50,59 @@ extension View {
         #else
         self.autocorrectionDisabled(true)
         #endif
+    }
+
+    /// Plain text for a username: no autocorrect or autocapitalization, offered to AutoFill as a username.
+    @ViewBuilder
+    func usernameInput() -> some View {
+        #if os(iOS) || os(visionOS)
+        self.textInputAutocapitalization(.never)
+            .autocorrectionDisabled(true)
+            .textContentType(.username)
+        #else
+        self.autocorrectionDisabled(true)
+        #endif
+    }
+
+    /// A password: no autocorrect or autocapitalization, offered to AutoFill as a password.
+    @ViewBuilder
+    func passwordInput() -> some View {
+        #if os(iOS) || os(visionOS)
+        self.textInputAutocapitalization(.never)
+            .autocorrectionDisabled(true)
+            .textContentType(.password)
+        #else
+        self.autocorrectionDisabled(true)
+        #endif
+    }
+
+    /// A drag on the scroll view dismisses the keyboard. visionOS has no such setting.
+    @ViewBuilder
+    func scrollDismissesKeyboardInteractively() -> some View {
+        #if os(visionOS)
+        self
+        #else
+        self.scrollDismissesKeyboard(.interactively)
+        #endif
+    }
+
+    /// A scroll view that bounces only when its content is longer than the view, where the system allows it.
+    @ViewBuilder
+    func scrollBounceBasedOnSize() -> some View {
+        if #available(iOS 16.4, macOS 13.3, visionOS 1.0, *) {
+            self.scrollBounceBehavior(.basedOnSize)
+        } else {
+            self
+        }
+    }
+
+    /// Has VoiceOver read `message` when it appears, since an error under a field is otherwise silent.
+    func announcing(_ message: String?) -> some View {
+        onChangeCompat(of: message) { newValue in
+            #if canImport(UIKit)
+            if let newValue { UIAccessibility.post(notification: .announcement, argument: newValue) }
+            #endif
+        }
     }
 
     /// Phone keypad, offering the user's own number for autofill.

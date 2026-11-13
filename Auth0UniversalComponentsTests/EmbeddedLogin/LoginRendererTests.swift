@@ -72,4 +72,86 @@ struct LoginRendererTests {
         #expect(plan(step, channels: [.phone])
                 == .otpCode(identifier: .phone("+14233530900"), sentTo: "(4**)***-*900"))
     }
+
+    // MARK: Password
+
+    private let password = ScreenPlan.password(identifier: .username("sarah.doe"))
+
+    @Test func thePasswordStep_isItsOwnScreen_atTheDepthOfCodeEntry() {
+        #expect(plan(.collectPassword(identifier: .username("sarah.doe")), channels: [.password]) == password)
+        #expect(password.navigationDepth == code.navigationDepth)
+        #expect(password.navigationDepth < ScreenPlan.additionalStep.navigationDepth)
+        #expect(password.transitionIdentity != code.transitionIdentity)
+    }
+
+    @Test func whatWasTyped_doesNotChangeThePasswordScreensIdentity() {
+        let other = ScreenPlan.password(identifier: .username("someone.else"))
+        #expect(password.transitionIdentity == other.transitionIdentity)
+    }
+
+    @Test func passwordOnItsOwn_isItsOwnScreen() {
+        #expect(plan(.collectOTPIdentifier(.password), channels: [.password]) == .identifier(.password))
+    }
+
+    @Test func passwordFirst_listsTheCodeWaysUnderIt() {
+        #expect(plan(.collectOTPIdentifier(.password), channels: [.password, .email, .phone])
+                == .identifier(.password, alternatives: [.email, .phone], isFirst: true))
+    }
+
+    /// "Continue with Password" opens the username's own screen, one level deeper than the first, so it pushes.
+    @Test func passwordAsAnotherWay_isItsOwnScreen_oneLevelDeeper() {
+        let own = plan(.collectOTPIdentifier(.password), channels: [.email, .password])
+        #expect(own == .identifier(.password, alternatives: [], isFirst: false))
+        let first = plan(.collectOTPIdentifier(.email), channels: [.email, .password])
+        #expect(first == .identifier(.email, alternatives: [.password], isFirst: true))
+        #expect(first.navigationDepth < own.navigationDepth)
+        #expect(own.navigationDepth < password.navigationDepth)
+    }
+
+    @Test func theUsernameWay_hasItsOwnWords() {
+        #expect(LoginChannel.password.title == "Enter your username to get started")
+        #expect(LoginChannel.password.continueTitle == "Continue with Password")
+    }
+
+    @Test func aPlanCarriesTheAlternativeItsStepOffers() {
+        let identifier = LoginIdentifier.email("a@b.com")
+        #expect(plan(.collectPassword(identifier: identifier, canSendCode: true))
+                == .password(identifier: identifier, canSendCode: true))
+        #expect(plan(.collectOTPCode(identifier: identifier, sentTo: nil, canUsePassword: true))
+                == .otpCode(identifier: identifier, sentTo: nil, canUsePassword: true))
+        #expect(plan(.collectPassword(identifier: identifier))
+                != plan(.collectPassword(identifier: identifier, canSendCode: true)))
+    }
+
+    @Test func aChangeOfAlternative_isNotANewScreen() {
+        let identifier = LoginIdentifier.email("a@b.com")
+        #expect(plan(.collectPassword(identifier: identifier, canSendCode: true)).transitionIdentity
+                == plan(.collectPassword(identifier: identifier)).transitionIdentity)
+    }
+
+    @Test func theCodeAndThePassword_areTheTwoWaysOfTheSameStep() {
+        let identifier = LoginIdentifier.email("a@b.com")
+        let code = plan(.collectOTPCode(identifier: identifier))
+        let password = plan(.collectPassword(identifier: identifier))
+        #expect(code.isSibling(of: password))
+        #expect(password.isSibling(of: code))
+        #expect(!code.isSibling(of: plan(.collectOTPIdentifier(.email))))
+        #expect(!password.isSibling(of: password))
+    }
+
+    @Test func theWayToACodeInstead_isWordedForWhereItGoes() {
+        #expect(LoginChannel.email.sendCodeTitle == "Email me a code")
+        #expect(LoginChannel.phone.sendCodeTitle == "Text me a code")
+    }
+
+    @Test func eachWay_hasTheLabelItsFieldHasAndTheRowThatShowsItsValue() {
+        #expect(LoginChannel.email.fieldLabel == "Email")
+        #expect(LoginChannel.phone.fieldLabel == "Phone number")
+        #expect(LoginChannel.password.fieldLabel == "Username")
+    }
+
+    @Test func aUsername_isTheIdentifierOfThePasswordWay() {
+        #expect(LoginIdentifier.username("sarah.doe").channel == .password)
+        #expect(LoginIdentifier.username("sarah.doe").value == "sarah.doe")
+    }
 }

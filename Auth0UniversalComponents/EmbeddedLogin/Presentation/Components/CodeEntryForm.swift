@@ -10,6 +10,8 @@ struct CodeEntryForm<Actions: View>: View {
     let verifyTitle: String
     /// A code is being checked: Verify shows progress and the boxes lock.
     let isVerifying: Bool
+    /// Some other request is on its way (a new code, a password): the boxes lock, and Verify shows nothing.
+    let isLocked: Bool
     /// Shown under the boxes, which turn red while it shows.
     let error: String?
     /// On top of a complete code, the screen may hold Verify back (e.g. an expired code).
@@ -20,13 +22,15 @@ struct CodeEntryForm<Actions: View>: View {
     @Environment(\.auth0Theme) private var theme
 
     init(code: Binding<String>, digitCount: Int = 6, fieldLabel: String = "One-Time Passcode",
-         verifyTitle: String = "Verify", isVerifying: Bool, error: String?, canVerify: Bool = true,
+         verifyTitle: String = "Verify", isVerifying: Bool, isLocked: Bool = false, error: String?,
+         canVerify: Bool = true,
          onVerify: @escaping (String) -> Void, @ViewBuilder actions: @escaping () -> Actions) {
         self._code = code
         self.digitCount = digitCount
         self.fieldLabel = fieldLabel
         self.verifyTitle = verifyTitle
         self.isVerifying = isVerifying
+        self.isLocked = isLocked
         self.error = error
         self.canVerify = canVerify
         self.onVerify = onVerify
@@ -36,7 +40,8 @@ struct CodeEntryForm<Actions: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             LoginFieldLabel(fieldLabel)
-            LoginCodeField(code: $code, digitCount: digitCount, isError: error != nil, isEnabled: !isVerifying)
+            LoginCodeField(code: $code, digitCount: digitCount, isError: error != nil,
+                           isEnabled: !isVerifying && !isLocked)
 
             if let error {
                 LoginInlineError(error)

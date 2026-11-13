@@ -36,7 +36,7 @@ ui-components-ios/
 │   ├── SaveAuthenticators/             # Manage saved factors
 │   │   ├── Domain/                     # DeleteAuthMethodUseCase
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
-│   ├── EmbeddedLogin/                  # Native Email or SMS OTP sign-in; hands over to MFA when the tenant asks for more
+│   ├── EmbeddedLogin/                  # Native Email or SMS OTP, or username and password, sign-in; hands over to MFA when the tenant asks for more
 │   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
 │   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
 │   │   └── Presentation/               # EmbeddedLoginView, login screens, shared factor-screen pieces
@@ -191,7 +191,7 @@ let client = Auth0.myAccount(token: token, domain: domain, session: session)
 
 ## MFA in Embedded Login: Layering Rules
 
-Embedded Login (email or SMS code) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
+Embedded Login (email or SMS code, or a password) and MFA are separate layers. `ArchitectureTests` reads the source and fails the build if a layer starts to know what it must not:
 
 | Layer | May know | Must not know |
 |---|---|---|
@@ -427,6 +427,7 @@ struct EmailPhoneEnrollmentView: View {
 - **Mock Dependencies**: Protocol-based mocks for TokenProvider and UseCases
 - **Coverage Goals**: 80%+ for business logic
 - **Security Testing**: Verify sensitive data handling
+- **Anything that retries**: test it against `SessionAwareEmbeddedAuthClient`, which ends the sign-in on every failure but a continuation or a network error, as the SDK does. The plain `StubEmbeddedAuthClient` can't lose its session, so a retry that would hit a dead one passes against it.
 
 ```swift
 @MainActor

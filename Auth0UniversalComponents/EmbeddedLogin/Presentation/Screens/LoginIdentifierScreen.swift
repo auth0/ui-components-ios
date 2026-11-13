@@ -15,6 +15,7 @@ struct LoginIdentifierScreen: View {
     @State private var email: String
     @State private var number: String
     @State private var country: Country?
+    @State private var username: String
 
     /// - Parameter prefill: What the user last submitted on this screen, when they come back to it.
     init(channel: LoginChannel, alternatives: [LoginChannel], prefill: LoginIdentifier? = nil, isLoading: Bool = false,
@@ -31,6 +32,7 @@ struct LoginIdentifierScreen: View {
         let entry = LoginPhoneForm.startingEntry(for: prefill?.channel == .phone ? prefill?.value ?? "" : "")
         _country = State(initialValue: channel == .phone ? entry.country : nil)
         _number = State(initialValue: channel == .phone ? entry.number : "")
+        _username = State(initialValue: prefill?.channel == .password ? prefill?.value ?? "" : "")
     }
 
     var body: some View {
@@ -63,6 +65,10 @@ struct LoginIdentifierScreen: View {
             LoginPhoneForm(country: $country, number: $number, isLoading: isLoading, serverError: errorMessage) {
                 onContinue(.phone($0))
             }
+        case .password:
+            LoginUsernameForm(username: $username, isLoading: isLoading, serverError: errorMessage) {
+                onContinue(.username($0))
+            }
         }
     }
 }
@@ -75,6 +81,7 @@ extension LoginChannel {
         switch self {
         case .email: return "Enter your email to get started"
         case .phone: return "Enter your phone number to get started"
+        case .password: return "Enter your username to get started"
         }
     }
 
@@ -83,15 +90,41 @@ extension LoginChannel {
         switch self {
         case .email: return "Continue with Email"
         case .phone: return "Continue with Phone"
+        case .password: return "Continue with Password"
+        }
+    }
+
+    /// The label over this way's field, and over the row that shows what was typed in it on the screens after.
+    var fieldLabel: String {
+        switch self {
+        case .email: return "Email"
+        case .phone: return "Phone number"
+        case .password: return "Username"
+        }
+    }
+
+    /// The password screen's way to a code, for an email or number the server offers both for. Its icon is
+    /// `continueIcon`: the envelope or the phone.
+    var sendCodeTitle: String {
+        switch self {
+        case .email: return "Email me a code"
+        case .phone: return "Text me a code"
+        case .password: return "Send me a code"
+        }
+    }
+
+    /// The asset behind `continueIcon`. A name that matches no asset draws nothing, so a test checks each exists.
+    var iconAssetName: String {
+        switch self {
+        case .email: return "email"
+        case .phone: return "phone"
+        case .password: return "ic_uds_password"
         }
     }
 
     /// That button's icon, in the button's text color. The button fits it to its icon size.
-    var continueIcon: Image? {
-        switch self {
-        case .email: return Image("email", bundle: ResourceBundle.default).renderingMode(.template)
-        case .phone: return Image("phone", bundle: ResourceBundle.default).renderingMode(.template)
-        }
+    var continueIcon: Image {
+        Image(iconAssetName, bundle: ResourceBundle.default).renderingMode(.template)
     }
 }
 
@@ -103,6 +136,14 @@ extension LoginChannel {
     LoginIdentifierScreen(channel: .email, alternatives: [.phone], prefill: .email("sarah.doe@atko.email"),
                           errorMessage: AuthFailure.codeNotSent.message(for: .email),
                           onContinue: { _ in }, onChoose: { _ in })
+}
+
+#Preview("Email first, password offered") {
+    LoginIdentifierScreen(channel: .email, alternatives: [.password], onContinue: { _ in }, onChoose: { _ in })
+}
+
+#Preview("Password first, email offered") {
+    LoginIdentifierScreen(channel: .password, alternatives: [.email], onContinue: { _ in }, onChoose: { _ in })
 }
 
 #Preview("Phone first, email offered") {

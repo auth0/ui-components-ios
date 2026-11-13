@@ -68,7 +68,8 @@ enum EmbeddedMfaErrors {
         case .sessionExpired, .noActiveSession: return .tokenInvalid
         case .noEligibleFactors: return .noEligibleFactors
         case .tooManyWrongOtpAttempts, .tooManyAttempts, .tooManyLogins: return .tooManyAttempts
-        case .insufficientAuthorization, .accessDenied, .consentRequired, .invalidRequest, .ipBlocked, .unknown:
+        case .insufficientAuthorization, .accessDenied, .consentRequired, .invalidRequest, .ipBlocked, .unknown,
+             .passwordLeaked, .noNextSteps:
             return .unexpected(error.displayMessage)
         @unknown default:
             return .unexpected(error.displayMessage)

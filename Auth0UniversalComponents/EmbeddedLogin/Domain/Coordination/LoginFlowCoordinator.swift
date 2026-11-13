@@ -1,8 +1,8 @@
 import Combine
 import Foundation
 
-/// Drives the Email and SMS OTP flow, then hands over to an additional step when the tenant asks for more:
-/// `LoginEvent`s in, `LoginStep`s out. UI-agnostic. It knows nothing about what the additional step is.
+/// Drives the Email and SMS OTP and password flows, then hands over to an additional step when the tenant asks for
+/// more: `LoginEvent`s in, `LoginStep`s out. UI-agnostic. It knows nothing about what the additional step is.
 @MainActor
 final class LoginFlowCoordinator: ObservableObject {
 
@@ -19,24 +19,35 @@ final class LoginFlowCoordinator: ObservableObject {
     /// What the user last submitted. Pre-fills its screen when the user comes back to it.
     private(set) var enteredIdentifier: LoginIdentifier?
 
+    /// The last code asked for, and when another may be: a code asked for from the password screen waits as long as
+    /// Resend does, so switching between the two can't send one on every tap.
+    private struct SentCode: Equatable {
+        let identifier: LoginIdentifier
+        let availableAgainAt: Date
+    }
+
     enum BackOutcome { case movedBack, exitFlow, ignored }
 
     private let interactor: AuthInteracting
 
     // Outputs of earlier calls that later calls need.
     private var connection: String?
-    /// Where the code was sent: what the user typed, and the server's masked version of it.
-    private var identifier: LoginIdentifier?
-    private var sentTo: String?
+    /// What the server offered for the last email, number or username submitted. A code asked for again is offered the
+    /// password only if it did.
+    private var offer: IdentifierOutcome?
+    @Published private var sentCode: SentCode?
     /// Where `retry` returns to; `nil` re-runs discovery.
     private var retryStep: LoginStep?
 
     /// What runs after the first factor. Without one, a tenant that asks for more can't be served.
     private let additionalStepProvider: AdditionalStepProviding?
+    private let now: @MainActor () -> Date
 
-    init(interactor: AuthInteracting, additionalStep: AdditionalStepProviding? = nil) {
+    init(interactor: AuthInteracting, additionalStep: AdditionalStepProviding? = nil,
+         now: @escaping @MainActor () -> Date = { Date() }) {
         self.interactor = interactor
         self.additionalStepProvider = additionalStep
+        self.now = now
     }
 
     func send(_ event: LoginEvent) async {
@@ -44,11 +55,17 @@ final class LoginFlowCoordinator: ObservableObject {
         case .start:
             await discover()
         case let .submitIdentifier(identifier):
-            await sendCode(to: identifier)
+            await submit(identifier)
         case let .chooseChannel(channel):
             choose(channel)
         case let .submitOTP(code):
             await verify(code)
+        case let .submitPassword(password):
+            await verifyPassword(password)
+        case .sendCodeInstead:
+            await sendCodeInstead()
+        case .usePasswordInstead:
+            await usePasswordInstead()
         case .retry:
             await retry()
         case .restart:
@@ -56,9 +73,9 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
-    /// Code entry steps back to the screen the identifier was typed on, and that screen back to the first one. From the
-    /// additional step, Back cancels it: a fresh sign-in at the first screen, since the code is spent. Anywhere else
-    /// leaves the flow.
+    /// Code or password entry steps back to the screen the identifier was typed on, and that screen back to the first
+    /// one. From the additional step, Back cancels it: a fresh sign-in at the first screen, since the code is spent.
+    /// Anywhere else leaves the flow.
     @discardableResult
     func goBack() -> BackOutcome {
         // Leaving now would orphan the in-flight result (e.g. credentials stored, no callback).
@@ -68,7 +85,7 @@ final class LoginFlowCoordinator: ObservableObject {
         case let .collectOTPIdentifier(channel) where channel != primaryChannel:
             step = .collectOTPIdentifier(primaryChannel)
             return .movedBack
-        case let .collectOTPCode(identifier, _):
+        case let .collectOTPCode(identifier, _, _), let .collectPassword(identifier, _):
             step = .collectOTPIdentifier(identifier.channel)
             return .movedBack
         case .additionalStepUnavailable:
@@ -90,14 +107,21 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
+    /// Sends the code on the code screen again.
     func resendOTP() async {
-        guard let identifier else { return }
+        guard case let .collectOTPCode(identifier, _, _) = step else { return }
         inputError = nil
-        await sendCode(to: identifier)
+        await requestCode(for: identifier)
     }
 
     /// The tenant's first method: the screen the sign-in starts on.
     var primaryChannel: LoginChannel { channels.first ?? .email }
+
+    /// When a code may be asked for again for `identifier`; `nil` when none was sent to them.
+    func codeAvailableAt(for identifier: LoginIdentifier?) -> Date? {
+        guard let sentCode, sentCode.identifier == identifier else { return nil }
+        return sentCode.availableAgainAt
+    }
 
     // MARK: Steps
 
@@ -115,6 +139,7 @@ final class LoginFlowCoordinator: ObservableObject {
                 switch option {
                 case let .emailOTP(value): offered = (value, .email)
                 case let .phoneOTP(value): offered = (value, .phone)
+                case let .password(value): offered = (value, .password)
                 case .unsupported: continue
                 }
                 connection = connection ?? offered.connection
@@ -128,14 +153,56 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
-    /// "Continue with Phone" on the first screen opens the phone screen.
+    /// "Continue with Phone" (or Password) on the first screen opens that method's own screen.
     private func choose(_ channel: LoginChannel) {
         guard case .collectOTPIdentifier = step, channels.contains(channel), !isSubmitting else { return }
         inputError = nil
         step = .collectOTPIdentifier(channel)
     }
 
-    private func sendCode(to identifier: LoginIdentifier) async {
+    /// Submits who the user is, then follows what the server lists first: a code is sent at once, or the password is
+    /// asked for. The other, when offered, is the alternative on that screen.
+    private func submit(_ identifier: LoginIdentifier) async {
+        await request(for: identifier) { connection in
+            let outcome = try await self.identify(identifier, connection: connection)
+            switch outcome {
+            case let .passwordOffered(canSendCode):
+                return .collectPassword(identifier: identifier, canSendCode: canSendCode)
+            case let .codeOffered(canUsePassword):
+                return try await self.sendCode(to: identifier, connection: connection, canUsePassword: canUsePassword)
+            }
+        }
+    }
+
+    /// Sends a code again to someone the sign-in already knows, offering the password if the server did.
+    private func requestCode(for identifier: LoginIdentifier) async {
+        await request(for: identifier) { connection in
+            try await self.sendCode(to: identifier, connection: connection,
+                                    canUsePassword: self.offer?.offersPassword ?? false)
+        }
+    }
+
+    /// "Email me a code": the password screen's other way in. It waits as long as Resend does after a code was sent.
+    private func sendCodeInstead() async {
+        guard case let .collectPassword(identifier, canSendCode) = step, canSendCode,
+              codeAvailableAt(for: identifier).map({ $0 <= now() }) ?? true else { return }
+        await requestCode(for: identifier)
+    }
+
+    /// "Continue with a password": the code screen's other way in. The sign-in is opened again, so the password is
+    /// asked for on a session the server still offers it on; the code that was sent goes with the old one.
+    private func usePasswordInstead() async {
+        guard case let .collectOTPCode(identifier, _, canUsePassword) = step, canUsePassword else { return }
+        await request(for: identifier) { connection in
+            let outcome = try await self.identify(identifier, connection: connection)
+            guard outcome.offersPassword else { throw AuthFailure.passwordNotAvailable }
+            return .collectPassword(identifier: identifier, canSendCode: outcome.offersCode)
+        }
+    }
+
+    /// A request made for `identifier` from the screen the user is on: it shows progress, `work` says which screen
+    /// follows, and a failure goes back to the email, number or username screen.
+    private func request(for identifier: LoginIdentifier, _ work: (String) async throws -> LoginStep) async {
         guard let connection, !isSubmitting else { return }
         isSubmitting = true
         defer { isSubmitting = false }
@@ -146,10 +213,7 @@ final class LoginFlowCoordinator: ObservableObject {
         inputError = nil
         step = .loading
         do {
-            let sentTo = try await interactor.startOTP(connection: connection, identifier: identifier)
-            self.identifier = identifier
-            self.sentTo = sentTo
-            step = .collectOTPCode(identifier: identifier, sentTo: sentTo)
+            step = try await work(connection)
         } catch let failure as AuthFailure {
             inputError = failure
             step = .collectOTPIdentifier(identifier.channel)
@@ -158,16 +222,46 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
+    private func identify(_ identifier: LoginIdentifier, connection: String) async throws -> IdentifierOutcome {
+        let outcome = try await interactor.identify(connection: connection, identifier: identifier)
+        offer = outcome
+        return outcome
+    }
+
+    private func sendCode(to identifier: LoginIdentifier, connection: String,
+                          canUsePassword: Bool) async throws -> LoginStep {
+        let sentTo = try await interactor.startOTP(connection: connection, identifier: identifier)
+        sentCode = SentCode(identifier: identifier,
+                            availableAgainAt: now().addingTimeInterval(TimeInterval(ResendCooldown.defaultSeconds)))
+        return .collectOTPCode(identifier: identifier, sentTo: sentTo, canUsePassword: canUsePassword)
+    }
+
     /// A rejected code stays on code entry with an inline error.
     private func verify(_ code: String) async {
-        guard let identifier, !isSubmitting else { return }
+        guard case let .collectOTPCode(identifier, _, _) = step else { return }
+        await settle(identifier, returningTo: step) {
+            try await interactor.verifyOTP(code: code)
+        }
+    }
+
+    /// A rejected password stays on password entry with an inline error.
+    private func verifyPassword(_ password: String) async {
+        guard case let .collectPassword(identifier, _) = step else { return }
+        await settle(identifier, returningTo: step) {
+            try await interactor.verifyPassword(password)
+        }
+    }
+
+    /// Runs one attempt to finish the first factor from `inputStep`, the screen the user is on.
+    private func settle(_ identifier: LoginIdentifier, returningTo inputStep: LoginStep,
+                        _ attempt: () async throws -> AuthProgress) async {
+        guard !isSubmitting else { return }
         isSubmitting = true
         defer { isSubmitting = false }
-        let codeStep = LoginStep.collectOTPCode(identifier: identifier, sentTo: sentTo)
         inputError = nil
         step = .loading
         do {
-            switch try await interactor.verifyOTP(code: code) {
+            switch try await attempt() {
             case .authenticated:
                 step = .authenticated
             case let .additionalStepRequired(context):
@@ -175,12 +269,12 @@ final class LoginFlowCoordinator: ObservableObject {
             }
         } catch let failure as AuthFailure {
             inputError = failure
-            step = codeStep
+            step = inputStep
         } catch let error as CredentialsNotSavedError {
-            // The code was consumed and the loop closed, so retry starts a fresh one.
+            // The code or password was consumed and the loop closed, so retry starts a fresh one.
             fail(error, returningTo: .collectOTPIdentifier(identifier.channel))
         } catch {
-            fail(error, returningTo: codeStep)
+            fail(error, returningTo: inputStep)
         }
     }
 

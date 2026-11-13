@@ -218,6 +218,19 @@ struct LoginIconAssetTests {
                                          with: nil))
         #expect(image.size == CGSize(width: 24, height: 22))
     }
+
+    /// The password icon is a vector with a 16-point frame; the button fits it to the same height as the others.
+    @Test func thePasswordIcon_ships() throws {
+        let image = try #require(UIImage(named: "ic_uds_password", in: Auth0UniversalComponents.ResourceBundle.default,
+                                         with: nil))
+        #expect(image.size == CGSize(width: 16, height: 16))
+    }
+
+    @Test(arguments: [LoginChannel.email, .phone, .password])
+    func eachWaysIconAsset_isTheOneItNames(_ channel: LoginChannel) {
+        #expect(UIImage(named: channel.iconAssetName, in: Auth0UniversalComponents.ResourceBundle.default,
+                        with: nil) != nil, "no asset named \(channel.iconAssetName)")
+    }
 }
 #endif
 

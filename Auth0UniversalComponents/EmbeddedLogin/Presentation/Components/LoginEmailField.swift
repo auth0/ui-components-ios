@@ -11,13 +11,13 @@ struct LoginEmailField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            LoginFieldLabel("Email")
+            LoginFieldLabel(LoginChannel.email.fieldLabel)
             LoginInputField(isInvalid: error != nil) {
                 TextField("", text: $email)
                     .emailInput()
                     .focused(isFocused)
                     .onSubmit(onSubmit)
-                    .accessibilityLabel("Email")
+                    .accessibilityLabel(LoginChannel.email.fieldLabel)
             }
 
             if let error {

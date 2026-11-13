@@ -127,7 +127,7 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ## Embedded Login
 
-> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.1` or later 4.x**, the first release with the Embedded Authorization MFA APIs that Guardian push, phone, email and authenticator app codes, and recovery codes use. Your tenant must have Embedded Login enabled, with Email OTP, SMS OTP or both on the connection you pass in.
+> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.2` or later 4.x**, the first release with the Embedded Authorization APIs for signing in with a password and for the multi-factor steps (Guardian push, phone, email and authenticator app codes, and recovery codes). Your tenant must have Embedded Login enabled, with Email OTP, SMS OTP, a username and password, or any of them on the connection you pass in.
 
 ### Display the Embedded Login View
 
@@ -171,6 +171,40 @@ When the connection offers SMS OTP, `EmbeddedLoginView` signs users in with a co
 - **An expired texted code** stays on the code screen: **Verify** is disabled and **Resend Code** works at once. An expired email code still shows the full-screen error.
 
 Codes are sent by text message only; a number that can only take voice calls gets "We couldn't send your code." A registered phone can also be a multi-factor step; see below.
+
+### Sign in with a Password
+
+When the connection offers a password, `EmbeddedLoginView` signs users in with it. Nothing changes in your code: the screens follow what the tenant offers, which can be one of two shapes.
+
+- **After the email or phone number (the usual shape).** The first screen asks for the email or number as before. Once the server has it, it lists what can follow, and **the screens follow that order**: whatever it lists first leads, and the other is one tap away.
+  - **A code listed first** (what a database connection such as `Username-Password-Authentication` answers) is sent at once and the screen opens on code entry. When a password is listed too, **OR** and a **Continue with a password** button (with a password icon) sit under Resend and open the password screen.
+  - **A password listed first** opens the password screen and **nothing is sent**. When a code is listed too, **OR** and an **Email me a code** button (**Text me a code** for a number, each with its icon) sit under Continue; it sends the code and opens code entry.
+  - **Only one of the two** is used with no alternative shown.
+
+  Either way the first screen has no password option of its own, and you can switch back and forth. Asking for a code again from the password screen waits as long as **Resend** does after the last code (the button counts down), so switching can't send one on every tap. A password asked for from the code screen opens the sign-in again, so the code that was sent can't be used afterwards.
+  - **To choose instead of following the server**, pass `preference`. `.server` (the default) follows the order above; `.code` always leads with the code and `.password` with the password, when the server offers both:
+
+    ```swift
+    EmbeddedLoginView(connection: "Username-Password-Authentication", preference: .password) { credentials in
+        try session.store(credentials)
+    }
+    ```
+- **From a username.** If the server's first answer includes a username step, the first screen lists **Continue with Password** (or **Continue with Email**, **Continue with Phone**) below an **OR** divider, and that button opens a username screen followed by the password screen. With only a username offered, the first screen asks for it.
+
+The same password screen serves both:
+
+- **It shows who is signing in** (the email, number or username) in a read-only row under the title, with the label the field had (**Email**, **Phone number** or **Username**) above it and **Edit** at the end of the row to change it. The password is hidden as it's typed, with a button to show it, and it's offered to iCloud Keychain AutoFill (which needs your app's Associated Domains set up). **Continue** shows progress while the password is checked, and the code button shows it while a code is sent. The screen keeps its shape either way, on this screen and on the code screen.
+- **A wrong password** stays on the screen with "Incorrect username or password. Please try again." The field is emptied, so a rejected password can't be sent twice by a second tap. The message is the same when the server offers no password step for a username, so it never tells an account that exists from one that doesn't. The code, when it was offered, stays available; it starts the sign-in again, because the server offers only the password after a wrong one. If the server no longer offers a password when **Continue with a password** is tapped, the screen returns to the email with "A password isn't available for this account. Please use a code instead."
+- **Too many attempts** shows "Too many attempts. Please try again later." on the same screen. The server ends the sign-in when it limits you, so the next password (or **Email me a code**) quietly opens a new one; it never ends on a technical error.
+- **A breached password**, one that appears in a data breach, can't be used to sign in. A screen says why and **Try again** returns to the password, where a new password opens a new sign-in. On the code screen, too many wrong codes (or a timeout) ends the sign-in; the next **Verify** says "This code is no longer valid. Please request a new one." and **Resend** is available at once.
+- **Short of room.** The password and code screens scroll when the keyboard or large text leaves too little space (a drag dismisses the keyboard), so **OR** and the other button stay reachable on a small phone.
+- **If the policy asks for more**, the password hands over to multi-factor authentication exactly as a one-time code does; see below. The credentials reach `onAuthenticated` once, after the last step.
+
+Two things to know when you adopt this:
+
+- Password sign-in is always on. The login tells the server it can render a password, so a connection that offers both a code and a password lists both. Pass a connection that offers only what you want shown, or use `preference` to choose which leads.
+- The password and username screens are internal for now: use them through `EmbeddedLoginView`.
+- There's no **Forgot password?** or **Sign up** in this flow yet. Auth0.swift has no embedded password reset, so send users who forgot their password to your own screen.
 
 ### Multi-Factor Authentication
 

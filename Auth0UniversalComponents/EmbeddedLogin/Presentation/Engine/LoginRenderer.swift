@@ -10,6 +10,8 @@ struct RenderContext {
     var identifier: LoginIdentifier?
     var isSubmitting: Bool
     var inputError: AuthFailure?
+    /// When a code may be asked for again for `identifier`; the code button on the password screen waits until then.
+    var codeAvailableAt: Date?
     let dispatch: (LoginEvent) -> Void
     let resend: () -> Void
     let back: () -> Void
@@ -20,7 +22,8 @@ enum ScreenPlan: Equatable {
     /// Asks for `channel`. `alternatives` are the other ways listed under "OR"; only the first screen has them.
     /// `isFirst` is false on a way's own screen, opened from the first one.
     case identifier(LoginChannel, alternatives: [LoginChannel] = [], isFirst: Bool = true)
-    case otpCode(identifier: LoginIdentifier, sentTo: String? = nil)
+    case otpCode(identifier: LoginIdentifier, sentTo: String? = nil, canUsePassword: Bool = false)
+    case password(identifier: LoginIdentifier, canSendCode: Bool = false)
     case additionalStep
     case additionalStepUnavailable
     case authenticated
@@ -35,11 +38,20 @@ extension ScreenPlan {
         case .loading:                   return "loading"
         case let .identifier(channel, _, _): return "identifier.\(channel)"
         case .otpCode:                   return "otpCode"
+        case .password:                  return "password"
         case .additionalStep:            return "additionalStep"
         case .additionalStepUnavailable: return "additionalStepUnavailable"
         case .authenticated:             return "authenticated"
         case .failed:                    return "failed"
         case .noMethods:                 return "noMethods"
+        }
+    }
+
+    /// Whether `other` is the other way of finishing the same step: the code and the password for the same person.
+    func isSibling(of other: ScreenPlan) -> Bool {
+        switch (self, other) {
+        case (.otpCode, .password), (.password, .otpCode): return true
+        default: return false
         }
     }
 
@@ -49,7 +61,7 @@ extension ScreenPlan {
         case .loading:                                    return 0
         case let .identifier(_, _, isFirst):              return isFirst ? 1 : 2
         case .noMethods:                                  return 1
-        case .otpCode:                                    return 3
+        case .otpCode, .password:                         return 3
         case .additionalStep, .additionalStepUnavailable: return 4
         case .authenticated, .failed:                     return 5
         }
@@ -66,7 +78,10 @@ struct LoginRenderer {
             let isFirst = channel == channels.first ?? channel
             return .identifier(channel, alternatives: isFirst ? channels.filter { $0 != channel } : [],
                                isFirst: isFirst)
-        case let .collectOTPCode(identifier, sentTo): return .otpCode(identifier: identifier, sentTo: sentTo)
+        case let .collectOTPCode(identifier, sentTo, canUsePassword):
+            return .otpCode(identifier: identifier, sentTo: sentTo, canUsePassword: canUsePassword)
+        case let .collectPassword(identifier, canSendCode):
+            return .password(identifier: identifier, canSendCode: canSendCode)
         case .additionalStep:             return .additionalStep
         case .additionalStepUnavailable:  return .additionalStepUnavailable
         case .authenticated:              return .authenticated
@@ -84,15 +99,31 @@ struct LoginRenderer {
         case let .identifier(channel, alternatives, _):
             identifierScreen(channel, alternatives: alternatives, context: ctx)
 
-        case let .otpCode(identifier, sentTo):
+        case let .otpCode(identifier, sentTo, canUsePassword):
             LoginCodeScreen(
                 subtitle: "From \(sentTo ?? identifier.value)",
                 isLoading: ctx.isSubmitting,
                 errorMessage: ctx.inputError?.message(for: identifier.channel),
-                isCodeExpired: ctx.inputError == .codeExpired,
+                isCodeExpired: ctx.inputError?.needsNewCode == true,
                 onVerify: { ctx.dispatch(.submitOTP(code: $0)) },
                 onEdit: ctx.back,
-                onResend: ctx.resend
+                onResend: ctx.resend,
+                onUsePassword: canUsePassword ? { ctx.dispatch(.usePasswordInstead) } : nil,
+                usePasswordIcon: LoginChannel.password.continueIcon
+            )
+
+        case let .password(identifier, canSendCode):
+            LoginPasswordScreen(
+                username: identifier.value,
+                identifierLabel: identifier.channel.fieldLabel,
+                isLoading: ctx.isSubmitting,
+                errorMessage: ctx.inputError?.message(for: identifier.channel),
+                onContinue: { ctx.dispatch(.submitPassword($0)) },
+                onEdit: ctx.back,
+                onSendCode: canSendCode ? { ctx.dispatch(.sendCodeInstead) } : nil,
+                sendCodeTitle: identifier.channel.sendCodeTitle,
+                sendCodeIcon: identifier.channel.continueIcon,
+                sendCodeAvailableAt: ctx.codeAvailableAt
             )
 
         case .additionalStep:
@@ -132,6 +163,10 @@ struct LoginRenderer {
             case .phone:
                 LoginPhoneScreen(number: prefill?.value ?? "", isLoading: ctx.isSubmitting, errorMessage: error) {
                     ctx.dispatch(.submitIdentifier(.phone($0)))
+                }
+            case .password:
+                LoginUsernameScreen(username: prefill?.value ?? "", isLoading: ctx.isSubmitting, errorMessage: error) {
+                    ctx.dispatch(.submitIdentifier(.username($0)))
                 }
             }
         }

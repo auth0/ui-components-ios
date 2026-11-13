@@ -7,7 +7,7 @@ struct LoginRenderingHostView: View {
     @Environment(\.dismiss) private var dismiss
 
     /// Kept on screen (with a button spinner) while the coordinator is `.loading` mid-flow.
-    @State private var lastInputStep: LoginStep?
+    @State private var inputSteps = InputStepMemory()
 
     /// Held locally so screen changes can be committed inside `withAnimation`.
     @State private var displayedPlan: ScreenPlan = .loading
@@ -15,12 +15,15 @@ struct LoginRenderingHostView: View {
     @State private var lastDepth = 0
     /// Push (deeper) vs. pop (shallower).
     @State private var forward = true
+    /// A move between two ways of finishing the same step (code and password) is a cross-fade, not a push.
+    @State private var isSwap = false
 
     #if !os(macOS)
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #endif
 
-    private let renderer = LoginRenderer() // TODO: Move into a view model.
+    /// Stateless, so the host owns one; the decisions it makes are covered by `LoginRendererTests`.
+    private let renderer = LoginRenderer()
 
     /// `interactor` is built once, with the coordinator: a parent re-rendering doesn't build another.
     init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil) {
@@ -50,20 +53,15 @@ struct LoginRenderingHostView: View {
             lastDepth = displayedPlan.navigationDepth
         }
         .onChangeCompat(of: coordinator.step) { newStep in
-            trackInputStep(newStep)
+            inputSteps.track(newStep)
             syncDisplay()
         }
     }
 
     // MARK: Engine wiring
 
-    private var displayStep: LoginStep {
-        if case .loading = coordinator.step, let lastInputStep { return lastInputStep }
-        return coordinator.step
-    }
-
     private var currentPlan: ScreenPlan {
-        renderer.plan(for: displayStep, channels: coordinator.channels)
+        renderer.plan(for: inputSteps.displayed(for: coordinator.step), channels: coordinator.channels)
     }
 
     private var context: RenderContext {
@@ -72,6 +70,7 @@ struct LoginRenderingHostView: View {
             identifier: coordinator.enteredIdentifier,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
+            codeAvailableAt: coordinator.codeAvailableAt(for: coordinator.enteredIdentifier),
             dispatch: { send($0) },
             resend: { Task { await coordinator.resendOTP() } },
             back: handleBack
@@ -89,6 +88,7 @@ struct LoginRenderingHostView: View {
         }
         let newDepth = target.navigationDepth
         forward = newDepth >= lastDepth
+        isSwap = target.isSibling(of: displayedPlan)
         lastDepth = newDepth
         withAnimation(motionEnabled ? .easeInOut(duration: 0.28) : nil) {
             displayedPlan = target
@@ -96,6 +96,7 @@ struct LoginRenderingHostView: View {
     }
 
     private var pushTransition: AnyTransition {
+        if isSwap { return .opacity }
         let insertionEdge: Edge = forward ? .trailing : .leading
         let removalEdge: Edge = forward ? .leading : .trailing
         return .asymmetric(
@@ -118,17 +119,6 @@ struct LoginRenderingHostView: View {
         switch coordinator.goBack() {
         case .exitFlow: dismiss()
         case .movedBack, .ignored: break
-        }
-    }
-
-    private func trackInputStep(_ step: LoginStep) {
-        switch step {
-        case .collectOTPIdentifier, .collectOTPCode:
-            lastInputStep = step
-        case .loading:
-            break
-        default:
-            lastInputStep = nil
         }
     }
 

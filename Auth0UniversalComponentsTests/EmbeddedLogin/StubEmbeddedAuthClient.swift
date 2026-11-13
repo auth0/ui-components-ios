@@ -13,6 +13,7 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         case challengeEmail(index: Int)
         case challengePhone(index: Int, deliveryMethod: PhoneDeliveryMethod)
         case verifyOtp(code: String, type: OtpType)
+        case verifyPassword(String)
         case challengePush(index: Int)
         case verifyOob
         case verifyRecoveryCode(code: String)
@@ -26,6 +27,7 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     var challengeEmailResults: [Error?] = []
     var challengePhoneResults: [Error?] = []
     var verifyOtpResults: [Result<Credentials, Error>] = []
+    var verifyPasswordResults: [Result<Credentials, Error>] = []
     var challengePushResults: [Error?] = []
     var verifyOobResults: [Result<Credentials, Error>] = []
     var verifyRecoveryCodeResults: [Error?] = []
@@ -54,6 +56,11 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     func verifyOtp(_ code: String, type: OtpType) async throws -> Credentials {
         calls.append(.verifyOtp(code: code, type: type))
         return try (verifyOtpResults.popFirst() ?? .success(Credentials())).get()
+    }
+
+    func verifyPassword(_ password: String) async throws -> Credentials {
+        calls.append(.verifyPassword(password))
+        return try (verifyPasswordResults.popFirst() ?? .success(Credentials())).get()
     }
 
     func challengePush(index: Int) async throws {
@@ -106,6 +113,8 @@ enum EmbeddedAuthFixtures {
     static func confirmRecoveryCode(newCode: String = "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5") -> [String: Any] {
         ["action": "action:confirm:recovery-code:v1", "new_code": newCode]
     }
+    static let identifyUsername: [String: Any] = ["action": "action:identify:username:v1"]
+    static let verifyPassword: [String: Any] = ["action": "action:verify:password:v1"]
 
     static func challengePhone(index: Int = 0, masked: String = "(4**)***-*900",
                                methods: [String] = ["text", "voice"]) -> [String: Any] {
@@ -132,9 +141,16 @@ enum EmbeddedAuthFixtures {
         EmbeddedAuthError(info: ["cause": URLError(.notConnectedToInternet)], statusCode: 0)
     }
 
-    /// The SDK's local guard when no flow is active.
+    /// The SDK's local guard when no flow is active, worded as the SDK words it.
     static var noActiveSession: EmbeddedAuthError {
-        EmbeddedAuthError(info: ["error": "no_active_session"], statusCode: 0)
+        EmbeddedAuthError(info: ["error": "no_active_session",
+                                 "error_description": "No active embedded auth session. Call authorize() first."],
+                          statusCode: 0)
+    }
+
+    /// The server's rate limit on a password or a code.
+    static var rateLimited: EmbeddedAuthError {
+        terminal("too_many_requests", description: "too_many_attempts", statusCode: 429)
     }
 }
 
