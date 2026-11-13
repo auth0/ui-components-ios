@@ -103,7 +103,7 @@ struct ArchitectureTests {
 
     @Test func everyFactor_reachesTheServerOnlyThroughItsOwnTransportProtocol() throws {
         for folder in Self.factorFolders {
-            let found = try violations(in: code(in: folder), matching: #"URLSession|URLRequest|\.authorize\(|challengePush\(|verifyOob\(|challengePhone\(|verifyOtp\("#)
+            let found = try violations(in: code(in: folder), matching: #"URLSession|URLRequest|\.authorize\(|challengePush\(|verifyOob\(|challengePhone\(|challengeEmail\(|verifyOtp\(|verifyRecoveryCode\(|confirmRecoveryCode\("#)
             #expect(found.isEmpty, "\(folder): \(found)")
         }
     }

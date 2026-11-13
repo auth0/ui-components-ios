@@ -148,14 +148,15 @@ struct EmailCodeSessionTests {
 
     @Test func theWords_followTheAddress_andCanBeChanged() {
         let defaults = MfaMessages.default.emailCodeChallenge
-        #expect(defaults.subtitle(address: "s***@atko.email") == "From s***@atko.email")
+        // The address is the user's own inbox, so the line says where the code went, not who sent it.
+        #expect(defaults.subtitle(address: "s***@atko.email") == "Sent to s***@atko.email")
         #expect(defaults.subtitle(address: "") == "We emailed you a code.")
 
         let changed = MfaMessages.default.with {
-            $0.emailCodeChallenge.description = { address in "Sent to \(address)" }
+            $0.emailCodeChallenge.description = { address in "We emailed \(address)" }
         }
-        #expect(changed.emailCodeChallenge.subtitle(address: "a***@b.c") == "Sent to a***@b.c")
-        #expect(MfaMessages.default.emailCodeChallenge.subtitle(address: "a***@b.c") == "From a***@b.c")
+        #expect(changed.emailCodeChallenge.subtitle(address: "a***@b.c") == "We emailed a***@b.c")
+        #expect(MfaMessages.default.emailCodeChallenge.subtitle(address: "a***@b.c") == "Sent to a***@b.c")
     }
 
     @Test func aCustomScreen_replacesTheFactorsScreen_throughItsTypedShortcut() {

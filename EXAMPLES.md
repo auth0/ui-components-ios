@@ -333,6 +333,12 @@ struct MyMfaScreens: View {
                     // your own code entry: call code.submit(digits) with all code.codeLength digits
                     Button("Cancel") { code.cancel() }
                 }
+            } else if let email = factorStep.model as? EmailCodeChallengeModel {
+                VStack {
+                    Text(email.address.isEmpty ? "We emailed you a code" : "Code sent to \(email.address)")
+                    // your own code entry: call email.submit(digits) with all email.codeLength digits
+                    Button("Cancel") { email.cancel() }
+                }
             } else if let recovery = factorStep.model as? RecoveryCodeChallengeModel {
                 VStack {
                     if let newCode = recovery.newCode {                  // the code was used up: show its replacement
@@ -359,6 +365,9 @@ struct MyMfaScreens: View {
 ```
 
 - An `MfaStep` is `.loading`, `.authenticatorList`, `.error`, or `.factor(step)` for a factor's own screen: read `step.factor` (for example `.push`, `.sms`, `.voice`, `.email` or `.recoveryCode`) and cast `step.model` to that factor's model (`PushChallengeModel`, `PhoneCodeChallengeModel` for both `.sms` and `.voice`, `EmailCodeChallengeModel` for `.email`, or `RecoveryCodeChallengeModel`). New factors add no case, so switch with `@unknown default`.
+- `stream.step` is `nil` when there is nothing to draw: before the flow starts, and after it ends signed in, cancelled, or with no factor to use. Your overlay goes away and the login's own screen shows.
+- `stream.result` is `.signedIn` or `.ended(error)` when the flow ends, and goes back to `nil` when the next flow starts.
+- The login still draws its own background and navigation bar; only the MFA steps are yours.
 - The standard screens (`MfaAuthenticatorListScreen`, `MfaPushChallengeScreen`, `MfaPhoneCodeChallengeScreen`, `MfaEmailCodeChallengeScreen`, `MfaRecoveryCodeScreen`, `MfaErrorScreen`, `MfaLoadingScreen`) can also be used on their own with a model, to keep the look for steps you don't want to redraw.
 
 #### Multi-step sign-in

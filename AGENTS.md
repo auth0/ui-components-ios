@@ -46,7 +46,7 @@ ui-components-ios/
 │   │   ├── Presentation/               # MfaHostView and the standard screens
 │   │   ├── Factors/Push/               # Guardian push: state machine, session, model, screen, transport protocol
 │   │   ├── Factors/PhoneCode/          # Texted or spoken code (one factor per delivery): state machine, session, model, screen, transport protocol
-│   │   └── Factors/RecoveryCode/       # Recovery code: check it, then save the new one: state machine, session, model, screen, transport protocol
+│   │   ├── Factors/RecoveryCode/       # Recovery code: check it, then save the new one: state machine, session, model, screen, transport protocol
 │   │   └── Factors/EmailCode/          # Emailed code: its own model, words and screen over the PhoneCode engine (one seam file, `EmailCodeEngine.swift`)
 │   ├── Core/Utils/                     # Shared utilities
 │   │   ├── OTPTextField.swift          # OTP code input component

@@ -198,6 +198,7 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
     private let email = "sudhanshu.vohra@okta.com"
     private let client = StubEmbeddedAuthClient()
     private let store = StubCredentialsDelivery()
+    private let clock = RecordingMfaClock()
 
     /// An email challenge the way the server lists it as a second factor.
     private func emailOffer(index: Int = 2) -> [String: Any] {
@@ -205,15 +206,15 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
     }
 
     /// Scripts discovery → email → challenge, then answers the sign-in's email code with `afterTheCode`. Push and the
-    /// email factor are plugged in, with no resend wait.
-    private func signIn(afterTheCode: EmbeddedAuthError) async -> LoginFlowCoordinator {
+    /// email factor are plugged in, with no resend wait unless `emailWait` says so.
+    private func signIn(afterTheCode: EmbeddedAuthError, emailWait: Int = 0) async -> LoginFlowCoordinator {
         client.authorizeResults = [Fix.needs([Fix.identifyEmail])]
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         client.challengeEmailResults = [Fix.needs([Fix.verifyEmail])] + client.challengeEmailResults
         client.verifyOtpResults = [.failure(afterTheCode)] + client.verifyOtpResults
-        let provider = EmbeddedMfaStep(clock: RecordingMfaClock(), bindings: [
+        let provider = EmbeddedMfaStep(clock: clock, bindings: [
             EmbeddedPushBinding(policy: PushPollingPolicy(resendCooldownSeconds: 0)),
-            EmbeddedEmailCodeBinding(policy: EmailCodePolicy(resendCooldownSeconds: 0))
+            EmbeddedEmailCodeBinding(policy: EmailCodePolicy(resendCooldownSeconds: emailWait))
         ])
         let interactor = Auth0EmbeddedAuthInteractor(client: client, credentialsDelivery: store, connection: "email")
         let sut = LoginFlowCoordinator(interactor: interactor, additionalStep: provider)
@@ -237,9 +238,24 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
         return nil
     }
 
+    private func pushModel(_ sut: LoginFlowCoordinator) -> PushChallengeModel? {
+        if case let .factor(step)? = mfaStep(sut) { return step.model as? PushChallengeModel }
+        return nil
+    }
+
     /// What was sent after the sign-in's own email code.
     private var mfaCalls: [StubEmbeddedAuthClient.Call] {
         Array(client.calls.drop { $0 != .verifyOtp(code: "111111", type: .oob) }.dropFirst())
+    }
+
+    /// The requests that ask for an emailed code to be sent.
+    private var emailSends: [StubEmbeddedAuthClient.Call] {
+        mfaCalls.filter { if case .challengeEmail = $0 { return true } else { return false } }
+    }
+
+    /// The requests that check a code, not counting the sign-in's own email code.
+    private var codeChecks: [StubEmbeddedAuthClient.Call] {
+        mfaCalls.filter { if case .verifyOtp = $0 { return true } else { return false } }
     }
 
     @Test func theOnlyFactor_emailsTheCodeAtOnce_andTheRightCodeSignsIn() async {
@@ -296,5 +312,84 @@ struct EmbeddedMfaEmailCodeEndToEndTests {
         codeModel(sut)?.submit("123456")
         await eventually { sut.step == .authenticated }
         #expect(store.delivered.map(\.accessToken) == ["email"])
+    }
+
+    // MARK: Failures that leave the code usable
+
+    /// The emailed code timed out: the screen stays, checking is off, and Resend asks the server for a new code at the
+    /// server's index. The new code then signs the user in.
+    @Test func anExpiredCode_staysOnTheCodeScreen_verifyIsOff_andResendSendsANewOne() async {
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail, emailOffer()]),
+                                        Fix.needs([Fix.verifyEmail, emailOffer()])]
+        client.verifyOtpResults = [
+            .failure(Fix.terminal("access_denied", description: "challenge_expired")),
+            .success(Credentials(accessToken: "email"))
+        ]
+
+        let sut = await signIn(afterTheCode: Fix.needs([emailOffer()]))
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.submit("123456")
+        await eventually { codeModel(sut)?.isCodeExpired == true }
+        #expect(sut.step == .additionalStep, "no error screen")
+        #expect(codeModel(sut)?.canResend == true)
+        #expect(store.delivered.isEmpty)
+
+        codeModel(sut)?.submit("999999")                       // checking is off: nothing is sent
+        await settle()
+        #expect(codeChecks.count == 1, "the expired code was the only check")
+
+        codeModel(sut)?.resend()
+        await eventually { emailSends.count == 2 }
+        await eventually { codeModel(sut)?.isCodeExpired == false }
+        #expect(emailSends == [.challengeEmail(index: 2), .challengeEmail(index: 2)], "the server's index, both times")
+        codeModel(sut)?.submit("654321")
+        await eventually { sut.step == .authenticated }
+        #expect(store.delivered.map(\.accessToken) == ["email"])
+    }
+
+    // MARK: Leaving and coming back
+
+    /// "Verify another way" and then the same address again, inside the wait: the first code's screen returns with the
+    /// rest of its wait, and no second email is sent.
+    @Test func leavingAndComingBack_doesNotEmailAnotherCode() async {
+        clock.suspends = true                                  // the countdown stands still
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail, emailOffer()])]
+
+        let sut = await signIn(afterTheCode: Fix.needs([emailOffer(), Fix.challengePush]), emailWait: 60)
+        list(sut)?.select("email:2")
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+
+        list(sut)?.select("email:2")
+        await eventually { codeModel(sut) != nil }
+        #expect(codeModel(sut)?.canResend == true)
+        #expect(codeModel(sut)?.resendAvailableIn ?? 0 > 0, "the wait carried over")
+        await settle()
+        #expect(emailSends == [.challengeEmail(index: 2)], "one email, not two")
+    }
+
+    /// A code is only checked against the last challenge. A push sent in between replaced it, so coming back sends a
+    /// new email, with a wait of its own. This goes through the sign-in's shared request gate.
+    @Test func comingBackToTheEmailAfterAPush_emailsAgain() async {
+        clock.suspends = true
+        client.challengeEmailResults = [Fix.needs([Fix.verifyEmail, emailOffer()]),
+                                        Fix.needs([Fix.verifyEmail, emailOffer()])]
+        client.challengePushResults = [Fix.needs([Fix.verifyOob()])]
+
+        let sut = await signIn(afterTheCode: Fix.needs([emailOffer(), Fix.challengePush]), emailWait: 60)
+        list(sut)?.select("email:2")
+        await eventually { codeModel(sut) != nil }
+        codeModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+        list(sut)?.select("push:0")
+        await eventually { pushModel(sut) != nil }
+        pushModel(sut)?.switchFactor()
+        await eventually { list(sut) != nil }
+
+        list(sut)?.select("email:2")
+        await eventually { emailSends.count == 2 && (codeModel(sut)?.resendAvailableIn ?? 0) > 0 }
+        #expect(emailSends == [.challengeEmail(index: 2), .challengeEmail(index: 2)])
+        #expect((codeModel(sut)?.resendAvailableIn ?? 0) > 0, "with a wait of its own")
     }
 }

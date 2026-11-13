@@ -25,7 +25,7 @@ public struct EmailCodeChallengeMessages: MfaFactorMessages {
     public var title = text("mfa.emailCodeChallenge.title", "Enter the 6-digit code")
     /// The line under the title. The closure receives the address as the server masked it.
     public var description: @Sendable (_ address: String) -> String = { address in
-        String(localized: "mfa.emailCodeChallenge.description", defaultValue: "From \(address)",
+        String(localized: "mfa.emailCodeChallenge.description", defaultValue: "Sent to \(address)",
                bundle: ResourceBundle.default)
     }
     /// The line under the title when the server sent no address, so there is nothing to put in ``description``.
