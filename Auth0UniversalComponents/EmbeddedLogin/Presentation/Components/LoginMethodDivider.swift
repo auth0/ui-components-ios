@@ -20,6 +20,7 @@ struct LoginMethodDivider: View {
             line
         }
         .frame(maxWidth: .infinity)
+        .accessibilityHidden(true)
     }
 
     private var line: some View {

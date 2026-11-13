@@ -37,7 +37,7 @@ public struct LoginPhoneScreen: View {
             LoginPhoneForm(country: $country, number: $number, isLoading: isLoading, serverError: errorMessage,
                            pinsContinueToBottom: true, onContinue: onContinue)
         }
-        .embeddedScreenChrome(theme: theme)
+        .embeddedScreenChrome(theme: theme, scrolls: true)
     }
 }
 

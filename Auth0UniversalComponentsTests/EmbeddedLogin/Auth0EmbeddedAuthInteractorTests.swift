@@ -61,7 +61,7 @@ struct Auth0EmbeddedAuthInteractorTests {
         client.identifyResults = [Fix.needs([Fix.challengeEmail])]
         try await sut.startOTP(connection: "email", identifier: .email(email))
         #expect(Array(client.calls.suffix(3)) == [
-            .authorize(connection: "email"), .identify(email, type: .email), .challengeEmail(index: 1),
+            .authorize(connection: "email"), .identify(email, type: .email), .challengeEmail(index: 1)
         ])
     }
 
@@ -176,9 +176,10 @@ struct Auth0EmbeddedAuthInteractorTests {
     }
 
     /// On its own the login advertises only the steps it renders itself. Whatever plugs in adds its own.
-    @Test func capabilities_onTheirOwn_coverEmailAndPhone() {
+    @Test func capabilities_onTheirOwn_coverEmailPhoneAndPassword() {
         #expect(LiveEmbeddedAuthClient.firstFactorCapabilities
-                == [.identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP])
+                == [.identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP,
+                    .identifyUsername, .verifyPassword])
     }
 
     // MARK: SMS OTP

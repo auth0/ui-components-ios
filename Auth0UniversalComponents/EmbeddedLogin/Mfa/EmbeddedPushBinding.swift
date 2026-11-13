@@ -78,8 +78,8 @@ final class EmbeddedPushTransport: PushTransport {
         case .slowDown: return .slowDown(retryAfterMs: retryAfter, canResend: canResend)
         // Approved, and the policy asks for another factor.
         case .none: return .anotherFactor(menu(nextActions))
-        // No code is sent to a push check.
-        case .invalidCode, .invalidIdentifierOrCode: throw MfaError.unexpected(nil)
+        // No code or password is sent to a push check.
+        case .invalidCode, .invalidIdentifierOrCode, .invalidIdentifierOrPassword: throw MfaError.unexpected(nil)
         @unknown default: throw MfaError.unexpected(nil)
         }
     }

@@ -25,19 +25,47 @@ extension View {
     /// - Parameters:
     ///   - horizontalPadding: Side margin; defaults to `spacing.lg`. Factor screens use `spacing.xl`.
     ///   - topPadding: Space under the navigation bar; defaults to `spacing.lg`.
-    func embeddedScreenChrome(theme: Auth0Theme, horizontalPadding: CGFloat? = nil,
-                              topPadding: CGFloat? = nil) -> some View {
+    ///   - scrolls: Whether the content scrolls (and a drag dismisses the keyboard) when the keyboard or large text
+    ///     leaves too little room. Content that fits looks the same, and a bottom-pinned `Spacer` still pins.
+    func embeddedScreenChrome(theme: Auth0Theme, horizontalPadding: CGFloat? = nil, topPadding: CGFloat? = nil,
+                              scrolls: Bool = false) -> some View {
         let horizontal = horizontalPadding ?? theme.spacing.lg
-        return self
-            .padding(EdgeInsets(top: topPadding ?? theme.spacing.lg, leading: horizontal,
-                                bottom: theme.spacing.xl, trailing: horizontal))
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background {
-                ZStack {
-                    theme.colors.background.layerBase
-                    BrandGradient()
+        let insets = EdgeInsets(top: topPadding ?? theme.spacing.lg, leading: horizontal,
+                                bottom: theme.spacing.xl, trailing: horizontal)
+        return modifier(EmbeddedScreenChrome(insets: insets, scrolls: scrolls))
+    }
+}
+
+private struct EmbeddedScreenChrome: ViewModifier {
+    let insets: EdgeInsets
+    let scrolls: Bool
+
+    @Environment(\.auth0Theme) private var theme
+
+    func body(content: Content) -> some View {
+        Group {
+            if scrolls {
+                GeometryReader { proxy in
+                    ScrollView {
+                        content
+                            .padding(insets)
+                            .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
+                    }
+                    .scrollDismissesKeyboardInteractively()
+                    .scrollBounceBasedOnSize()
                 }
-                .ignoresSafeArea()
+            } else {
+                content
+                    .padding(insets)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
+        }
+        .background {
+            ZStack {
+                theme.colors.background.layerBase
+                BrandGradient()
+            }
+            .ignoresSafeArea()
+        }
     }
 }

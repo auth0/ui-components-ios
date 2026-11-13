@@ -93,8 +93,8 @@ final class EmbeddedPhoneCodeTransport: PhoneCodeTransport {
                 return .rejected(canResend: stillOffers(offer, in: nextActions))
             // Accepted, and the policy asks for another factor.
             case .none: return .anotherFactor(menu(nextActions))
-            // Push answers; a code check never gets them.
-            case .authorizationPending, .slowDown: throw MfaError.unexpected(nil)
+            // Push and password answers; a code check never gets them.
+            case .authorizationPending, .slowDown, .invalidIdentifierOrPassword: throw MfaError.unexpected(nil)
             @unknown default: throw MfaError.unexpected(nil)
             }
         }

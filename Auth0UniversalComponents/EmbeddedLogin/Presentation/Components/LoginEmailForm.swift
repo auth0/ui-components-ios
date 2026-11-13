@@ -27,6 +27,7 @@ struct LoginEmailForm: View {
         .onAppear { isFocused = true }
         .onChangeCompat(of: email) { _ in errors.userEdited() }
         .onChangeCompat(of: serverError) { if $0 != nil { errors.serverReported() } }
+        .announcing(errors.shown(server: serverError))
     }
 
     private func submit() {
