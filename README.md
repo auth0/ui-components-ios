@@ -11,6 +11,7 @@
 
 Composable UI building blocks for MFA enrollment and verification on iOS, built with SwiftUI Compose. This library provides ready-to-use components that integrate seamlessly with Auth0's authentication flows.
 - [Sample App](https://github.com/auth0/ui-components-ios/tree/main/AppUIComponents)
+- [Examples](https://github.com/auth0/ui-components-ios/blob/main/EXAMPLES.md) — initialisation, Embedded Login, multi-factor steps, and changing their words and screens
 - [API Documentation](https://github.com/auth0/ui-components-ios/blob/main/Documentation.docc/Documentation.md)
 - [Theme System](https://github.com/auth0/ui-components-ios/blob/main/Documentation.docc/ThemeSystem.md) — customise colours, typography, spacing, radii, and component sizes
 
@@ -22,7 +23,8 @@ This library provides ready-to-use UI components for multi-factor authentication
 - 📱 **Push Notifications** - Secure push-based authentication
 - 💬 **SMS OTP** - Phone number verification via one-time codes
 - 📧 **Email OTP** - Email-based verification
-- 🔑 **Recovery Codes** - Backup authentication codes for account recovery
+- 🔑 **Recovery Codes** - Backup authentication codes for account recovery, enrolled in My Account and usable as a step when signing in with Embedded Login
+- 🔓 **Embedded Login (beta)** - Native email or SMS one-time-code sign-in with `EmbeddedLoginView`. When the tenant asks for more, multi-factor steps run in place: Guardian push, SMS and voice codes, and recovery codes. See [Examples](EXAMPLES.md#embedded-login)
 - 🔐 **Passkeys** - Passwordless authentication using FIDO2/WebAuthn standards (Requires iOS 16.6+, macOS 13.5+, visionOS 1.0+)
 - ✨ **Skeleton shimmer loading** - Card screens show animated, theme-aware skeleton placeholders while data loads (light/dark mode, Reduce Motion aware)
 
@@ -46,6 +48,7 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 
 | Universal Components | Auth0.swift | Notes |
 |---|---|---|
+| Unreleased | 4.0.0-beta.1+ (< 5.0.0) | Adds recovery codes as a multi-factor step in Embedded Login. No breaking changes |
 | 1.0.0-beta.3 | 4.0.0-beta.1+ (< 5.0.0) | Adds sign-in with a phone number (SMS OTP) to Embedded Login, and SMS and voice codes as multi-factor steps. No breaking changes |
 | 1.0.0-beta.2 | 4.0.0-beta.1+ (< 5.0.0) | Adds multi-factor authentication (Guardian push) to Embedded Login. Breaking: `EmbeddedLoginView` hands the credentials to `onAuthenticated` instead of storing them |
 | 1.0.0-beta.1 | 4.0.0-beta.0+ (< 5.0.0) | Adds Embedded Login. Breaking: needs the Auth0.swift 4 beta |

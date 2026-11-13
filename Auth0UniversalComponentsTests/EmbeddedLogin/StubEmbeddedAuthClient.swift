@@ -15,6 +15,8 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         case verifyOtp(code: String, type: OtpType)
         case challengePush(index: Int)
         case verifyOob
+        case verifyRecoveryCode(code: String)
+        case confirmRecoveryCode
     }
 
     private(set) var calls: [Call] = []
@@ -26,6 +28,8 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     var verifyOtpResults: [Result<Credentials, Error>] = []
     var challengePushResults: [Error?] = []
     var verifyOobResults: [Result<Credentials, Error>] = []
+    var verifyRecoveryCodeResults: [Error?] = []
+    var confirmRecoveryCodeResults: [Result<Credentials, Error>] = []
 
     func authorize(connection: String) async throws {
         calls.append(.authorize(connection: connection))
@@ -61,6 +65,16 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         calls.append(.verifyOob)
         return try (verifyOobResults.popFirst() ?? .success(Credentials())).get()
     }
+
+    func verifyRecoveryCode(_ code: String) async throws {
+        calls.append(.verifyRecoveryCode(code: code))
+        if let error = verifyRecoveryCodeResults.popFirst() ?? nil { throw error }
+    }
+
+    func confirmRecoveryCode() async throws -> Credentials {
+        calls.append(.confirmRecoveryCode)
+        return try (confirmRecoveryCodeResults.popFirst() ?? .success(Credentials())).get()
+    }
 }
 
 final class StubCredentialsDelivery: CredentialsDelivering {
@@ -88,6 +102,10 @@ enum EmbeddedAuthFixtures {
     static let challengePush: [String: Any] = ["action": "action:challenge:push:v1", "index": 0,
                                                "name": "Sudhanshu's iPhone"]
     static let identifyPhone: [String: Any] = ["action": "action:identify:phone:v1"]
+    static let verifyRecoveryCode: [String: Any] = ["action": "action:verify:recovery-code:v1"]
+    static func confirmRecoveryCode(newCode: String = "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5") -> [String: Any] {
+        ["action": "action:confirm:recovery-code:v1", "new_code": newCode]
+    }
 
     static func challengePhone(index: Int = 0, masked: String = "(4**)***-*900",
                                methods: [String] = ["text", "voice"]) -> [String: Any] {

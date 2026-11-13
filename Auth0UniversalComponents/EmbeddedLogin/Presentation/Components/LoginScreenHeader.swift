@@ -1,18 +1,21 @@
 import SwiftUI
 
 /// Screen title with an optional subtitle and "Edit" action. A masked subtitle (`From (4**)***-*900`) draws its `*`
-/// smaller and top-aligned.
+/// smaller and top-aligned. The subtitle keeps to one line unless `subtitleLineLimit` says otherwise (`nil` wraps).
 public struct LoginScreenHeader: View {
     let title: String
     let subtitle: String?
+    let subtitleLineLimit: Int?
     let isEditEnabled: Bool
     let onEdit: (() -> Void)?
 
     @Environment(\.auth0Theme) private var theme
 
-    public init(title: String, subtitle: String? = nil, isEditEnabled: Bool = true, onEdit: (() -> Void)? = nil) {
+    public init(title: String, subtitle: String? = nil, subtitleLineLimit: Int? = 1, isEditEnabled: Bool = true,
+                onEdit: (() -> Void)? = nil) {
         self.title = title
         self.subtitle = subtitle
+        self.subtitleLineLimit = subtitleLineLimit
         self.isEditEnabled = isEditEnabled
         self.onEdit = onEdit
     }
@@ -30,8 +33,9 @@ public struct LoginScreenHeader: View {
                     MaskedText(subtitle)
                         .auth0TextStyle(theme.typography.body)
                         .foregroundStyle(theme.colors.text.regular)
-                        .lineLimit(1)
+                        .lineLimit(subtitleLineLimit)
                         .truncationMode(.middle)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let onEdit {
                         Button("Edit", action: onEdit)
                             .buttonStyle(.plain)

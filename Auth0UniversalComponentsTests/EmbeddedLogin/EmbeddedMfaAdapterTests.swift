@@ -32,18 +32,20 @@ struct EmbeddedPushBindingTests {
     }
 
     @Test func theAdditionalStep_advertisesTheUnionOfItsBindings_withoutRepeats() {
-        #expect(EmbeddedMfaStep().capabilities == [.challengePush, .verifyOob, .challengePhone, .verifyOTP])
+        #expect(EmbeddedMfaStep().capabilities
+                == [.challengePush, .verifyOob, .challengePhone, .verifyOTP, .verifyRecoveryCode, .confirmRecoveryCode])
         #expect(EmbeddedMfaStep(bindings: []).capabilities.isEmpty)
         #expect(EmbeddedMfaStep(bindings: [EmbeddedPushBinding(), EmbeddedPushBinding()]).capabilities
                 == [.challengePush, .verifyOob])
     }
 
     /// With the login's own steps, this is what `authorize` is asked to route to: Email and SMS OTP, then Guardian
-    /// push. SMS as a factor needs the same phone steps the login already lists, so they appear once.
-    @Test func withTheLoginsOwnSteps_theCapabilitiesAreEmailPhoneAndPush_eachOnce() {
+    /// push and the recovery code. SMS as a factor needs the same phone steps the login already lists, so they appear
+    /// once.
+    @Test func withTheLoginsOwnSteps_theCapabilitiesAreEmailPhonePushAndRecovery_eachOnce() {
         #expect(LiveEmbeddedAuthClient.capabilities(adding: EmbeddedMfaStep().capabilities)
                 == [.identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP,
-                    .challengePush, .verifyOob])
+                    .challengePush, .verifyOob, .verifyRecoveryCode, .confirmRecoveryCode])
     }
 }
 
