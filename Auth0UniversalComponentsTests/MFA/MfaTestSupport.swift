@@ -28,7 +28,7 @@ actor ManualMfaClock: MfaClock {
     }
 }
 
-/// Records each wait and returns at once, or suspends until cancelled, like a long `Task.sleep`.
+/// Records each wait and returns at once, or suspends until cancelled.
 @MainActor
 final class RecordingMfaClock: MfaClock {
     private(set) var delays: [Int] = []
@@ -36,7 +36,11 @@ final class RecordingMfaClock: MfaClock {
 
     // `MfaClock.sleep` is nonisolated, so the recording hops to the main actor.
     nonisolated func sleep(milliseconds: Int) async throws {
-        if await record(milliseconds) { try await Task.sleep(nanoseconds: .max) }
+        guard await record(milliseconds) else { return }
+        // Short sleeps in a loop, not one `Task.sleep(nanoseconds: .max)`: where that overflows its deadline it returns
+        // at once, and a clock that was meant to stand still would let the countdown and the push poll run (a poll
+        // against an unscripted stub approves the sign-in and ends the flow). Cancelling still ends it.
+        while true { try await Task.sleep(nanoseconds: 1_000_000_000) }
     }
 
     /// Returns whether to suspend.
