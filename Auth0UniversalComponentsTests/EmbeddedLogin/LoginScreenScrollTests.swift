@@ -1,12 +1,13 @@
-#if canImport(UIKit)
+#if os(iOS)
 @testable import Auth0UniversalComponents
 import Foundation
 import SwiftUI
 import Testing
 import UIKit
 
-/// The password and code screens scroll when the keyboard or large text leaves too little room, and sit still when
-/// everything fits. Hosted in a real window so the system lays them out.
+/// The screens scroll when the keyboard or large text leaves too little room, and sit still when everything fits.
+/// Hosted in a real window so the system lays them out. iOS only: that is where a keyboard covers the screen, and a
+/// window made without a scene crashes the visionOS test host.
 @Suite
 @MainActor
 struct LoginScreenScrollTests {
