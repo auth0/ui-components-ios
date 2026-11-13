@@ -39,7 +39,8 @@ public struct MfaPhoneCodeChallengeScreen: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             MfaCodeHeader(title: copy.title,
-                          subtitle: copy.subtitle(number: model.destination, delivery: model.delivery))
+                          subtitle: copy.subtitle(number: model.destination, delivery: model.delivery),
+                          subtitleLineLimit: nil)
 
             MfaCodeEntryForm(code: $code, digitCount: model.codeLength, fieldLabel: copy.fieldLabel,
                              verifyTitle: copy.verify, isVerifying: model.isVerifying, error: problem,

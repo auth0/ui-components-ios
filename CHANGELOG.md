@@ -10,6 +10,7 @@
 
 **Changed**
 
+- **The multi-factor phone code screens name the end of the number.** A text-message code now reads **Sent to the phone number ending in 900** instead of **From (4\*\*)\*\*\*-\*900**, and a voice call reads **Calling your phone number ending in 900** instead of **Calling (4\*\*)\*\*\*-\*900**. Signing in with a phone number and email codes are unchanged.
 - **A user whose only factor is an authenticator app no longer ends with `MfaError.noEligibleFactors`.** They now get the authenticator app's code screen. An app that handled that case in `.onMfaError` (for example to send them to Universal Login) will see it less often: it still applies when nothing is enrolled, or when the tenant asks only for factors this flow doesn't run yet. Apps that draw the MFA steps themselves (headless) now receive a `.factor` step for `.totp` with a `TotpChallengeModel`, and should handle it.
 
 ## [1.0.0-beta.3](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.3) (2026-11-06)
