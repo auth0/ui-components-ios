@@ -35,8 +35,14 @@ public struct PhoneCodeChallengeMessages: MfaFactorMessages {
             title: localized("mfa.authenticatorList.factors.sms.title", "Text message"),
             description: localized("mfa.authenticatorList.factors.sms.description", "Get a code by text message.")),
         description: { number in
-            String(localized: "mfa.phoneCodeChallenge.text.description", defaultValue: "From \(number)",
-                   bundle: ResourceBundle.default)
+            // The end of the number, not all of it: a server that hides every digit leaves nothing to name.
+            guard let ending = PhoneNumberEnding.digits(of: number) else {
+                return localized("mfa.phoneCodeChallenge.text.descriptionUnnamed",
+                                 "We texted a code to your phone.")
+            }
+            return String(localized: "mfa.phoneCodeChallenge.text.description",
+                          defaultValue: "Sent to the phone number ending in \(ending)",
+                          bundle: ResourceBundle.default)
         },
         descriptionUnnamed: localized("mfa.phoneCodeChallenge.text.descriptionUnnamed",
                                       "We texted a code to your phone."))
@@ -46,8 +52,13 @@ public struct PhoneCodeChallengeMessages: MfaFactorMessages {
             title: localized("mfa.authenticatorList.factors.voice.title", "Voice call"),
             description: localized("mfa.authenticatorList.factors.voice.description", "Get a code by phone call.")),
         description: { number in
-            String(localized: "mfa.phoneCodeChallenge.voice.description", defaultValue: "Calling \(number)",
-                   bundle: ResourceBundle.default)
+            guard let ending = PhoneNumberEnding.digits(of: number) else {
+                return localized("mfa.phoneCodeChallenge.voice.descriptionUnnamed",
+                                 "We're calling your phone with a code.")
+            }
+            return String(localized: "mfa.phoneCodeChallenge.voice.description",
+                          defaultValue: "Calling your phone number ending in \(ending)",
+                          bundle: ResourceBundle.default)
         },
         descriptionUnnamed: localized("mfa.phoneCodeChallenge.voice.descriptionUnnamed",
                                  "We're calling your phone with a code."))
