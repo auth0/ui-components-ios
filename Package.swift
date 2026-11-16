@@ -11,9 +11,9 @@ let package = Package(
     platforms: [.iOS(.v16), .macOS(.v13), .visionOS(.v1)],
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
-        // Embedded Login needs the Flow 2 APIs (Guardian push, and signing in with a password), first shipped in
-        // this beta.
-        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "4.0.0-beta.2")
+        // Embedded Login needs the Flow 2 APIs (Guardian push, and signing in with a password). beta.3 is the
+        // version the Cartfile pins and this SDK is built and tested against, so Swift Package Manager requires it too.
+        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "4.0.0-beta.3")
     ],
     targets: [
         .target(

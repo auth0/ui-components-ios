@@ -127,7 +127,7 @@ The `MyAccountAuthMethodsView` component allows users to:
 
 ## Embedded Login
 
-> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.2` or later 4.x**, the first release with the Embedded Authorization APIs for signing in with a password and for the multi-factor steps (Guardian push, phone, email and authenticator app codes, and recovery codes). Your tenant must have Embedded Login enabled, with Email OTP, SMS OTP, a username and password, or any of them on the connection you pass in.
+> **Note:** Embedded Login is in beta and requires **Auth0.swift `4.0.0-beta.3` or later 4.x**, the first release with the Embedded Authorization APIs for signing in with a password and for the multi-factor steps (Guardian push, phone, email and authenticator app codes, and recovery codes). Your tenant must have Embedded Login enabled, with Email OTP, SMS OTP, a username and password, or any of them on the connection you pass in.
 
 ### Display the Embedded Login View
 
