@@ -35,7 +35,9 @@ struct AuthenticatorView: View {
             Spacer()
 
             Image("threedots", bundle: ResourceBundle.default)
+                .renderingMode(.template)
                 .frame(width: theme.sizes.iconLarge, height: theme.sizes.iconLarge)
+                .foregroundStyle(theme.colors.background.inverse)
                 .onTapGesture {
                     showConfirmationDialog = true
                 }
