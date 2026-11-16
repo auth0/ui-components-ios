@@ -39,8 +39,8 @@ class WelcomeViewModel: ObservableObject {
                 case .success:
                     self?.clearLocalSession()
                     completion()
-                case .failure(let error):
-                    debugPrint("Error: \(error.localizedDescription)")
+                case .failure:
+                    break
                 }
             }
     }

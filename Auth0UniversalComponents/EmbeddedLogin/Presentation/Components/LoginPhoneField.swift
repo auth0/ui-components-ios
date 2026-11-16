@@ -16,7 +16,7 @@ struct LoginPhoneField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            LoginFieldLabel("Phone number")
+            LoginFieldLabel(LoginChannel.phone.fieldLabel)
             LoginInputField(isInvalid: error != nil) {
                 HStack(spacing: theme.spacing.md) {
                     countryButton
@@ -24,7 +24,7 @@ struct LoginPhoneField: View {
                         .phoneInput()
                         .focused(isFocused)
                         .onSubmit(onSubmit)
-                        .accessibilityLabel("Phone number")
+                        .accessibilityLabel(LoginChannel.phone.fieldLabel)
                 }
             }
 

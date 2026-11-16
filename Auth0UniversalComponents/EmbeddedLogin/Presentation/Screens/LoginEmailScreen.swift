@@ -29,7 +29,7 @@ public struct LoginEmailScreen: View {
             LoginEmailForm(email: $email, isLoading: isLoading, serverError: errorMessage, pinsContinueToBottom: true,
                            onContinue: onContinue)
         }
-        .embeddedScreenChrome(theme: theme)
+        .embeddedScreenChrome(theme: theme, scrolls: true)
     }
 }
 
