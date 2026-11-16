@@ -41,6 +41,7 @@ struct LoginPhoneForm: View {
             errors.userEdited()
         }
         .onChangeCompat(of: serverError) { if $0 != nil { errors.serverReported() } }
+        .announcing(errors.shown(server: serverError))
     }
 
     /// `number` laid out for the country just picked. One typed with its own `+` names its country, so it stays as is.

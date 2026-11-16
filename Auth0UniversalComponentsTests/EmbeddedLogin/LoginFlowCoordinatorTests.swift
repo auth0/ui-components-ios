@@ -40,14 +40,17 @@ struct LoginFlowCoordinatorTests {
     }
 
     @Test func onlyUnsupportedOptions_reportsNoMethods() async {
-        let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: .success([.unsupported("webauthn")])))
+        let interactor = ScriptedAuthInteractor(discover: .success([.unsupported("webauthn")]))
+        let sut = LoginFlowCoordinator(interactor: interactor)
         await sut.send(.start)
         #expect(sut.step == .noMethodsAvailable)
     }
 
     @Test func firstEmailOption_connectionIsUsedForStartOTP() async {
         let interactor = ScriptedAuthInteractor(
-            discover: .success([.unsupported("webauthn"), .emailOTP(connection: "first"), .emailOTP(connection: "second")]),
+            discover: .success([
+                .unsupported("webauthn"), .emailOTP(connection: "first"), .emailOTP(connection: "second")
+            ]),
             startOTP: .success(())
         )
         _ = await atCodeEntry(interactor)
@@ -73,12 +76,13 @@ struct LoginFlowCoordinatorTests {
         let interactor = ScriptedAuthInteractor(discover: emailDiscovery(), startOTP: .success(()),
                                                 verifyOTP: .success(.authenticated))
         let sut = await atCodeEntry(interactor)
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
 
         await sut.send(.submitOTP(code: "112233"))
         #expect(sut.step == .authenticated)
         #expect(interactor.receivedRequests == [
-            .discover, .startOTP(connection: "email", identifier: .email(email)), .verifyOTP(code: "112233"),
+            .discover, .identify(connection: "email", identifier: .email(email)),
+            .startOTP(connection: "email", identifier: .email(email)), .verifyOTP(code: "112233")
         ])
     }
 
@@ -87,7 +91,7 @@ struct LoginFlowCoordinatorTests {
         let sut = await atCodeEntry(interactor)
 
         await sut.resendOTP()
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
         #expect(startOTPCount(interactor) == 2)
     }
 
@@ -102,7 +106,7 @@ struct LoginFlowCoordinatorTests {
 
         interactor.startOTPResult = .success(())
         await sut.send(.submitIdentifier(.email(email)))
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
     }
 
     @Test func codeNotSent_staysOnIdentifierWithInlineError() async {
@@ -114,7 +118,7 @@ struct LoginFlowCoordinatorTests {
 
         interactor.startOTPResult = .success(())
         await sut.send(.submitIdentifier(.email(email)))
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
         #expect(sut.inputError == nil)
     }
 
@@ -134,7 +138,7 @@ struct LoginFlowCoordinatorTests {
         let sut = await atCodeEntry(interactor)
 
         await sut.send(.submitOTP(code: "000000"))
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
         #expect(sut.inputError == failure)
     }
 
@@ -148,7 +152,7 @@ struct LoginFlowCoordinatorTests {
         #expect(sut.inputError == nil)
 
         await sut.send(.retry)
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
     }
 
     @Test func resubmit_clearsInlineError() async {
@@ -252,8 +256,11 @@ struct LoginFlowCoordinatorTests {
 
         interactor.release(.startOTP)
         await first.value
-        #expect(interactor.receivedRequests == [.discover, .startOTP(connection: "email", identifier: .email(email))])
-        #expect(sut.step == .collectOTPCode(identifier: .email(email)))
+        #expect(interactor.receivedRequests == [
+            .discover, .identify(connection: "email", identifier: .email(email)),
+            .startOTP(connection: "email", identifier: .email(email))
+        ])
+        #expect(sut.screen == .collectOTPCode(identifier: .email(email)))
     }
 
     @Test func doubleSubmitOTP_verifiesOnce() async {

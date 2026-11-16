@@ -7,13 +7,15 @@ import Foundation
 final class ScriptedAuthInteractor: AuthInteracting {
 
     enum Call: Hashable {
-        case discover, startOTP, verifyOTP
+        case discover, identify, startOTP, verifyOTP, verifyPassword
     }
 
     enum Request: Equatable {
         case discover
         case startOTP(connection: String, identifier: LoginIdentifier)
         case verifyOTP(code: String)
+        case identify(connection: String, identifier: LoginIdentifier)
+        case verifyPassword(String)
     }
 
     enum ScriptedAuthError: LocalizedError, Equatable {
@@ -35,6 +37,9 @@ final class ScriptedAuthInteractor: AuthInteracting {
     /// What a successful `startOTP` says the code went to (the server's masked number).
     var startOTPSentTo: String?
     var verifyOTPResult: Result<AuthProgress, Error>?
+    /// What the server offers once it has the email, number or username. A code only, unless a test says otherwise.
+    var identifyResult: Result<IdentifierOutcome, Error>? = .success(.codeOffered(canUsePassword: false))
+    var verifyPasswordResult: Result<AuthProgress, Error>?
 
     var held: Set<Call> = []
     private var gates: [Call: CheckedContinuation<Void, Never>] = [:]
@@ -67,6 +72,18 @@ final class ScriptedAuthInteractor: AuthInteracting {
         receivedRequests.append(.verifyOTP(code: code))
         await gate(.verifyOTP)
         return try resolve(verifyOTPResult, call: "verifyOTP")
+    }
+
+    func identify(connection: String, identifier: LoginIdentifier) async throws -> IdentifierOutcome {
+        receivedRequests.append(.identify(connection: connection, identifier: identifier))
+        await gate(.identify)
+        return try resolve(identifyResult, call: "identify")
+    }
+
+    func verifyPassword(_ password: String) async throws -> AuthProgress {
+        receivedRequests.append(.verifyPassword(password))
+        await gate(.verifyPassword)
+        return try resolve(verifyPasswordResult, call: "verifyPassword")
     }
 
     /// Suspends until `call` is held at its gate.
