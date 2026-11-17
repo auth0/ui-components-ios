@@ -2,6 +2,8 @@
 import {
   applyDashboardClientChanges,
   applyMyAccountClientGrantChanges,
+  DEFAULT_CLIENT_NAME,
+  setClientName,
 } from "./utils/clients.mjs"
 import { applyDatabaseConnectionChanges } from "./utils/connections.mjs"
 import {
@@ -11,7 +13,7 @@ import {
 } from "./utils/discovery.mjs"
 import { writeAuth0Plist } from "./utils/plist-writer.mjs"
 import { writeInfoPlistUrlScheme } from "./utils/info-plist-writer.mjs"
-import { confirmWithUser } from "./utils/helpers.mjs"
+import { confirmWithUser, promptWithUser } from "./utils/helpers.mjs"
 import { getManualActions } from "./utils/manual-actions.mjs"
 import {
   applyMyAccountResourceServerChanges,
@@ -47,13 +49,29 @@ async function main() {
   const args = process.argv.slice(2)
 
   if (args.includes("--help") || args.includes("-h")) {
-    console.log("Usage: npm run auth0:bootstrap <tenant-domain> [--yes]")
+    console.log(
+      "Usage: npm run auth0:bootstrap <tenant-domain> [--client-name=<name>] [--yes]"
+    )
     console.log("\nArguments:")
     console.log(
       "  tenant-domain  Required. The Auth0 tenant domain to configure."
     )
     console.log("                 Must match your Auth0 CLI active tenant.")
     console.log("\nOptions:")
+    console.log("  --client-name=<name>")
+    console.log(
+      "                 Name of the native Auth0 application. Interactive runs"
+    )
+    console.log(
+      `                 are prompted for it; the default is "${DEFAULT_CLIENT_NAME}".`
+    )
+    console.log("                 Env: AUTH0_CLIENT_NAME")
+    console.log(
+      "                 The name is the lookup key on re-runs: reusing a name"
+    )
+    console.log(
+      "                 updates that application, a new name creates a new one."
+    )
     console.log(
       "  --yes, -y      Skip the confirmation prompt and apply changes."
     )
@@ -124,6 +142,13 @@ async function main() {
   // identifier for the OAuth redirect to reach the app.
   const scheme = iosConfig.bundleIdentifier
   iosConfig.scheme = scheme
+
+  // Resolve the native application's name before discovery: it is the key used
+  // to find an existing app (exact name + app_type "native"), so the change plan
+  // depends on it. Held in module state via setClientName so every check/apply
+  // reads the same name.
+  setClientName(await resolveClientName(flags))
+  console.log("")
 
   // Step 2: Discovery
   step("🔍", "Resource Discovery")
@@ -315,6 +340,80 @@ function reportManualActions() {
   console.log(
     "  the bootstrap. It is idempotent — completed resources will be skipped.\n"
   )
+}
+
+/**
+ * Reject client names the Management API would reject, before spending a
+ * round-trip on them. Auth0 requires a non-empty name without `<` or `>`.
+ *
+ * @param {string} name - Candidate client name (already trimmed)
+ * @returns {string | null} An error message, or null when the name is valid
+ */
+function validateClientName(name) {
+  if (!name) return "Name cannot be empty."
+  if (/[<>]/.test(name)) return "Name cannot contain < or >."
+  return null
+}
+
+/**
+ * Decide what to name the native Auth0 application for this run.
+ *
+ * Precedence: `--client-name=<name>` → `AUTH0_CLIENT_NAME` → interactive prompt
+ * (defaulting to DEFAULT_CLIENT_NAME) → the default itself when stdin is not a
+ * TTY (headless/CI), so a non-interactive run never hangs on input.
+ *
+ * The interactive path loops until the user accepts a valid name, so a typo does
+ * not silently create a stray application in the tenant.
+ *
+ * @param {string[]} flags - CLI flags from argv
+ * @returns {Promise<string>} The client name to use
+ */
+async function resolveClientName(flags) {
+  const prefix = "--client-name="
+  const flagValue = flags
+    .find((f) => f.startsWith(prefix))
+    ?.slice(prefix.length)
+    .trim()
+  const preset = flagValue || process.env.AUTH0_CLIENT_NAME?.trim()
+
+  if (preset) {
+    const error = validateClientName(preset)
+    if (error) {
+      throw new Error(
+        `Invalid client name "${preset}" (--client-name / AUTH0_CLIENT_NAME): ${error}`
+      )
+    }
+    console.log(`✅ Native application name: ${preset}`)
+    return preset
+  }
+
+  // No TTY means there is nobody to answer the prompt, so take the default
+  // rather than looping on empty input.
+  if (!process.stdin.isTTY) {
+    console.log(`✅ Native application name: ${DEFAULT_CLIENT_NAME} (default)`)
+    return DEFAULT_CLIENT_NAME
+  }
+
+  console.log(
+    "\n🏷️  Name of the native Auth0 application to create or update.\n" +
+      "   Reusing a name updates that application; a new name creates a new one.\n" +
+      "   Press Enter to accept the default."
+  )
+
+  for (;;) {
+    const answer = await promptWithUser("   Application name", DEFAULT_CLIENT_NAME)
+
+    const error = validateClientName(answer)
+    if (error) {
+      console.log(`   ⚠️  ${error}`)
+      continue
+    }
+
+    if (await confirmWithUser(`   Use "${answer}" as the application name?`)) {
+      return answer
+    }
+    console.log("   No problem — enter a different name.")
+  }
 }
 
 // Run the main function
