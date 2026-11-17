@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.0.0-beta.4](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.4) (2026-11-17)
+[Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.3...1.0.0-beta.4)
+
+**Added**
+- Dark mode threedots menu disaapearing on saved authenticator bug fixed [\#92](https://github.com/auth0/ui-components-ios/pull/92) ([Sudhanshu96](https://github.com/Sudhanshu96))
+- SMS OTP Login text and MFA texts updated [\#91](https://github.com/auth0/ui-components-ios/pull/91) ([Sudhanshu96](https://github.com/Sudhanshu96))
+- Implemented Login via Email-Password in Embedded flow [\#90](https://github.com/auth0/ui-components-ios/pull/90) ([Sudhanshu96](https://github.com/Sudhanshu96))
+- MFA Authenticator flow implemented [\#87](https://github.com/auth0/ui-components-ios/pull/87) ([Sudhanshu96](https://github.com/Sudhanshu96))
+- MFA Email OTP support added [\#88](https://github.com/auth0/ui-components-ios/pull/88) ([Sudhanshu96](https://github.com/Sudhanshu96))
+- Implemented the MFA via Recovery code flow [\#89](https://github.com/auth0/ui-components-ios/pull/89) ([Sudhanshu96](https://github.com/Sudhanshu96))
+
 ## Unreleased
 
 **Added**
