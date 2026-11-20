@@ -31,19 +31,19 @@ struct LoginCooldownTests {
 
     @Test func theButtonRedrawsEverySecondUpToTheEndOfTheWait_andNotAfter() {
         let end = start.addingTimeInterval(3)
-        let ticks = LoginCodeAlternativeButton.ticks(until: end, from: start)
+        let ticks = ResendCooldown.ticks(until: end, from: start)
         #expect(ticks == [start, start.addingTimeInterval(1), start.addingTimeInterval(2), end])
     }
 
     @Test func aPartialSecondIsRoundedUp_soTheLastRedrawIsExactlyTheEnd() {
         let end = start.addingTimeInterval(2.4)
-        let ticks = LoginCodeAlternativeButton.ticks(until: end, from: start)
+        let ticks = ResendCooldown.ticks(until: end, from: start)
         #expect(ticks.last == end)
         #expect(ticks.count == 4)
     }
 
     @Test func aWaitThatIsOver_hasOneRedraw() {
         let end = start.addingTimeInterval(-5)
-        #expect(LoginCodeAlternativeButton.ticks(until: end, from: start) == [end])
+        #expect(ResendCooldown.ticks(until: end, from: start) == [end])
     }
 }

@@ -18,6 +18,8 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         case verifyOob
         case verifyRecoveryCode(code: String)
         case confirmRecoveryCode
+        case signup
+        case confirmSignup
     }
 
     private(set) var calls: [Call] = []
@@ -32,6 +34,8 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
     var verifyOobResults: [Result<Credentials, Error>] = []
     var verifyRecoveryCodeResults: [Error?] = []
     var confirmRecoveryCodeResults: [Result<Credentials, Error>] = []
+    var signupResults: [Error?] = []
+    var confirmSignupResults: [Result<Credentials, Error>] = []
 
     func authorize(connection: String) async throws {
         calls.append(.authorize(connection: connection))
@@ -82,6 +86,16 @@ final class StubEmbeddedAuthClient: EmbeddedAuthClient {
         calls.append(.confirmRecoveryCode)
         return try (confirmRecoveryCodeResults.popFirst() ?? .success(Credentials())).get()
     }
+
+    func signup() async throws {
+        calls.append(.signup)
+        if let error = signupResults.popFirst() ?? nil { throw error }
+    }
+
+    func confirmSignup() async throws -> Credentials {
+        calls.append(.confirmSignup)
+        return try (confirmSignupResults.popFirst() ?? .success(Credentials())).get()
+    }
 }
 
 final class StubCredentialsDelivery: CredentialsDelivering {
@@ -113,6 +127,12 @@ enum EmbeddedAuthFixtures {
     static func confirmRecoveryCode(newCode: String = "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5") -> [String: Any] {
         ["action": "action:confirm:recovery-code:v1", "new_code": newCode]
     }
+    /// The sign-up offer.
+    static func signup(email required: Bool = true) -> [String: Any] {
+        ["action": "action:signup:v1", "identifiers": ["email": ["required": required]]]
+    }
+    /// The last step of a sign-up.
+    static let confirmSignup: [String: Any] = ["action": "action:signup:confirm:v1"]
     static let identifyUsername: [String: Any] = ["action": "action:identify:username:v1"]
     static let verifyPassword: [String: Any] = ["action": "action:verify:password:v1"]
 

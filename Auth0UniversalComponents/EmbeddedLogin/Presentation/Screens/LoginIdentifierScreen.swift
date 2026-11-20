@@ -10,8 +10,14 @@ struct LoginIdentifierScreen: View {
     let errorMessage: String?
     let onContinue: (LoginIdentifier) -> Void
     let onChoose: (LoginChannel) -> Void
+    /// Replaces the title: sign-up's, say. `nil` is the login's own.
+    let title: String?
+    /// The way to the other flow, under Continue. `nil` offers none.
+    let accountLink: LoginAccountLink?
+    let onAccountLink: () -> Void
 
     @Environment(\.auth0Theme) private var theme
+    @Environment(\.embeddedEntry) private var entryConfiguration
     @State private var email: String
     @State private var number: String
     @State private var country: Country?
@@ -19,14 +25,18 @@ struct LoginIdentifierScreen: View {
 
     /// - Parameter prefill: What the user last submitted on this screen, when they come back to it.
     init(channel: LoginChannel, alternatives: [LoginChannel], prefill: LoginIdentifier? = nil, isLoading: Bool = false,
-         errorMessage: String? = nil, onContinue: @escaping (LoginIdentifier) -> Void,
-         onChoose: @escaping (LoginChannel) -> Void) {
+         errorMessage: String? = nil, title: String? = nil, accountLink: LoginAccountLink? = nil,
+         onAccountLink: @escaping () -> Void = {}, onContinue: @escaping (LoginIdentifier) -> Void,
+         onChoose: @escaping (LoginChannel) -> Void = { _ in }) {
         self.channel = channel
         self.alternatives = alternatives
         self.isLoading = isLoading
         self.errorMessage = errorMessage
         self.onContinue = onContinue
         self.onChoose = onChoose
+        self.title = title
+        self.accountLink = accountLink
+        self.onAccountLink = onAccountLink
         _email = State(initialValue: prefill?.channel == .email ? prefill?.value ?? "" : "")
         // Set before the first render, so the phone form doesn't take it for an edit and hide `errorMessage`.
         let entry = LoginPhoneForm.startingEntry(for: prefill?.channel == .phone ? prefill?.value ?? "" : "")
@@ -36,22 +46,30 @@ struct LoginIdentifierScreen: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            LoginScreenHeader(title: channel.title)
-            form
+        LoginEntryScaffold(title: resolvedTitle, form: AnyView(form), accountLink: accountLink,
+                           isEnabled: !isLoading, onAccountLink: onAccountLink,
+                           alternatives: alternatives.isEmpty ? nil : AnyView(alternativeButtons))
+    }
 
-            if !alternatives.isEmpty {
-                LoginMethodDivider()
-                    .padding(.vertical, theme.spacing.md)
-                VStack(spacing: theme.spacing.sm) {
-                    ForEach(alternatives, id: \.self) { alternative in
-                        LoginSecondaryButton(alternative.continueTitle, icon: alternative.continueIcon,
-                                             isEnabled: !isLoading) { onChoose(alternative) }
-                    }
+    /// Sign-up's own title when given; otherwise the login's: "Log in or sign up" when sign-up is offered, else the
+    /// brand's, else the way's own.
+    private var resolvedTitle: String {
+        if let title { return title }
+        if accountLink == .signUp { return entryConfiguration.messages.loginOrSignUpTitle }
+        return entryConfiguration.messages.loginTitle ?? channel.title
+    }
+
+    private var alternativeButtons: some View {
+        VStack(spacing: 0) {
+            LoginMethodDivider()
+                .padding(.bottom, theme.spacing.md)
+            VStack(spacing: theme.spacing.sm) {
+                ForEach(alternatives, id: \.self) { alternative in
+                    LoginSecondaryButton(alternative.continueTitle, icon: alternative.continueIcon,
+                                         isEnabled: !isLoading) { onChoose(alternative) }
                 }
             }
         }
-        .embeddedScreenChrome(theme: theme, scrolls: true)
     }
 
     @ViewBuilder
@@ -126,6 +144,15 @@ extension LoginChannel {
     var continueIcon: Image {
         Image(iconAssetName, bundle: ResourceBundle.default).renderingMode(.template)
     }
+}
+
+#Preview("Email only, sign-up offered") {
+    LoginIdentifierScreen(channel: .email, alternatives: [], accountLink: .signUp, onContinue: { _ in })
+}
+
+#Preview("Sign-up entry, opened from the login") {
+    LoginIdentifierScreen(channel: .email, alternatives: [], title: "Create your account", accountLink: .logIn,
+                          onContinue: { _ in })
 }
 
 #Preview("Email first, phone offered") {

@@ -51,6 +51,12 @@ struct ErrorHandler {
             handleMyAccountError(error, handler: handler, retryCallback: retryCallback)
         } else if let error = error as? WebAuthError {
             handleWebAuthError(error, handler: handler, retryCallback: retryCallback)
+        } else {
+            // Anything else (a network error, a custom `TokenProvider`'s error) still has to be shown, or the screen
+            // is left blank.
+            handler.errorViewModel = Auth0UIComponentError.unknown(cause: error).errorViewModel(completion: {
+                retryCallback()
+            })
         }
     }
 
@@ -78,6 +84,8 @@ struct ErrorHandler {
             handleMyAccountError(error, handler: handler)
         } else if let error = error as? WebAuthError {
             handler.errorMessage = error.message
+        } else {
+            handler.errorMessage = "Something went wrong. Please try again."
         }
     }
 

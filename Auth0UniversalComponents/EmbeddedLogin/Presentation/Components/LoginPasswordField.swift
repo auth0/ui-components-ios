@@ -29,7 +29,7 @@ struct LoginPasswordField: View {
                 Button { isRevealed.toggle() } label: {
                     Image(systemName: isRevealed ? "eye.slash" : "eye")
                         .foregroundStyle(theme.colors.text.regular)
-                        .frame(minWidth: 44, minHeight: 44)
+                        .frame(minWidth: theme.sizes.tapTarget, minHeight: theme.sizes.tapTarget)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

@@ -27,7 +27,7 @@ struct LoginMethodDivider: View {
         Rectangle()
             .fill(theme.colors.border.regular)
             .frame(maxWidth: .infinity)
-            .frame(height: 1)
+            .frame(height: theme.sizes.borderWidth)
             .accessibilityHidden(true)
     }
 }

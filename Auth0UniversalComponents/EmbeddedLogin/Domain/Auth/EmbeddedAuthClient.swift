@@ -14,6 +14,10 @@ protocol EmbeddedAuthClient {
     func verifyOob() async throws -> Credentials
     func verifyRecoveryCode(_ code: String) async throws
     func confirmRecoveryCode() async throws -> Credentials
+    /// Starts registering a new user. Like every step that isn't the last, it always answers with a continuation.
+    func signup() async throws
+    /// Creates the account and exchanges the code for credentials.
+    func confirmSignup() async throws -> Credentials
 }
 
 struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
@@ -21,6 +25,9 @@ struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
     static let firstFactorCapabilities: [EmbeddedCapability] = [
         .identifyEmail, .challengeEmail, .identifyPhone, .challengePhone, .verifyOTP, .identifyUsername, .verifyPassword
     ]
+
+    /// What the login advertises so the server offers "sign up" next to its own steps. The sign-up flow runs the rest.
+    static let signupCapabilities: [EmbeddedCapability] = [.signup, .confirmSignup]
 
     /// The login's own steps, then the additional step's, each once: they can overlap (both can text a code).
     static func capabilities(adding additional: [EmbeddedCapability]) -> [EmbeddedCapability] {
@@ -61,6 +68,8 @@ struct LiveEmbeddedAuthClient: EmbeddedAuthClient {
     func verifyOob() async throws -> Credentials { try await auth.verifyOob().start() }
     func verifyRecoveryCode(_ code: String) async throws { try await auth.verifyRecoveryCode(code).start() }
     func confirmRecoveryCode() async throws -> Credentials { try await auth.confirmRecoveryCode().start() }
+    func signup() async throws { try await auth.signup().start() }
+    func confirmSignup() async throws -> Credentials { try await auth.confirmSignup().start() }
 }
 
 /// Where a finished sign-in's credentials go. The SDK keeps nothing: the app that embeds the login receives them.

@@ -368,4 +368,6 @@ private final class HoldingEmbeddedAuthClient: EmbeddedAuthClient {
     func challengePush(index: Int) async throws { throw Fix.noActiveSession }
     func verifyRecoveryCode(_ code: String) async throws { throw Fix.noActiveSession }
     func confirmRecoveryCode() async throws -> Credentials { throw Fix.noActiveSession }
+    func signup() async throws { throw Fix.noActiveSession }
+    func confirmSignup() async throws -> Credentials { throw Fix.noActiveSession }
 }

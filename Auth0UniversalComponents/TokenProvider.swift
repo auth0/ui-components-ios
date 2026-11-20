@@ -71,16 +71,3 @@ public protocol TokenProvider: Sendable {
     /// - Throws: An error if credentials cannot be fetched or refreshed
     func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials
 }
-
-extension TokenProvider {
-    /// Default implementation of fetchAPICredentials that calls the protocol method.
-    ///
-    /// - Parameters:
-    ///   - audience: The API audience (e.g., "https://api.example.com")
-    ///   - scope: The requested scopes (space-separated)
-    /// - Returns: API credentials for the requested audience and scope
-    /// - Throws: An error if credentials cannot be fetched or refreshed
-    func fetchAPICredentials(audience: String, scope: String) async throws -> APICredentials {
-        try await self.fetchAPICredentials(audience: audience, scope: scope)
-    }
-}

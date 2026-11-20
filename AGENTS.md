@@ -36,10 +36,11 @@ ui-components-ios/
 │   ├── SaveAuthenticators/             # Manage saved factors
 │   │   ├── Domain/                     # DeleteAuthMethodUseCase
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
-│   ├── EmbeddedLogin/                  # Native Email or SMS OTP, or username and password, sign-in; hands over to MFA when the tenant asks for more
+│   ├── EmbeddedLogin/                  # Native Email or SMS OTP, or username and password, sign-in and email sign-up; hands over to MFA when the tenant asks for more
 │   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
+│   │   ├── Signup/                     # SignupFlowCoordinator, Auth0SignupInteractor, host view (no MFA types)
 │   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
-│   │   └── Presentation/               # EmbeddedLoginView, login screens, shared factor-screen pieces
+│   │   └── Presentation/               # EmbeddedLoginView, login screens, Entry/ (composable first screen), shared factor-screen pieces
 │   ├── MFA/                            # Multi-factor engine (no login, no Auth0, no factor names)
 │   │   ├── Core/                       # MfaFlowReducer, MfaController, MfaStep, MfaError, factor contract
 │   │   ├── Configuration/              # MfaConfiguration, MfaMessages, MfaScreens, .onMfaError
@@ -71,7 +72,7 @@ ui-components-ios/
 1. **Presentation Layer**
    - **Views**: SwiftUI Views for MFA enrollment/management
    - **ViewModels**: State management and presentation logic
-   - **Coordinators**: Navigation and flow management (via NavigationStore)
+   - **Coordinators**: Navigation and flow management (via `Router<Route>`)
    - **Responsibility**: User interface and user interaction
 
 2. **Domain Layer**
@@ -164,7 +165,7 @@ This factory attaches the `Auth0-Client` HTTP header that identifies requests as
 
 ```swift
 // Version.swift
-let version = "1.0.0"
+let version = "1.0.0-beta.4"
 let libraryName = "universal-components-ios"
 ```
 
@@ -259,6 +260,10 @@ the end).
 
 ### Theming & Styling
 
+- **Design tokens, no literals** (Embedded Login and sign-up; the My Account screens still have some): Read colours, fonts, spacing, radii, sizes and the brand logo from `@Environment(\.auth0Theme)`
+  (`theme.colors…`, `theme.typography…`, `theme.spacing…`, `theme.radius…`, `theme.sizes…`, `theme.brand…`). Don't write a
+  `Color` literal, a `.font(.system(size:))` or a bare point value in a view; if no token fits, add one (a new
+  requirement gets a default in the protocol extension, so existing custom themes keep compiling).
 - **Native SwiftUI styling**: Use built-in SwiftUI modifiers
 - **Dynamic Type**: Support for accessibility text sizes
 - **Dark Mode**: Full support for appearance switching
@@ -556,7 +561,7 @@ Reusable components in `Core/Utils/`:
 - **CountryPickerView** - Country code selection for SMS
 - **ErrorScreen** - Standardized error display with retry
 - **Toast** - Transient notifications for success/info messages
-- **NavigationStore** - Navigation state management
+- **Router** - Navigation state management (`Router<Route>`)
 - **Auth0UIComponentError** - Unified error types
 
 ## Security Guidelines
@@ -566,7 +571,7 @@ When working with authentication components:
 ### Sensitive Data Handling
 
 - **Never log tokens or OTP codes** - Even in debug builds
-- **Use Keychain** - Leverage `SimpleKeychain` for credential storage
+- **The SDK stores nothing** - Credentials go to the app's own `onAuthenticated` / `TokenProvider`; the SDK never touches the Keychain
 - **Clear sensitive state** - Wipe OTP codes from memory after use
 - **Screenshot protection** - Consider security for recovery codes display
 - **Secure text entry** - Use appropriate secure fields for OTP input
@@ -611,7 +616,7 @@ When working with authentication components:
 - **Over-abstraction**: Don't create layers without clear benefit
 - **Platform differences**: Test on all supported platforms (iOS, macOS, visionOS)
 - **Token expiration**: Always handle token refresh in TokenProvider
-- **Navigation state**: Use NavigationStore for coordinated multi-screen flows
+- **Navigation state**: Use `Router<Route>` for coordinated multi-screen flows
 
 ## AI Agent Best Practices
 
@@ -633,7 +638,7 @@ When assisting with this codebase:
 
 - **Two-phase enrollment**: Start (get challenge) → Confirm (verify response)
 - **State machine**: Use enum-based states (idle → loading → success/error)
-- **Navigation**: Use `NavigationStore` for coordinated flows
+- **Navigation**: Use `Router<Route>` for coordinated flows
 - **Validation**: Validate input (phone numbers, OTP codes) before API calls
 - **User feedback**: Use `Toast` for success messages, `ErrorScreen` for failures
 - **Platform conventions**: Follow iOS/macOS/visionOS design guidelines

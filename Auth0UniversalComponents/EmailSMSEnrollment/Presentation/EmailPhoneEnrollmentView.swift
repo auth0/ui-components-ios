@@ -27,7 +27,9 @@ struct EmailPhoneEnrollmentView: View {
                 .foregroundStyle(theme.colors.text.bold)
                 .padding(.bottom, theme.spacing.xs)
 
-            Text("We will text you a verification code.")
+            Text(viewModel.isPhoneAuthMethod
+                 ? "We will text you a verification code."
+                 : "We will email you a verification code.")
                 .auth0TextStyle(theme.typography.body)
                 .foregroundStyle(theme.colors.text.regular)
                 .padding(.bottom, 25)
@@ -166,7 +168,7 @@ struct EmailPhoneEnrollmentView: View {
         .onDisappear {
             textFieldFocused = false
         }
-        .onChange(of: viewModel.navigationRoute) { _ in
+        .onChangeCompat(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }

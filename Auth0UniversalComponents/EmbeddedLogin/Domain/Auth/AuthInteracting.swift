@@ -7,6 +7,8 @@ enum LoginOption: Equatable {
     case emailOTP(connection: String)
     case phoneOTP(connection: String)
     case password(connection: String)
+    /// The tenant lets new users register: the first screen offers "Sign up".
+    case signup
     /// Advertised but not supported by this flow; ignored by the coordinator.
     case unsupported(String)
 }

@@ -5,6 +5,8 @@ import SwiftUI
 public struct LoginCodeScreen: View {
     let title: String
     let subtitle: String?
+    /// How many lines the subtitle may take; `nil` wraps. The default keeps it to one, truncated in the middle.
+    let subtitleLineLimit: Int?
     let fieldLabel: String
     let digitCount: Int
     let isLoading: Bool
@@ -32,6 +34,7 @@ public struct LoginCodeScreen: View {
 
     public init(title: String = "Enter the 6-digit code",
                 subtitle: String? = nil,
+                subtitleLineLimit: Int? = 1,
                 fieldLabel: String = "One-Time Passcode",
                 digitCount: Int = 6,
                 isLoading: Bool = false,
@@ -45,6 +48,7 @@ public struct LoginCodeScreen: View {
                 usePasswordIcon: Image? = nil) {
         self.title = title
         self.subtitle = subtitle
+        self.subtitleLineLimit = subtitleLineLimit
         self.fieldLabel = fieldLabel
         self.digitCount = digitCount
         self.isLoading = isLoading
@@ -67,7 +71,8 @@ public struct LoginCodeScreen: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            LoginScreenHeader(title: title, subtitle: subtitle, isEditEnabled: !isLoading, onEdit: onEdit)
+            LoginScreenHeader(title: title, subtitle: subtitle, subtitleLineLimit: subtitleLineLimit,
+                              isEditEnabled: !isLoading, onEdit: onEdit)
 
             CodeEntryForm(code: $code, digitCount: digitCount, fieldLabel: fieldLabel,
                           isVerifying: isLoading && (pending == nil || pending == .verify), isLocked: isLoading,

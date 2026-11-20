@@ -1,5 +1,26 @@
 # Change Log
 
+## Unreleased
+
+**Added**
+
+- **Embedded Login has a new entry screen with a way into sign-up.** A logo, a title, the field with Continue, and a "Sign up" link when the tenant offers it, which opens sign-up in place. The top bar has a back arrow on every screen, so the flow fits inside an app's own navigation. New `EmbeddedLoginView(signup:)`: `.offered` (the default) or `.hidden`.
+- **The entry screen is composable.** `.embeddedEntry(_:)` sets an `EmbeddedEntryConfiguration` (logo, layout, words and link colour), and `.embeddedEntryLogo`, `.embeddedEntryLayout` and `.embeddedEntryMessages` change one part at a time. `EmbeddedEntryLayout` offers `.centered`, `.top` or your own.
+- **The theme carries the brand.** New `Auth0Theme.brand` (`Auth0BrandTokens`, `DefaultAuth0BrandTokens(logo:logoLabel:)`) sets the logo for every entry screen at once. It defaults to the Auth0 logo. `.embeddedEntryLogo(.hidden)` removes it.
+- **New design tokens.** `colors.foreground` (`linkPrimary`, `success`, `error`), `border.elevation`, and the sizes `tapTarget`, `logoHeight`, `statusIcon`, `navigationIcon`, `borderWidth`, `focusRingWidth` and `errorRingWidth`. A custom theme written before them keeps compiling. The Embedded Login screens now use tokens instead of fixed values. See "Theme System".
+- **Embedded sign-up with an email.** New `EmbeddedSignupView(connection:onAuthenticated:)`: the user enters their email, confirms it with a one-time code and creates the account. The credentials go to `onAuthenticated` once, and the SDK stores nothing. A connection that needs more than an email, such as a password or a phone number, isn't supported yet.
+
+**Changed**
+
+- `LoginErrorScreen`, `LoginNoMethodsScreen` and `LoginSuccessScreen` now follow the theme.
+- Copying an authenticator secret or a recovery code in My Account uses the careful pasteboard: it stays on the device and expires.
+- An `EmbeddedLoginView` that comes back on screen no longer restarts the sign-in.
+
+**Fixed**
+
+- My Account screens now show errors of a kind the SDK doesn't recognise, instead of staying blank.
+- The email enrollment screen no longer says a code will be texted.
+
 ## [1.0.0-beta.4](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.4) (2026-11-17)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.3...1.0.0-beta.4)
 

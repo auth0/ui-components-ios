@@ -33,6 +33,17 @@ struct LoginFlowCoordinatorTests {
         #expect(sut.step == .collectOTPIdentifier(.email))
     }
 
+    @Test func start_whenTheScreenReappears_keepsWhatTheUserHasDone() async {
+        let interactor = ScriptedAuthInteractor(discover: emailDiscovery())
+        let sut = await atCodeEntry(interactor)
+        let before = sut.step
+
+        await sut.send(.start)
+
+        #expect(sut.step == before)
+        #expect(interactor.receivedRequests.filter { $0 == .discover }.count == 1)
+    }
+
     @Test func noOptions_reportsNoMethods() async {
         let sut = LoginFlowCoordinator(interactor: ScriptedAuthInteractor(discover: .success([])))
         await sut.send(.start)

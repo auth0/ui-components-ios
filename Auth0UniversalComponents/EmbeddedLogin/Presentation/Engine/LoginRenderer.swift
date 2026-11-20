@@ -8,6 +8,8 @@ struct RenderContext {
     var additionalStepView: AnyView?
     /// Pre-fills the identifier screens, so Back from code entry keeps what the user typed.
     var identifier: LoginIdentifier?
+    /// Opens sign-up from the first screen's "Sign up" link; `nil` when the server didn't offer it.
+    var signUp: (() -> Void)?
     var isSubmitting: Bool
     var inputError: AuthFailure?
     /// When a code may be asked for again for `identifier`; the code button on the password screen waits until then.
@@ -96,8 +98,8 @@ struct LoginRenderer {
         case .loading:
             LoginLoadingScreen()
 
-        case let .identifier(channel, alternatives, _):
-            identifierScreen(channel, alternatives: alternatives, context: ctx)
+        case let .identifier(channel, alternatives, isFirst):
+            identifierScreen(channel, alternatives: alternatives, isFirst: isFirst, context: ctx)
 
         case let .otpCode(identifier, sentTo, canUsePassword):
             LoginCodeScreen(
@@ -143,15 +145,19 @@ struct LoginRenderer {
         }
     }
 
-    /// The first of several ways gets the shared screen with "OR"; a way on its own gets its own screen.
+    /// The first screen is the entry screen, whatever else is offered: the field and Continue, the way to sign-up when
+    /// the server offered it, and "OR" with the other ways when the tenant has more than one. A way opened from it gets
+    /// its own screen.
     @ViewBuilder
-    private func identifierScreen(_ channel: LoginChannel, alternatives: [LoginChannel],
+    private func identifierScreen(_ channel: LoginChannel, alternatives: [LoginChannel], isFirst: Bool,
                                   context ctx: RenderContext) -> some View {
         let prefill = ctx.identifier?.channel == channel ? ctx.identifier : nil
         let error = ctx.inputError?.message(for: channel)
-        if !alternatives.isEmpty {
+        if isFirst {
             LoginIdentifierScreen(channel: channel, alternatives: alternatives, prefill: prefill,
                                   isLoading: ctx.isSubmitting, errorMessage: error,
+                                  accountLink: ctx.signUp == nil ? nil : .signUp,
+                                  onAccountLink: { ctx.signUp?() },
                                   onContinue: { ctx.dispatch(.submitIdentifier($0)) },
                                   onChoose: { ctx.dispatch(.chooseChannel($0)) })
         } else {

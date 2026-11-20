@@ -50,13 +50,15 @@ public struct LoginCodeField: View {
         .frame(maxWidth: .infinity)
         .frame(height: theme.sizes.size3xlDimen)
         .background(isError ? theme.colors.background.errorSubtle : theme.colors.background.layerTop, in: shape)
-        .overlay(shape.strokeBorder(isError ? theme.colors.errorBorder : theme.colors.border.shadow, lineWidth: 1))
+        .overlay(shape.strokeBorder(isError ? theme.colors.errorBorder : theme.colors.border.shadow,
+                                       lineWidth: theme.sizes.borderWidth))
         .overlay {
             if isFocused && !isError {
-                shape.strokeBorder(theme.colors.border.subtle, lineWidth: 3)
+                shape.strokeBorder(theme.colors.border.subtle, lineWidth: theme.sizes.focusRingWidth)
             }
         }
-        .errorRing(isError && isFocused, cornerRadius: theme.radius.medium, color: theme.colors.errorRing)
+        .errorRing(isError && isFocused, cornerRadius: theme.radius.medium, color: theme.colors.errorRing,
+                   width: theme.sizes.errorRingWidth, overhang: theme.sizes.errorRingWidth - theme.sizes.borderWidth)
         .shadow(color: .black.opacity(isError ? 0 : 0.07), radius: 4, x: 0, y: 2)
         .focused($focusedField, equals: index)
     }

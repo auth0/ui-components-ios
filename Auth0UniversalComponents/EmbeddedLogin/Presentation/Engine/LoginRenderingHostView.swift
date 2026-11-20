@@ -22,13 +22,33 @@ struct LoginRenderingHostView: View {
     /// Stateless, so the host owns one; the decisions it makes are covered by `LoginRendererTests`.
     private let renderer = LoginRenderer()
 
+    /// Builds sign-up, shown over the login. It is given what returns to the login. `nil` offers no sign-up. The host
+    /// knows nothing about sign-up itself: whoever builds it says what it is.
+    private let makeSignup: ((_ backToLogin: @escaping () -> Void) -> AnyView)?
+    @State private var isShowingSignup = false
+
     /// `interactor` is built once, with the coordinator: a parent re-rendering doesn't build another.
-    init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil) {
+    init(interactor: @autoclosure @escaping () -> any AuthInteracting, additionalStep: AdditionalStepProviding? = nil,
+         makeSignup: ((_ backToLogin: @escaping () -> Void) -> AnyView)? = nil) {
         _coordinator = StateObject(
             wrappedValue: LoginFlowCoordinator(interactor: interactor(), additionalStep: additionalStep))
+        self.makeSignup = makeSignup
     }
 
+    /// The login stays where it is while sign-up is over it, so coming back doesn't load it again.
     var body: some View {
+        ZStack {
+            loginBody
+                .accessibilityHidden(isShowingSignup)
+                .allowsHitTesting(!isShowingSignup)
+            if isShowingSignup, let makeSignup {
+                makeSignup { setSignupShown(false) }
+                    .transition(.move(edge: .trailing))
+            }
+        }
+    }
+
+    private var loginBody: some View {
         ZStack {
             theme.colors.background.layerBase.ignoresSafeArea()
             renderer.view(for: displayedPlan, context: context)
@@ -59,9 +79,11 @@ struct LoginRenderingHostView: View {
     }
 
     private var context: RenderContext {
-        RenderContext(
+        let signUp: (() -> Void)? = coordinator.canSignUp && makeSignup != nil ? { openSignup() } : nil
+        return RenderContext(
             additionalStepView: coordinator.additionalStep?.view,
             identifier: coordinator.enteredIdentifier,
+            signUp: signUp,
             isSubmitting: coordinator.isSubmitting,
             inputError: coordinator.inputError,
             codeAvailableAt: coordinator.codeAvailableAt(for: coordinator.enteredIdentifier),
@@ -116,13 +138,19 @@ struct LoginRenderingHostView: View {
         }
     }
 
+    private func openSignup() { setSignupShown(true) }
+
+    private func setSignupShown(_ shown: Bool) {
+        withAnimation(motionEnabled ? .easeInOut(duration: 0.28) : nil) { isShowingSignup = shown }
+    }
+
     private func send(_ event: LoginEvent) {
         Task { await coordinator.send(event) }
     }
 }
 
 /// Clips horizontally, unbounded vertically.
-private struct HorizontalClip: Shape {
+struct HorizontalClip: Shape {
     func path(in rect: CGRect) -> Path {
         Path(rect.insetBy(dx: 0, dy: -10_000))
     }

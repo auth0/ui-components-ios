@@ -46,6 +46,14 @@ public protocol Auth0BorderColorTokens: Sendable {
 
     /// Border-like shadow colour for depth and elevation cues.
     var shadow: Color { get }
+
+    /// The drop shadow under a raised card or a modal loader. Added after the first release: a type written before
+    /// it gets a translucent black.
+    var elevation: Color { get }
+}
+
+public extension Auth0BorderColorTokens {
+    var elevation: Color { Color.black.opacity(0.18) }
 }
 
 // MARK: - Default Implementation
@@ -73,6 +81,7 @@ public struct DefaultAuth0BorderColorTokens: Auth0BorderColorTokens {
     // MARK: - Elevation
 
     public var shadow: Color
+    public var elevation: Color
 
     // MARK: - Init
 
@@ -82,7 +91,8 @@ public struct DefaultAuth0BorderColorTokens: Auth0BorderColorTokens {
         regular: Color = Color("Border/Default", bundle: ResourceBundle.default),
         subtle: Color = Color("Border/Subtle", bundle: ResourceBundle.default),
         // Elevation
-        shadow: Color = Color("Border/Shadow", bundle: ResourceBundle.default)
+        shadow: Color = Color("Border/Shadow", bundle: ResourceBundle.default),
+        elevation: Color = Color.black.opacity(0.18)
     ) {
         // Emphasis
         self.bold    = bold
@@ -90,5 +100,6 @@ public struct DefaultAuth0BorderColorTokens: Auth0BorderColorTokens {
         self.subtle  = subtle
         // Elevation
         self.shadow  = shadow
+        self.elevation = elevation
     }
 }

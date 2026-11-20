@@ -96,6 +96,16 @@ extension View {
         }
     }
 
+    /// Runs `action` when the software keyboard has come up.
+    @ViewBuilder
+    func onKeyboardShown(perform action: @escaping () -> Void) -> some View {
+        #if canImport(UIKit)
+        onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in action() }
+        #else
+        self
+        #endif
+    }
+
     /// Has VoiceOver read `message` when it appears, since an error under a field is otherwise silent.
     func announcing(_ message: String?) -> some View {
         onChangeCompat(of: message) { newValue in

@@ -121,7 +121,7 @@ struct OTPView: View {
         .onAppear {
             focusedField = 0
         }
-        .onChange(of: viewModel.navigationRoute) { _ in
+        .onChangeCompat(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }

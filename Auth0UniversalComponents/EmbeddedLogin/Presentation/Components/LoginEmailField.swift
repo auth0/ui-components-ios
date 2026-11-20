@@ -13,7 +13,7 @@ struct LoginEmailField: View {
         VStack(alignment: .leading, spacing: 0) {
             LoginFieldLabel(LoginChannel.email.fieldLabel)
             LoginInputField(isInvalid: error != nil) {
-                TextField("", text: $email)
+                TextField("", text: $email, prompt: theme.fieldPrompt("name@example.com"))
                     .emailInput()
                     .focused(isFocused)
                     .onSubmit(onSubmit)

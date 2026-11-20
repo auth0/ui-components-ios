@@ -47,11 +47,12 @@ struct LoginSecondaryButton: View {
                 if isLoading { Auth0Loader(tintColor: theme.colors.text.bold) }
             }
             .foregroundStyle(theme.colors.text.bold)
-            // Grows with Dynamic Type instead of clipping; 44pt at the default size.
+            // Grows with Dynamic Type instead of clipping; the tap target at the default size.
             .padding(.vertical, theme.spacing.sm)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: theme.sizes.tapTarget)
             .background(theme.colors.background.layerTop, in: shape)
-            .overlay(shape.strokeBorder(theme.colors.border.regular, lineWidth: 1))
+            .overlay(shape.strokeBorder(theme.colors.border.regular,
+                                       lineWidth: theme.sizes.borderWidth))
             .contentShape(shape)
         }
         .buttonStyle(.plain)

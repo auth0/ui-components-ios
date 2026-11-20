@@ -22,7 +22,7 @@ final class PasskeysEnrollmentViewModel: NSObject,
     private let confirmPasskeyEnrollmentUseCase: ConfirmPasskeyEnrollmentUseCaseable
     private let dependencies: Auth0UniversalComponentsSDKInitializer
     private var passkeyChallenge: PasskeyEnrollmentChallenge?
-    private var delegate: RefreshAuthDataProtocol?
+    private weak var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
     
     // MARK: - Published properties

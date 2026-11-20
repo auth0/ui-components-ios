@@ -1,10 +1,10 @@
 # Theming Auth0 UI Components
 
-Customise colours, typography, spacing, corner radii, and component sizes to match your brand — with zero boilerplate for the default Auth0 look.
+Customise colours, typography, spacing, corner radii, component sizes, and your logo to match your brand — with zero boilerplate for the default Auth0 look.
 
 ## Overview
 
-Auth0 UI Components ships with a fully injectable theme system. Every visual property — colours, fonts, spacing, corner radii, and component dimensions — is expressed as a **design token**: a named constant that carries a design decision, not a raw value.
+Auth0 UI Components ships with a fully injectable theme system. Every visual property — colours, fonts, spacing, corner radii, component dimensions, and the brand's logo — is expressed as a **design token**: a named constant that carries a design decision, not a raw value. The Embedded Login and sign-up screens use no literal colour, font or size, so changing a token changes every one of them; some My Account screens still carry a few fixed paddings and skeleton sizes.
 
 > **What is a design token?**
 > A design token is a single source of truth for a visual property. Instead of writing `Color(hex: "#1F1F1F")` in dozens of places, you write `theme.colors.primary` once. If the brand colour changes, you update one token and every component updates automatically — no search-and-replace required.
@@ -40,7 +40,7 @@ The theme is organised in three layers that separate raw values from their meani
 
 **Layer 1 (Palette)** stores the raw colour values in `Colors.xcassets`, organised into three Mobile Design System namespaces: `Background/`, `Border/`, and `Text/`. Every palette entry is an *adaptive* colorset — a single asset that contains both a light-mode and a dark-mode swatch. Separating the palette from semantic names means the entire colour system is interchangeable: swap the palette, keep the semantics, or keep the palette and redefine the semantics.
 
-**Layer 2 (Semantic tokens)** is the public API. Colours are split across three focused protocols — ``Auth0BackgroundColorTokens``, ``Auth0TextColorTokens``, and ``Auth0BorderColorTokens`` — each mapping roles onto palette entries. `Auth0ColorTokens` is a thin container that aggregates all three under `background`, `text`, and `border` properties. SDK views consume tokens via `theme.colors.background.primary`, `theme.colors.text.bold`, etc.
+**Layer 2 (Semantic tokens)** is the public API. Colours are split across four focused protocols — ``Auth0BackgroundColorTokens``, ``Auth0TextColorTokens``, ``Auth0BorderColorTokens`` and ``Auth0ForegroundColorTokens`` — each mapping roles onto palette entries. `Auth0ColorTokens` is a thin container that aggregates all three under `background`, `text`, and `border` properties. SDK views consume tokens via `theme.colors.background.primary`, `theme.colors.text.bold`, etc.
 
 **Layer 3 (Injection)** wraps the active token set in a plain `Auth0Theme` struct and pushes it through the SwiftUI Environment with a single `.auth0Theme(_:)` modifier.
 
@@ -48,7 +48,7 @@ The theme is organised in three layers that separate raw values from their meani
 
 ### For Designers — How Tokens Map to the UI
 
-The five token categories map directly to the visual properties a designer controls in a design tool:
+The six token categories map directly to the visual properties a designer controls in a design tool:
 
 | Token category | What it controls | Analogy in design tool |
 |---|---|---|
@@ -427,18 +427,68 @@ Corner radii create visual hierarchy: tighter curves on small cells, softer curv
 
 Fixed component dimensions that define the height, width, and icon scale of SDK elements. These are the values designers annotate on component specs.
 
-> **For designers:** The `size4xlDimen` and `size5xlDimen` tokens control the width and height of each individual digit cell in a code-entry field (OTP, PIN, etc.). The `containerSizeLargeDimen` token controls the height of any read-only code display box (recovery codes, secret keys). Adjusting these tokens resizes the entire component consistently across all screens.
+> **For designers:** The `size2xlDimen` and `size3xlDimen` tokens control the width and height of each individual digit cell in a code-entry field (OTP, PIN, etc.). The `containerSizeLargeDimen` token controls the height of any read-only code display box (recovery codes, secret keys). Adjusting these tokens resizes the entire component consistently across all screens.
 
 | Token | Default | Usage |
 |---|---|---|
 | `buttonHeight` | 48 pt | All primary and secondary action buttons |
 | `inputHeight` | 60 pt | Text and phone-number input fields |
-| `size4xlDimen` | 48 pt | Width of a single character-input cell (OTP digit, PIN digit, etc.) |
-| `size5xlDimen` | 56 pt | Height of a single character-input cell (OTP digit, PIN digit, etc.) |
+| `size2xlDimen` | 48 pt | Width of a single character-input cell (OTP digit, PIN digit, etc.) |
+| `size3xlDimen` | 56 pt | Height of a single character-input cell (OTP digit, PIN digit, etc.) |
 | `containerSizeLargeDimen` | 52 pt | Height of a read-only code display container (recovery code, TOTP secret, etc.) |
 | `iconSmall` | 16 pt | Small icons — chevrons, info indicators, checkmarks |
 | `iconMedium` | 24 pt | Standard icons — authentication-method images |
 | `iconLarge` | 28 pt | Large icons — three-dots menu button |
+| `tapTarget` | 44 pt | The smallest side of anything the user taps; the height of the Embedded Login buttons and its top bar |
+| `logoHeight` | 40 pt | Height of the brand logo on the Embedded Login and sign-up entry screens |
+| `statusIcon` | 44 pt | The symbol on a status screen (signed in, nothing to sign in with) |
+| `navigationIcon` | 20 pt | The arrow in the Embedded Login top bar |
+| `borderWidth` | 1 pt | A hairline outline: a field, a button, a card |
+| `focusRingWidth` | 3 pt | The ring around a focused field |
+| `errorRingWidth` | 4 pt | The ring around an invalid field |
+
+The last seven were added after the first release. A custom ``Auth0SizeTokens`` written before them keeps compiling and gets these defaults.
+
+---
+
+### Foreground — ``Auth0ForegroundColorTokens``
+
+Colours for content that isn't body text, drawn over a surface.
+
+| Token | Default | Usage |
+|---|---|---|
+| `linkPrimary` | #9921FE | "Sign up" and "Log in" under the Embedded Login field |
+| `success` | #218C4D (a lighter green in dark mode) | The check on the "Email verified." screen |
+| `error` | #CA3B2B | Error text, digits and cursor in Embedded Login |
+
+`Auth0ColorTokens.foreground` has a default, so a theme written before this group existed keeps compiling. Supply your own with `DefaultAuth0ColorTokens(foreground: DefaultAuth0ForegroundColorTokens(linkPrimary: ...))`.
+
+One more colour was added to an existing group the same way: `border.elevation` (the drop shadow under a raised card).
+
+---
+
+### Brand — ``Auth0BrandTokens``
+
+The brand's own assets. Today that is the logo shown above the title of the Embedded Login and sign-up entry screens.
+
+| Token | Default | Usage |
+|---|---|---|
+| `logo` | The Auth0 logo | The image above the entry screen's title. A template image takes the colour of the text around it, so it reads in dark mode too; give your own image `.renderingMode(.original)` to keep its colours |
+| `logoLabel` | `"Auth0"` | What VoiceOver says for the logo |
+
+Replace it once, in the theme, and every screen that shows the logo follows:
+
+```swift
+var theme = Auth0Theme()
+theme.brand = DefaultAuth0BrandTokens(logo: Image("AcmeLogo"), logoLabel: "Acme")
+
+EmbeddedLoginView(connection: "Username-Password-Authentication") { credentials in
+    // …
+}
+.auth0Theme(theme)
+```
+
+To change the logo of one screen only, or hide it, use `.embeddedEntryLogo { … }` and `.embeddedEntryLogo(.hidden)`. See "Customize the Entry Screen" in `EXAMPLES.md`.
 
 ---
 
@@ -462,6 +512,14 @@ Fixed component dimensions that define the height, width, and icon scale of SDK 
 ### Color Tokens — Border
 - ``Auth0BorderColorTokens``
 - ``DefaultAuth0BorderColorTokens``
+
+### Color Tokens — Foreground
+- ``Auth0ForegroundColorTokens``
+- ``DefaultAuth0ForegroundColorTokens``
+
+### Brand Tokens
+- ``Auth0BrandTokens``
+- ``DefaultAuth0BrandTokens``
 
 ### Typography Tokens
 - ``Auth0TypographyTokens``
