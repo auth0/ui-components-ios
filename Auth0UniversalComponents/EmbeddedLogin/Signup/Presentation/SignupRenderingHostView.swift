@@ -1,8 +1,8 @@
-import Auth0
 import SwiftUI
 
-/// Renders the coordinator's step, animates screen changes and owns the nav bar. The screens are the login's own
-/// (`LoginEmailScreen`, `LoginCodeScreen`, `LoginErrorScreen`), with sign-up's words.
+/// Renders the coordinator's step, animates screen changes and owns the nav bar. The entry, code and error screens are
+/// the login's own (`LoginIdentifierScreen`, `LoginCodeScreen`, `LoginErrorScreen`), with sign-up's words; the
+/// rest (`SignupDeliveryScreen`, `SignupVerifiedScreen`) are sign-up's.
 struct SignupRenderingHostView: View {
     @StateObject private var coordinator: SignupFlowCoordinator
     @Environment(\.auth0Theme) private var theme
@@ -11,13 +11,8 @@ struct SignupRenderingHostView: View {
 
     /// Held locally so screen changes can be committed inside `withAnimation`.
     @State private var displayed: SignupStep = .loading
-    @State private var lastDepth = 0
-    /// Push (deeper) vs. pop (shallower).
-    @State private var forward = true
-
-    #if !os(macOS)
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    #endif
+    @State private var transition = ScreenTransition()
+    private let motion = ScreenMotion()
 
     /// Set when sign-up was opened from the login: the entry screen then offers "Log in", and Back from it returns
     /// there instead of leaving the flow.
@@ -34,7 +29,7 @@ struct SignupRenderingHostView: View {
             theme.colors.background.layerBase.ignoresSafeArea()
             screen(for: displayed)
                 .id(displayed.identity)
-                .transition(pushTransition)
+                .transition(transition.transition)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(HorizontalClip())
@@ -45,7 +40,7 @@ struct SignupRenderingHostView: View {
         .task { await coordinator.send(.start) }
         .onAppear {
             displayed = coordinator.step
-            lastDepth = displayed.depth
+            transition.start(at: displayed.depth)
         }
         .onChangeCompat(of: coordinator.step) { syncDisplay(to: $0) }
     }
@@ -61,15 +56,17 @@ struct SignupRenderingHostView: View {
         case let .collectIdentifier(kind):
             identifierScreen(kind)
 
+        case let .chooseDelivery(choice):
+            SignupDeliveryScreen(sentTo: choice.challenge.sentTo ?? choice.identifier.value,
+                                 ways: choice.challenge.deliveries, isLoading: coordinator.isSubmitting,
+                                 errorMessage: coordinator.inputError?.message(for: choice.identifier.kind),
+                                 onEdit: handleBack, onContinue: { send(.chooseDelivery($0)) })
+
         case let .collectCode(code):
-            LoginCodeScreen(
-                subtitle: "Sent to \(code.identifier.value)",
-                subtitleLineLimit: nil,
-                isLoading: coordinator.isSubmitting,
-                errorMessage: coordinator.inputError?.message,
-                onVerify: { send(.submitCode($0)) },
-                onEdit: handleBack,
-                onResend: { send(.resend) })
+            LoginCodeScreen(subtitle: code.subtitle, subtitleLineLimit: nil, isLoading: coordinator.isSubmitting,
+                            errorMessage: coordinator.inputError?.message(for: code.identifier.kind),
+                            isCodeExpired: code.isExpired, onVerify: { send(.submitCode($0)) },
+                            onEdit: handleBack, onResend: { send(.resend) })
 
         case .confirm:
             verifiedScreen
@@ -79,7 +76,7 @@ struct SignupRenderingHostView: View {
 
         case .unavailable:
             LoginErrorScreen(message: "This app can't create accounts right now.", title: "Sign-up isn't available",
-                             retryTitle: "Go back") { dismiss() }
+                             retryTitle: "Go back") { leaveFlow() }
 
         case let .failed(message, canRetry):
             LoginErrorScreen(message: message, title: "Sign-up couldn't be completed.",
@@ -88,25 +85,24 @@ struct SignupRenderingHostView: View {
     }
 
     private var verifiedScreen: some View {
-        let kind = coordinator.entered?.kind ?? .email
+        let kind = coordinator.enteredKind
         return SignupVerifiedScreen(
             title: kind.verifiedTitle, message: kind.verifiedMessage,
-            isLoading: coordinator.isSubmitting, errorMessage: coordinator.inputError?.message,
-            onPrimary: { send(.confirm) })
+            isLoading: coordinator.isSubmitting, errorMessage: coordinator.inputError?.message(for: kind),
+            onContinue: { send(.confirm) })
     }
 
-    @ViewBuilder
+    /// The login's own entry screen for the kind's field, with sign-up's words.
     private func identifierScreen(_ kind: SignupIdentifierKind) -> some View {
-        switch kind {
-        case .email:
-            LoginIdentifierScreen(channel: .email, alternatives: [],
-                                  prefill: coordinator.entered.map { .email($0.value) },
-                                  isLoading: coordinator.isSubmitting, errorMessage: coordinator.inputError?.message,
-                                  title: entry.messages.signUpTitle, accountLink: backToLogin == nil ? nil : .logIn,
-                                  onAccountLink: { backToLogin?() },
-                                  onContinue: { send(.submitIdentifier(SignupIdentifierValue(kind: .email,
-                                                                                           value: $0.value))) })
-        }
+        LoginIdentifierScreen(channel: kind.channel, alternatives: [],
+                              prefill: coordinator.entered.flatMap { $0.kind == kind ? $0.loginIdentifier : nil },
+                              isLoading: coordinator.isSubmitting,
+                              errorMessage: coordinator.inputError?.message(for: kind),
+                              title: entry.messages.signUpTitle, accountLink: backToLogin == nil ? nil : .logIn,
+                              onAccountLink: { backToLogin?() },
+                              onContinue: {
+                                  send(.submitIdentifier(SignupIdentifierValue(kind: kind, value: $0.value)))
+                              })
     }
 
     // MARK: Transitions
@@ -117,9 +113,8 @@ struct SignupRenderingHostView: View {
             displayed = target
             return
         }
-        forward = target.depth >= lastDepth
-        lastDepth = target.depth
-        withAnimation(motionEnabled ? .easeInOut(duration: 0.28) : nil) { displayed = target }
+        transition.move(to: target.depth)
+        withAnimation(motion.animation) { displayed = target }
         announceScreenChange(to: target)
     }
 
@@ -137,27 +132,18 @@ struct SignupRenderingHostView: View {
         #endif
     }
 
-    private var pushTransition: AnyTransition {
-        .asymmetric(
-            insertion: .move(edge: forward ? .trailing : .leading).combined(with: .opacity),
-            removal: .move(edge: forward ? .leading : .trailing).combined(with: .opacity))
-    }
-
-    private var motionEnabled: Bool {
-        #if !os(macOS)
-        return !reduceMotion
-        #else
-        return true
-        #endif
-    }
-
     // MARK: Navigation
 
     private func handleBack() {
         switch coordinator.goBack() {
-        case .exitFlow: if let backToLogin { backToLogin() } else { dismiss() }
+        case .exitFlow: leaveFlow()
         case .movedBack, .ignored: break
         }
+    }
+
+    /// Back to the login when sign-up was opened from it, else out of the flow.
+    private func leaveFlow() {
+        if let backToLogin { backToLogin() } else { dismiss() }
     }
 
     private func send(_ event: SignupEvent) {
@@ -173,6 +159,7 @@ private extension SignupStep {
         case let .collectIdentifier(kind): return "identifier.\(kind)"
         case .collectCode: return "code"
         case .confirm: return "confirm"
+        case .chooseDelivery: return "delivery"
         case .authenticated: return "authenticated"
         case .unavailable: return "unavailable"
         case .failed: return "failed"
@@ -184,9 +171,10 @@ private extension SignupStep {
         switch self {
         case .loading: return 0
         case .collectIdentifier: return 1
-        case .collectCode: return 2
-        case .confirm: return 3
-        case .authenticated, .unavailable, .failed: return 4
+        case .chooseDelivery: return 2
+        case .collectCode: return 3
+        case .confirm: return 4
+        case .authenticated, .unavailable, .failed: return 5
         }
     }
 }

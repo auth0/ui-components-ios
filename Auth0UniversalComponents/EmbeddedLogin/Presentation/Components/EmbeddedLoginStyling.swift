@@ -17,9 +17,10 @@ extension Auth0Theme {
 }
 
 extension View {
-    /// Soft ring drawn just outside the view's rounded bounds: `width` wide, reaching `overhang` beyond them.
-    func errorRing(_ isVisible: Bool, cornerRadius: CGFloat, color: Color, width: CGFloat,
-                   overhang: CGFloat) -> some View {
+    /// Soft ring drawn just outside the view's rounded bounds: `width` wide, reaching `overhang` beyond them. An
+    /// invalid field wears it in red, and the chosen one of a few choices in grey.
+    func softRing(_ isVisible: Bool, cornerRadius: CGFloat, color: Color, width: CGFloat,
+                  overhang: CGFloat) -> some View {
         overlay {
             if isVisible {
                 RoundedRectangle(cornerRadius: cornerRadius + overhang, style: .continuous)

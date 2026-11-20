@@ -9,15 +9,9 @@ struct LoginRenderingHostView: View {
     /// Held locally so screen changes can be committed inside `withAnimation`.
     @State private var displayedPlan: ScreenPlan = .loading
 
-    @State private var lastDepth = 0
-    /// Push (deeper) vs. pop (shallower).
-    @State private var forward = true
     /// A move between two ways of finishing the same step (code and password) is a cross-fade, not a push.
-    @State private var isSwap = false
-
-    #if !os(macOS)
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    #endif
+    @State private var transition = ScreenTransition()
+    private let motion = ScreenMotion()
 
     /// Stateless, so the host owns one; the decisions it makes are covered by `LoginRendererTests`.
     private let renderer = LoginRenderer()
@@ -53,7 +47,7 @@ struct LoginRenderingHostView: View {
             theme.colors.background.layerBase.ignoresSafeArea()
             renderer.view(for: displayedPlan, context: context)
                 .id(displayedPlan.transitionIdentity)
-                .transition(pushTransition)
+                .transition(transition.transition)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Horizontal only, so backgrounds still reach under the home indicator.
@@ -67,7 +61,7 @@ struct LoginRenderingHostView: View {
         }
         .onAppear {
             displayedPlan = currentPlan
-            lastDepth = displayedPlan.navigationDepth
+            transition.start(at: displayedPlan.navigationDepth)
         }
         .onChangeCompat(of: coordinator.step) { _ in syncDisplay() }
     }
@@ -102,31 +96,10 @@ struct LoginRenderingHostView: View {
             displayedPlan = target
             return
         }
-        let newDepth = target.navigationDepth
-        forward = newDepth >= lastDepth
-        isSwap = target.isSibling(of: displayedPlan)
-        lastDepth = newDepth
-        withAnimation(motionEnabled ? .easeInOut(duration: 0.28) : nil) {
+        transition.move(to: target.navigationDepth, isSwap: target.isSibling(of: displayedPlan))
+        withAnimation(motion.animation) {
             displayedPlan = target
         }
-    }
-
-    private var pushTransition: AnyTransition {
-        if isSwap { return .opacity }
-        let insertionEdge: Edge = forward ? .trailing : .leading
-        let removalEdge: Edge = forward ? .leading : .trailing
-        return .asymmetric(
-            insertion: .move(edge: insertionEdge).combined(with: .opacity),
-            removal: .move(edge: removalEdge).combined(with: .opacity)
-        )
-    }
-
-    private var motionEnabled: Bool {
-        #if !os(macOS)
-        return !reduceMotion
-        #else
-        return true
-        #endif
     }
 
     // MARK: Navigation
@@ -141,17 +114,10 @@ struct LoginRenderingHostView: View {
     private func openSignup() { setSignupShown(true) }
 
     private func setSignupShown(_ shown: Bool) {
-        withAnimation(motionEnabled ? .easeInOut(duration: 0.28) : nil) { isShowingSignup = shown }
+        withAnimation(motion.animation) { isShowingSignup = shown }
     }
 
     private func send(_ event: LoginEvent) {
         Task { await coordinator.send(event) }
-    }
-}
-
-/// Clips horizontally, unbounded vertically.
-struct HorizontalClip: Shape {
-    func path(in rect: CGRect) -> Path {
-        Path(rect.insetBy(dx: 0, dy: -10_000))
     }
 }

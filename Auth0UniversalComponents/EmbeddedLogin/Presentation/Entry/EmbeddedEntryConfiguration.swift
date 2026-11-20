@@ -158,7 +158,7 @@ private struct StackedEntry: View {
     var body: some View {
         VStack(spacing: 0) {
             if isCentered { Spacer(minLength: theme.spacing.lg) }
-            // The designs' gaps: 24 under the logo, 32 under the title, 16 above the link.
+            // The designs' gaps: roomy under the logo and the title, tighter above the link.
             if let logo = parts.logo {
                 logo.padding(.bottom, theme.spacing.lg)
             }

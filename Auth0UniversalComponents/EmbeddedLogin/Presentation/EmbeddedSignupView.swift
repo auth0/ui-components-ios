@@ -1,12 +1,12 @@
 import Auth0
 import SwiftUI
 
-/// Embedded sign-up against the tenant in `Auth0.plist`: the user enters their email, confirms it with a one-time
-/// code, and creates the account. The server decides what it asks for and in what order; a connection that needs
-/// something this view can't ask for yet shows "Sign-up isn't available".
+/// Embedded sign-up against the tenant in `Auth0.plist`: the user enters their email or phone number, confirms it with
+/// a one-time code, and creates the account. The server decides what it asks for and in what order; a connection that
+/// needs something this view can't ask for yet shows "Sign-up isn't available".
 ///
 /// The SDK stores nothing. When the account is created, the credentials go to `onAuthenticated`, once, and keeping
-/// them is the app's job. If the email already has an account, the server signs that user in instead, and
+/// them is the app's job. If the email or number already has an account, the server signs that user in instead, and
 /// `onAuthenticated` is called the same way.
 public struct EmbeddedSignupView: View {
     private let connection: String?

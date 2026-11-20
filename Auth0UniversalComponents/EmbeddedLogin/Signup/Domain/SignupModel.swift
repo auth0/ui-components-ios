@@ -1,18 +1,21 @@
 import Auth0
 
 // What a sign-up is made of, and how the server's menu (`next`) is read. This is the only file that looks inside a
-// `NextAction` for sign-up, so a new kind of identifier changes it and the screens, and nothing in between.
+// `NextAction` for sign-up (apart from the delivery methods `CodeDelivery` maps), so a new kind of identifier changes
+// it and the screens, and nothing in between.
 
 /// What a new account can be identified by. A kind the server offers that isn't here is left out, so the flow never
 /// shows a screen it can't finish. Adding one is a new case: the compiler then lists each place that needs it.
 enum SignupIdentifierKind: CaseIterable, Hashable, Sendable {
     case email
+    case phone
 
     /// `nil` for a kind this flow has no screens for.
     init?(_ type: IdentifierType) {
         switch type {
         case .email: self = .email
-        case .phone, .username: return nil
+        case .phone: self = .phone
+        case .username: return nil
         }
     }
 
@@ -20,33 +23,46 @@ enum SignupIdentifierKind: CaseIterable, Hashable, Sendable {
     var capabilities: [EmbeddedCapability] {
         switch self {
         case .email: return [.identifyEmail, .challengeEmail, .verifyOTP]
+        case .phone: return [.identifyPhone, .challengePhone, .verifyOTP]
         }
     }
 
     var identifierType: IdentifierType {
         switch self {
         case .email: return .email
+        case .phone: return .phone
         }
     }
 
-    /// The title of the screen shown once this kind is verified.
-    var verifiedTitle: String {
+    /// What the user is verifying, as the words under a code screen say it ("sent to your email").
+    var noun: String {
         switch self {
-        case .email: return "Email verified."
+        case .email: return "email"
+        case .phone: return "phone"
         }
     }
 
-    /// What that screen says about it.
-    var verifiedMessage: String {
+    /// The same, as the thing the user typed ("the email address is correct").
+    var fullNoun: String {
         switch self {
-        case .email: return "Your email has been verified."
+        case .email: return "email address"
+        case .phone: return "phone number"
+        }
+    }
+
+    /// Whether a code that timed out can be replaced from the code screen, which starts the sign-up over for the same
+    /// identifier. A kind without it ends the sign-up instead.
+    var recoversExpiredCode: Bool {
+        switch self {
+        case .email: return false
+        case .phone: return true
         }
     }
 
     /// Whether `action` asks for this kind to be entered, or entered again to correct it.
     func isAskedFor(by action: NextAction) -> Bool {
         switch (self, action) {
-        case (.email, .identifyEmail): return true
+        case (.email, .identifyEmail), (.phone, .identifyPhone): return true
         default: return false
         }
     }
@@ -54,7 +70,12 @@ enum SignupIdentifierKind: CaseIterable, Hashable, Sendable {
     /// The server's offer to send a code to this kind, when `action` is one.
     func challenge(in action: NextAction) -> SignupChallenge? {
         switch (self, action) {
-        case let (.email, .challengeEmail(index, _)): return SignupChallenge(kind: .email, index: index)
+        case let (.email, .challengeEmail(index, _)): return SignupChallenge(index: index)
+        case let (.phone, .challengePhone(index, masked, methods)):
+            return SignupChallenge(index: index, sentTo: PhoneMask.display(masked),
+                                   deliveries: CodeDelivery.allCases.filter { delivery in
+                                       methods.contains { CodeDelivery($0) == delivery }
+                                   })
         default: return nil
         }
     }
@@ -68,12 +89,33 @@ struct SignupIdentifierValue: Equatable, Sendable {
 
 /// A code the server will send. `index` is the server's, passed back unchanged.
 struct SignupChallenge: Equatable, Sendable {
-    let kind: SignupIdentifierKind
     let index: Int
+    /// Where the server says the code goes, as it masked it. `nil` shows what the user typed.
+    let sentTo: String?
+    /// The ways the server will send it, in the order the screen offers them.
+    let deliveries: [CodeDelivery]
+
+    init(index: Int, sentTo: String? = nil, deliveries: [CodeDelivery] = [.email]) {
+        self.index = index
+        self.sentTo = sentTo
+        self.deliveries = deliveries
+    }
+
+    /// The first code goes by text when the number takes one, and by a call when it only takes calls.
+    var firstDelivery: CodeDelivery? { deliveries.contains(.text) ? .text : deliveries.first }
 }
 
 /// What one sign-up requires, from `NextAction.signup(identifiers:)`.
 struct SignupOffer: Equatable {
+    /// The sign-up the server's menu offers, or `nil` when it offers none.
+    init?(in actions: [NextAction]) {
+        for case let .signup(identifiers) in actions {
+            self.init(identifiers)
+            return
+        }
+        return nil
+    }
+
     /// The required kinds this flow can render.
     let required: [SignupIdentifierKind]
     /// The server requires a kind this flow has no screens for, so the sign-up can't be finished here.
@@ -98,8 +140,11 @@ struct SignupMenu: Equatable {
     /// Every required identifier is verified: the account can be created.
     let canConfirm: Bool
 
-    init(_ actions: [NextAction]) {
-        askedFor = SignupIdentifierKind.allCases.filter { kind in actions.contains(where: kind.isAskedFor) }
+    /// `preferring` are the kinds the sign-up requires: the ones asked for first, since a connection that requires a
+    /// phone and allows an email must not start on the email.
+    init(_ actions: [NextAction], preferring preferred: [SignupIdentifierKind] = []) {
+        let asked = SignupIdentifierKind.allCases.filter { kind in actions.contains(where: kind.isAskedFor) }
+        askedFor = asked.filter(preferred.contains) + asked.filter { !preferred.contains($0) }
         challenge = actions.lazy.compactMap { action in
             SignupIdentifierKind.allCases.lazy.compactMap { $0.challenge(in: action) }.first
         }.first

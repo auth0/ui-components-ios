@@ -47,8 +47,8 @@ public protocol Auth0BorderColorTokens: Sendable {
     /// Border-like shadow colour for depth and elevation cues.
     var shadow: Color { get }
 
-    /// The drop shadow under a raised card or a modal loader. Added after the first release: a type written before
-    /// it gets a translucent black.
+    /// The drop shadow under a raised control, such as the press of a factor row. Added after the first release: a
+    /// type written before it gets a translucent black.
     var elevation: Color { get }
 }
 

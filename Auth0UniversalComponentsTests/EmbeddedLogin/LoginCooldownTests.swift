@@ -29,21 +29,31 @@ struct LoginCooldownTests {
         #expect(LoginCodeAlternativeButton.title("Email me a code", remaining: 42) == "Email me a code in 42s")
     }
 
-    @Test func theButtonRedrawsEverySecondUpToTheEndOfTheWait_andNotAfter() {
+    /// `TimelineView` never shows the last date of an explicit schedule: the end of the wait must not be it, or the
+    /// button stays off a second short of the end.
+    @Test func theButtonRedrawsEverySecondUpToTheEndOfTheWait_andOnceMore() {
         let end = start.addingTimeInterval(3)
         let ticks = ResendCooldown.ticks(until: end, from: start)
-        #expect(ticks == [start, start.addingTimeInterval(1), start.addingTimeInterval(2), end])
+        #expect(ticks == [start, start.addingTimeInterval(1), start.addingTimeInterval(2), end,
+                          end.addingTimeInterval(1)])
+        #expect(ticks.dropLast().last == end)
     }
 
-    @Test func aPartialSecondIsRoundedUp_soTheLastRedrawIsExactlyTheEnd() {
+    @Test func aPartialSecondIsRoundedUp_soARedrawIsExactlyTheEnd() {
         let end = start.addingTimeInterval(2.4)
         let ticks = ResendCooldown.ticks(until: end, from: start)
-        #expect(ticks.last == end)
-        #expect(ticks.count == 4)
+        #expect(ticks.dropLast().last == end)
+        #expect(ticks.count == 5)
     }
 
-    @Test func aWaitThatIsOver_hasOneRedraw() {
+    @Test func aWaitThatIsOver_stillRedrawsOnceAtTheEnd() {
         let end = start.addingTimeInterval(-5)
-        #expect(ResendCooldown.ticks(until: end, from: start) == [end])
+        #expect(ResendCooldown.ticks(until: end, from: start) == [end, end.addingTimeInterval(1)])
+    }
+
+    @Test func atTheEndOfTheWait_nothingIsLeft() {
+        let cooldown = ResendCooldown(seconds: 60, startedAt: start)
+        #expect(cooldown.remaining(at: start.addingTimeInterval(59)) == 1)
+        #expect(cooldown.remaining(at: start.addingTimeInterval(60)) == 0)
     }
 }

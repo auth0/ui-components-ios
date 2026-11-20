@@ -444,10 +444,11 @@ Fixed component dimensions that define the height, width, and icon scale of SDK 
 | `statusIcon` | 44 pt | The symbol on a status screen (signed in, nothing to sign in with) |
 | `navigationIcon` | 20 pt | The arrow in the Embedded Login top bar |
 | `borderWidth` | 1 pt | A hairline outline: a field, a button, a card |
+| `borderWidthStrong` | 2 pt | An emphasised outline: the choice the user has made among several |
 | `focusRingWidth` | 3 pt | The ring around a focused field |
 | `errorRingWidth` | 4 pt | The ring around an invalid field |
 
-The last seven were added after the first release. A custom ``Auth0SizeTokens`` written before them keeps compiling and gets these defaults.
+The last eight were added after the first release. A custom ``Auth0SizeTokens`` written before them keeps compiling and gets these defaults.
 
 ---
 

@@ -26,10 +26,12 @@ struct ResendCooldown: Equatable {
         max(0, Int(end.timeIntervalSince(date).rounded(.up)))
     }
 
-    /// A redraw every second counted back from `end`, so the last is the moment the wait is over, and none after it.
+    /// A redraw every second counted back from `end`, so one is the moment the wait is over, and one more after it.
+    /// `TimelineView` never shows the last date of an explicit schedule, so without that one the screen would stop a
+    /// second short and the button would never come on.
     static func ticks(until end: Date, from now: Date) -> [Date] {
         let seconds = max(0, Int(end.timeIntervalSince(now).rounded(.up)))
-        return (0...seconds).map { end.addingTimeInterval(TimeInterval($0 - seconds)) }
+        return (0...seconds + 1).map { end.addingTimeInterval(TimeInterval($0 - seconds)) }
     }
 
     mutating func restart(at date: Date = Date()) {
