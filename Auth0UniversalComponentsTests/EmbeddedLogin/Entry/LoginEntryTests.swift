@@ -159,7 +159,8 @@ import UIKit
     }
 }
 
-/// The brand's link colour is a design-system token, and a theme written before it existed still compiles.
+/// The brand's foreground colours are design-system tokens, readable in both appearances, and a theme written before
+/// them still compiles.
 @MainActor
 @Suite struct ForegroundColorTokenTests {
 
@@ -178,10 +179,44 @@ import UIKit
                       Int((blue * 255).rounded()))
     }
 
-    @Test func linkPrimary_isThePurpleOfTheDesigns() {
+    /// WCAG relative luminance of a `#RRGGBB` string.
+    private func luminance(_ hex: String) -> Double {
+        let channels = stride(from: 1, to: 7, by: 2).map { offset -> Double in
+            let start = hex.index(hex.startIndex, offsetBy: offset)
+            let value = Double(Int(hex[start..<hex.index(start, offsetBy: 2)], radix: 16) ?? 0) / 255
+            return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+    }
+
+    private func contrast(_ foreground: String, _ background: String) -> Double {
+        let lighter = max(luminance(foreground), luminance(background))
+        let darker = min(luminance(foreground), luminance(background))
+        return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    @Test func linkPrimary_isThePurpleOfTheDesigns_andLighterInDarkMode() {
         let link = DefaultAuth0ColorTokens().foreground.linkPrimary
         #expect(hex(link, dark: false) == "#9921FE")
-        #expect(hex(link, dark: true) == "#9921FE")
+        #expect(hex(link, dark: true) == "#B570FF")
+    }
+
+    @Test func error_isTheRedOfTheDesigns_andLighterInDarkMode() {
+        let error = DefaultAuth0ColorTokens().foreground.error
+        #expect(hex(error, dark: false) == "#CA3B2B")
+        #expect(hex(error, dark: true) == "#EF6B5E")
+    }
+
+    /// Small text needs 4.5:1 (WCAG AA) against the screen's background, in both appearances.
+    @Test func linkAndErrorText_areReadableOnTheScreenBackground_inBothAppearances() {
+        let colors = DefaultAuth0ColorTokens()
+        let base = colors.background.layerBase
+        for (name, token) in [("linkPrimary", colors.foreground.linkPrimary), ("error", colors.foreground.error)] {
+            for dark in [false, true] {
+                let ratio = contrast(hex(token, dark: dark), hex(base, dark: dark))
+                #expect(ratio >= 4.5, "\(name) is \(ratio):1 in \(dark ? "dark" : "light") mode")
+            }
+        }
     }
 
     @Test func success_isTheGreenOfTheVerifiedScreen() {

@@ -29,9 +29,9 @@ public struct DefaultAuth0ForegroundColorTokens: Auth0ForegroundColorTokens {
     public var error: Color
 
     /// - Parameters:
-    ///   - linkPrimary: Defaults to `Foreground/Link Primary` (#9921FE).
+    ///   - linkPrimary: Defaults to `Foreground/Link Primary` (#9921FE, a lighter purple in dark mode).
     ///   - success: Defaults to `Foreground/Success` (#218C4D, a lighter green in dark mode).
-    ///   - error: Defaults to `Foreground/Error` (#CA3B2B).
+    ///   - error: Defaults to `Foreground/Error` (#CA3B2B, a lighter red in dark mode).
     public init(linkPrimary: Color = Color("Foreground/LinkPrimary", bundle: ResourceBundle.default),
                 success: Color = Color("Foreground/Success", bundle: ResourceBundle.default),
                 error: Color = Color("Foreground/Error", bundle: ResourceBundle.default)) {

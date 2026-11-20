@@ -457,9 +457,9 @@ Colours for content that isn't body text, drawn over a surface.
 
 | Token | Default | Usage |
 |---|---|---|
-| `linkPrimary` | #9921FE | "Sign up" and "Log in" under the Embedded Login field |
+| `linkPrimary` | #9921FE (#B570FF in dark mode) | "Sign up" and "Log in" under the Embedded Login field |
 | `success` | #218C4D (a lighter green in dark mode) | The check on the "Email verified." screen |
-| `error` | #CA3B2B | Error text, digits and cursor in Embedded Login |
+| `error` | #CA3B2B (#EF6B5E in dark mode) | Error text, digits and cursor in Embedded Login |
 
 `Auth0ColorTokens.foreground` has a default, so a theme written before this group existed keeps compiling. Supply your own with `DefaultAuth0ColorTokens(foreground: DefaultAuth0ForegroundColorTokens(linkPrimary: ...))`.
 
