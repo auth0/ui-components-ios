@@ -11,8 +11,6 @@ final class Auth0SignupInteractor: SignupInteracting {
     private let connection: String?
     /// The kinds this sign-up requires, so a menu that asks for more than one starts on a required one.
     private var required: [SignupIdentifierKind] = []
-    /// What the account's creation answered with, until `finish` hands it to the app.
-    private var created: Credentials?
 
     init(client: EmbeddedAuthClient, credentialsDelivery: CredentialsDelivering, connection: String? = nil) {
         self.client = client
@@ -74,19 +72,13 @@ final class Auth0SignupInteractor: SignupInteracting {
 
     func confirm() async throws {
         do {
-            created = try await client.confirmSignup()
+            try deliver(try await client.confirmSignup())
         } catch let error as EmbeddedAuthError {
             // A continuation here means the tenant wants more than sign-up gave (a second factor, say), which this
             // flow doesn't run. Sending the confirmation again would get the same answer.
             _ = try Self.continuation(of: error)
             throw SignupFailure.ended
         }
-    }
-
-    func finish() async throws {
-        guard let credentials = created else { throw SignupFailure.ended }
-        created = nil
-        try deliver(credentials)
     }
 
     // MARK: Helpers

@@ -189,8 +189,6 @@ import Testing
         #expect(harness.sut.step == .confirm)
 
         await harness.sut.send(.confirm)
-        #expect(harness.sut.step == .created)
-        await harness.sut.send(.finish)
         #expect(harness.sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
     }
@@ -227,9 +225,8 @@ import Testing
         harness.delivered.failsToSave = true
         await harness.onTheCodeScreen()
         await harness.sut.send(.submitCode("123456"))
-        await harness.sut.send(.confirm)
 
-        await harness.sut.send(.finish)
+        await harness.sut.send(.confirm)
 
         let message = CredentialsNotSavedError().errorDescription ?? ""
         #expect(harness.sut.step == .failed(message: message, canRetry: false))

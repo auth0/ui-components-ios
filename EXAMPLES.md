@@ -234,7 +234,7 @@ struct CreateAccountScreen: View {
 
 - `EmbeddedLoginView` already links to this flow when the tenant offers sign-up, so a button of your own is only needed to start sign-up from somewhere else.
 - The server decides what it asks for. A connection that requires something this view can't ask for yet, such as two identifiers, shows "Sign-up isn't available".
-- A final screen says "Your account is created". Its **Continue** is what hands the credentials to `onAuthenticated`. If the email already has an account, the server signs that user in, and `onAuthenticated` is called at once.
+- If the email already has an account, the server signs that user in, and `onAuthenticated` is called the same way.
 - A wrong code stays on the code screen. Too many wrong codes, or too many codes requested, end the sign-up with **Start over**.
 
 ### Sign up with a Phone Number
@@ -537,7 +537,7 @@ if credentialsManager.canRenew() {
 - **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed. During MFA, Back cancels it at once, and an approval already on its way is discarded.
 - **Email and phone entry keep what was typed** when the user comes back to them: Back or **Edit** from code entry, Back from push, **Try again**, or **Sign in again**. A phone number comes back with its country.
 - **Push checks right away** when the app returns to the foreground, so approving on the same phone signs in without waiting for the next check.
-- **The top bar has a back arrow and a title** ("Log in", or "Sign up"), on every screen but the one that says a sign-up created the account, which has nothing to go back to. From the entry screen it leaves the flow with the environment's `dismiss`, so it pops the screen from a `NavigationStack` and closes a sheet or full-screen cover. From sign-up opened from the login, it goes back to the login. Later screens go back a step.
+- **The top bar has a back arrow and a title** ("Log in", or "Sign up"), on every screen. From the entry screen it leaves the flow with the environment's `dismiss`, so it pops the screen from a `NavigationStack` and closes a sheet or full-screen cover. From sign-up opened from the login, it goes back to the login. Later screens go back a step.
 
 ### Use the Screens Standalone
 

@@ -9,8 +9,6 @@ enum SignupStep: Equatable {
     case collectCode(SignupCodeStep)
     /// Every required identifier is verified. Continue creates the account.
     case confirm
-    /// The account exists. Continue hands the credentials to the app.
-    case created
     case authenticated
     /// The connection offers no sign-up this flow can finish.
     case unavailable
@@ -58,7 +56,5 @@ enum SignupEvent: Equatable {
     case chooseDelivery(CodeDelivery)
     /// Continue on the verified screen.
     case confirm
-    /// Continue on the screen that says the account is created.
-    case finish
     case retry
 }

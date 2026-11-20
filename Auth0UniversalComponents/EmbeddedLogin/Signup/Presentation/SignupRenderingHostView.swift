@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Renders the coordinator's step, animates screen changes and owns the nav bar. The entry, code and error screens are
 /// the login's own (`LoginIdentifierScreen`, `LoginCodeScreen`, `LoginErrorScreen`), with sign-up's words; the
-/// rest (`SignupDeliveryScreen`, `SignupVerifiedScreen`, `SignupCreatedScreen`) are sign-up's.
+/// rest (`SignupDeliveryScreen`, `SignupVerifiedScreen`) are sign-up's.
 struct SignupRenderingHostView: View {
     @StateObject private var coordinator: SignupFlowCoordinator
     @Environment(\.auth0Theme) private var theme
@@ -34,12 +34,7 @@ struct SignupRenderingHostView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(HorizontalClip())
         .safeAreaInset(edge: .top, spacing: 0) {
-            // The account exists: there is nothing to go back to, so the bar has no title and no arrow.
-            if displayed.hasBackNavigation {
-                LoginNavigationBar(title: "Sign up", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
-            } else {
-                LoginNavigationBar(title: nil)
-            }
+            LoginNavigationBar(title: "Sign up", isBackEnabled: !coordinator.isSubmitting, onBack: handleBack)
         }
         .systemNavigationBarHidden()
         .task { await coordinator.send(.start) }
@@ -75,9 +70,6 @@ struct SignupRenderingHostView: View {
 
         case .confirm:
             verifiedScreen
-
-        case .created:
-            SignupCreatedScreen(isLoading: coordinator.isSubmitting, onContinue: { send(.finish) })
 
         case .authenticated:
             LoginSuccessScreen()
@@ -134,7 +126,6 @@ struct SignupRenderingHostView: View {
         switch step {
         case let .failed(message, _): UIAccessibility.post(notification: .announcement, argument: message)
         case .unavailable: UIAccessibility.post(notification: .announcement, argument: "Sign-up isn't available")
-        case .created: UIAccessibility.post(notification: .announcement, argument: entry.messages.accountCreatedTitle)
         case .authenticated: UIAccessibility.post(notification: .announcement, argument: "You're signed in")
         default: break
         }
@@ -169,18 +160,9 @@ private extension SignupStep {
         case .collectCode: return "code"
         case .confirm: return "confirm"
         case .chooseDelivery: return "delivery"
-        case .created: return "created"
         case .authenticated: return "authenticated"
         case .unavailable: return "unavailable"
         case .failed: return "failed"
-        }
-    }
-
-    /// Whether the top bar has its back arrow and title: not once the account exists.
-    var hasBackNavigation: Bool {
-        switch self {
-        case .created, .authenticated: return false
-        default: return true
         }
     }
 
@@ -192,8 +174,7 @@ private extension SignupStep {
         case .chooseDelivery: return 2
         case .collectCode: return 3
         case .confirm: return 4
-        case .created: return 5
-        case .authenticated, .unavailable, .failed: return 6
+        case .authenticated, .unavailable, .failed: return 5
         }
     }
 }

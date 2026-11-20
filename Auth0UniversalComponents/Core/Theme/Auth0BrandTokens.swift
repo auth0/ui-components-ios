@@ -17,15 +17,6 @@ public protocol Auth0BrandTokens: Sendable {
 
     /// What VoiceOver says for the logo.
     var logoLabel: String { get }
-
-    /// The brand's mark on its own, without its name: shown large on the screen that says an account is created. A
-    /// template image takes the colour of the text around it.
-    var mark: Image { get }
-}
-
-public extension Auth0BrandTokens {
-    /// Added after the first release: a brand written before it gets Auth0's mark.
-    var mark: Image { Image("auth0_mark", bundle: ResourceBundle.default) }
 }
 
 /// The built-in Auth0 brand assets.
@@ -33,16 +24,12 @@ public struct DefaultAuth0BrandTokens: Auth0BrandTokens {
 
     public var logo: Image
     public var logoLabel: String
-    public var mark: Image
 
     /// - Parameters:
     ///   - logo: Defaults to the Auth0 logo.
     ///   - logoLabel: Defaults to `"Auth0"`.
-    ///   - mark: Defaults to the Auth0 shield.
-    public init(logo: Image = Image("auth0_logo", bundle: ResourceBundle.default), logoLabel: String = "Auth0",
-                mark: Image = Image("auth0_mark", bundle: ResourceBundle.default)) {
+    public init(logo: Image = Image("auth0_logo", bundle: ResourceBundle.default), logoLabel: String = "Auth0") {
         self.logo = logo
         self.logoLabel = logoLabel
-        self.mark = mark
     }
 }

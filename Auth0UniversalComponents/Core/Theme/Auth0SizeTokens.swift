@@ -51,9 +51,6 @@ public protocol Auth0SizeTokens: Sendable {
     /// Height of the brand logo on the entry screens.
     var logoHeight: CGFloat { get }
 
-    /// Height of the brand's mark (the shield) on the screen that says an account is created.
-    var markHeight: CGFloat { get }
-
     /// Side length of the symbol on a status screen (signed in, nothing to sign in with).
     var statusIcon: CGFloat { get }
 
@@ -77,7 +74,6 @@ public protocol Auth0SizeTokens: Sendable {
 public extension Auth0SizeTokens {
     var tapTarget: CGFloat { 44 }
     var logoHeight: CGFloat { 40 }
-    var markHeight: CGFloat { 60 }
     var statusIcon: CGFloat { 44 }
     var navigationIcon: CGFloat { 20 }
     var borderWidth: CGFloat { 1 }
@@ -104,7 +100,6 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     public var iconLarge: CGFloat
     public var tapTarget: CGFloat
     public var logoHeight: CGFloat
-    public var markHeight: CGFloat
     public var statusIcon: CGFloat
     public var navigationIcon: CGFloat
     public var borderWidth: CGFloat
@@ -125,7 +120,6 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     ///   - iconLarge: Default `28`.
     ///   - tapTarget: Default `44`.
     ///   - logoHeight: Default `40`.
-    ///   - markHeight: Default `60`.
     ///   - statusIcon: Default `44`.
     ///   - navigationIcon: Default `20`.
     ///   - borderWidth: Default `1`.
@@ -143,7 +137,6 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
         iconLarge: CGFloat = 28,
         tapTarget: CGFloat = 44,
         logoHeight: CGFloat = 40,
-        markHeight: CGFloat = 60,
         statusIcon: CGFloat = 44,
         navigationIcon: CGFloat = 20,
         borderWidth: CGFloat = 1,
@@ -161,7 +154,6 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
         self.iconLarge = iconLarge
         self.tapTarget = tapTarget
         self.logoHeight = logoHeight
-        self.markHeight = markHeight
         self.statusIcon = statusIcon
         self.navigationIcon = navigationIcon
         self.borderWidth = borderWidth

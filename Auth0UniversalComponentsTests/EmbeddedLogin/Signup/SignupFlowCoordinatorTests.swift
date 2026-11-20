@@ -31,10 +31,6 @@ import Testing
         #expect(harness.delivered.credentials.isEmpty, "nothing is handed over before the account exists")
 
         await sut.send(.confirm)
-        #expect(sut.step == .created)
-        #expect(harness.delivered.credentials.isEmpty, "the app waits for Continue on the created screen")
-
-        await sut.send(.finish)
         #expect(sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
         #expect(harness.client.calls == [
@@ -150,48 +146,5 @@ import Testing
         #expect(harness.sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
         #expect(!harness.client.calls.contains(.confirmSignup))
-    }
-}
-
-/// The screen that says the account is created, and the app being given the credentials from it.
-@MainActor
-@Suite struct SignupCreatedTests {
-
-    private func created() async -> SignupHarness {
-        let harness = SignupHarness()
-        await harness.onTheCodeScreen()
-        await harness.sut.send(.submitCode("123456"))
-        await harness.sut.send(.confirm)
-        return harness
-    }
-
-    @Test func theCredentialsAreHandedOverOnce_whenTheUserContinues() async {
-        let harness = await created()
-        #expect(harness.sut.step == .created)
-        #expect(harness.delivered.credentials.isEmpty)
-
-        await harness.sut.send(.finish)
-        await harness.sut.send(.finish)
-
-        #expect(harness.sut.step == .authenticated)
-        #expect(harness.delivered.credentials.count == 1)
-    }
-
-    @Test func thereIsNoGoingBack_fromTheCreatedScreen() async {
-        let harness = await created()
-
-        #expect(harness.sut.goBack() == .ignored)
-
-        #expect(harness.sut.step == .created)
-    }
-
-    @Test func continuing_beforeTheAccountExists_doesNothing() async {
-        let harness = SignupHarness()
-        await harness.onTheCodeScreen()
-
-        await harness.sut.send(.finish)
-
-        guard case .collectCode = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
-        #expect(harness.delivered.credentials.isEmpty)
     }
 }

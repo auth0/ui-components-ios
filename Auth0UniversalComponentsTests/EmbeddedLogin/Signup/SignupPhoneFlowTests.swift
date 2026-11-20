@@ -52,9 +52,6 @@ import Testing
         await sut.send(.submitCode("123456"))
         #expect(sut.step == .confirm)
         await sut.send(.confirm)
-        #expect(sut.step == .created)
-        #expect(harness.delivered.credentials.isEmpty)
-        await sut.send(.finish)
 
         #expect(sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)

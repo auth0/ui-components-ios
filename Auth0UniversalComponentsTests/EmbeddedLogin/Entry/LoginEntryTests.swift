@@ -111,15 +111,6 @@ import UIKit
         #expect(seen.parts.last?.logo != nil)
     }
 
-    /// A brand written before the mark existed keeps compiling, and gets Auth0's.
-    @Test func aBrandWrittenBeforeTheMark_getsTheDefaultMark() {
-        struct OlderBrand: Auth0BrandTokens {
-            var logo: Image { Image(systemName: "star") }
-            var logoLabel: String { "Acme" }
-        }
-        #expect(OlderBrand().mark == DefaultAuth0BrandTokens().mark)
-    }
-
     @Test func withoutALinkOrOtherWays_thoseAreLeftOut() {
         let seen = Seen()
         draw(LoginIdentifierScreen(channel: .email, alternatives: [], onContinue: { _ in })

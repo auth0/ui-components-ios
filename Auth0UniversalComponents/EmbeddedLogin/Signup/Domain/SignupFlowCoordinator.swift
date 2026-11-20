@@ -40,15 +40,13 @@ final class SignupFlowCoordinator: ObservableObject {
         case .resend: await request { screen in try await self.resend(from: screen) }
         case let .chooseDelivery(way): await request { screen in try await self.sendCode(via: way, from: screen) }
         case .confirm: await request { screen in try await self.confirm(from: screen) }
-        case .finish: await request { screen in try await self.finish(from: screen) }
         case .retry: await retry()
         }
     }
 
     /// Edit and Back on the code screen, and on the one that asks how to get it, return to the entry, with what was
-    /// typed. Once the account exists there is no going back, and nothing to leave: the app has not been given the
-    /// credentials yet. Anywhere else leaves the flow: a verified identifier can't be changed, so there is nothing to
-    /// go back to.
+    /// typed. Anywhere else leaves the flow: a verified identifier can't be changed, so there is nothing to go back
+    /// to.
     @discardableResult
     func goBack() -> BackOutcome {
         if isSubmitting { return .ignored }
@@ -60,8 +58,6 @@ final class SignupFlowCoordinator: ObservableObject {
         case let .chooseDelivery(choice):
             step = .collectIdentifier(choice.identifier.kind)
             return .movedBack
-        case .created:
-            return .ignored
         default:
             return .exitFlow
         }
@@ -147,14 +143,6 @@ final class SignupFlowCoordinator: ObservableObject {
     private func confirm(from screen: SignupStep) async throws -> SignupStep {
         guard case .confirm = screen else { return screen }
         try await interactor.confirm()
-        return .created
-    }
-
-    /// Continue on the screen that says the account is created: the app receives the credentials now. Only from
-    /// there, so a repeated tap or a late event can't hand them over twice.
-    private func finish(from screen: SignupStep) async throws -> SignupStep {
-        guard case .created = screen else { return screen }
-        try await interactor.finish()
         return .authenticated
     }
 
