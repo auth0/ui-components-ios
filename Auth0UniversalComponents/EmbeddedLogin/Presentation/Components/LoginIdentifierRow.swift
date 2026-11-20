@@ -25,7 +25,7 @@ struct LoginIdentifierRow: View {
                         .buttonStyle(.plain)
                         .auth0TextStyle(theme.typography.title)
                         .foregroundStyle(theme.colors.text.bold)
-                        .frame(minWidth: 44, minHeight: 44)
+                        .frame(minWidth: theme.sizes.tapTarget, minHeight: theme.sizes.tapTarget)
                         .contentShape(Rectangle())
                         .disabled(!isEditEnabled)
                         .opacity(isEditEnabled ? 1 : 0.4)

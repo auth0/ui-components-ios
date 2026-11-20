@@ -4,8 +4,8 @@ import SwiftUI
 
 /// The central theme configuration for Auth0 UI Components.
 ///
-/// `Auth0Theme` composes all five token categories — colours, typography,
-/// spacing, corner radii, and component sizes — into a single injectable value.
+/// `Auth0Theme` composes all six token categories — colours, typography,
+/// spacing, corner radii, component sizes, and the brand's own assets (its logo) — into a single injectable value.
 /// Inject it into your view hierarchy using the ``SwiftUI/View/auth0Theme(_:)``
 /// modifier.  All Auth0 UI Components views will automatically read the theme
 /// from the SwiftUI environment.
@@ -96,6 +96,9 @@ public struct Auth0Theme {
     /// All fixed component-size tokens for this theme.
     public var sizes: any Auth0SizeTokens
 
+    /// The brand's own assets: its logo.
+    public var brand: any Auth0BrandTokens
+
     /// Creates an `Auth0Theme` with optional per-category overrides.
     ///
     /// Every category defaults to its corresponding `Default*` implementation
@@ -107,18 +110,21 @@ public struct Auth0Theme {
     ///   - spacing: Spacing tokens. Defaults to ``DefaultAuth0SpacingTokens``.
     ///   - radius: Corner-radius tokens. Defaults to ``DefaultAuth0RadiusTokens``.
     ///   - sizes: Component-size tokens. Defaults to ``DefaultAuth0SizeTokens``.
+    ///   - brand: The brand's own assets: its logo. Defaults to ``DefaultAuth0BrandTokens``, Auth0's.
     public init(
         colors: any Auth0ColorTokens = DefaultAuth0ColorTokens(),
         typography: any Auth0TypographyTokens = DefaultAuth0TypographyTokens(),
         spacing: any Auth0SpacingTokens = DefaultAuth0SpacingTokens(),
         radius: any Auth0RadiusTokens = DefaultAuth0RadiusTokens(),
-        sizes: any Auth0SizeTokens = DefaultAuth0SizeTokens()
+        sizes: any Auth0SizeTokens = DefaultAuth0SizeTokens(),
+        brand: any Auth0BrandTokens = DefaultAuth0BrandTokens()
     ) {
         self.colors = colors
         self.typography = typography
         self.spacing = spacing
         self.radius = radius
         self.sizes = sizes
+        self.brand = brand
     }
 }
 

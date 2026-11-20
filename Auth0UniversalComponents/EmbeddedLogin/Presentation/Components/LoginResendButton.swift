@@ -21,7 +21,8 @@ public struct LoginResendButton: View {
     }
 
     public var body: some View {
-        TimelineView(.periodic(from: cooldown.startedAt, by: 1)) { context in
+        // Ticks only while there is something to count, then stops redrawing.
+        TimelineView(.explicit(ResendCooldown.ticks(until: cooldown.endsAt, from: .now))) { context in
             CountdownResendButton(remaining: isAvailableNow ? 0 : cooldown.remaining(at: context.date),
                                   isBusy: isBusy, look: .text) {
                 onResend()

@@ -18,6 +18,8 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private(set) var additionalStep: AdditionalStepSession?
     /// The sign-in methods the tenant offers, in its order. The first is the starting screen.
     @Published private(set) var channels: [LoginChannel] = []
+    /// Whether the server offered sign-up next to the sign-in methods: the first screen then links to it.
+    @Published private(set) var canSignUp = false
     /// What the user last submitted. Pre-fills its screen when the user comes back to it.
     private(set) var enteredIdentifier: LoginIdentifier?
     private var inputSteps = InputStepMemory()
@@ -45,6 +47,7 @@ final class LoginFlowCoordinator: ObservableObject {
     @Published private var sentCode: SentCode?
     /// Where `retry` returns to; `nil` re-runs discovery.
     private var retryStep: LoginStep?
+    private var hasStarted = false
 
     /// What runs after the first factor. Without one, a tenant that asks for more can't be served.
     private let additionalStepProvider: AdditionalStepProviding?
@@ -60,6 +63,9 @@ final class LoginFlowCoordinator: ObservableObject {
     func send(_ event: LoginEvent) async {
         switch event {
         case .start:
+            // The screen runs `.start` again whenever it reappears; that must not throw away what the user has done.
+            guard !hasStarted else { return }
+            hasStarted = true
             await discover()
         case let .submitIdentifier(identifier):
             await submit(identifier)
@@ -141,13 +147,14 @@ final class LoginFlowCoordinator: ObservableObject {
             let options = try await interactor.discover()
             var connection: String?
             var channels: [LoginChannel] = []
+            canSignUp = options.contains(.signup)
             for option in options {
                 let offered: (connection: String, channel: LoginChannel)
                 switch option {
                 case let .emailOTP(value): offered = (value, .email)
                 case let .phoneOTP(value): offered = (value, .phone)
                 case let .password(value): offered = (value, .password)
-                case .unsupported: continue
+                case .signup, .unsupported: continue
                 }
                 connection = connection ?? offered.connection
                 if !channels.contains(offered.channel) { channels.append(offered.channel) }
@@ -288,27 +295,6 @@ final class LoginFlowCoordinator: ObservableObject {
         }
     }
 
-    // MARK: Additional step
-
-    private func startAdditionalStep(_ context: AdditionalStepContext) {
-        guard let additionalStepProvider else {
-            step = .additionalStepUnavailable
-            return
-        }
-        let session = additionalStepProvider.makeSession(context: context, delegate: self)
-        additionalStep = session
-        step = .additionalStep
-        session.start()
-    }
-
-    /// Ends the additional step, if it is still going, and waits for a request still in flight: the SDK allows one at a
-    /// time, and a reply that arrives after it ended is dropped.
-    private func endAdditionalStep() async {
-        guard let additionalStep else { return }
-        await additionalStep.cancelAndWait()
-        self.additionalStep = nil
-    }
-
     private func restart() async {
         guard !isSubmitting else { return }
         inputError = nil
@@ -330,6 +316,29 @@ final class LoginFlowCoordinator: ObservableObject {
         } else {
             await discover()
         }
+    }
+}
+
+private extension LoginFlowCoordinator {
+    // MARK: Additional step
+
+    private func startAdditionalStep(_ context: AdditionalStepContext) {
+        guard let additionalStepProvider else {
+            step = .additionalStepUnavailable
+            return
+        }
+        let session = additionalStepProvider.makeSession(context: context, delegate: self)
+        additionalStep = session
+        step = .additionalStep
+        session.start()
+    }
+
+    /// Ends the additional step, if it is still going, and waits for a request still in flight: the SDK allows one at a
+    /// time, and a reply that arrives after it ended is dropped.
+    private func endAdditionalStep() async {
+        guard let additionalStep else { return }
+        await additionalStep.cancelAndWait()
+        self.additionalStep = nil
     }
 }
 

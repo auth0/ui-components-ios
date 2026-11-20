@@ -28,8 +28,10 @@ public struct LoginInputField<Content: View, Trailing: View>: View {
         .padding(.horizontal, theme.spacing.md)
         .frame(height: theme.sizes.size3xlDimen)
         .background(isInvalid ? theme.colors.background.errorSubtle : theme.colors.background.layerTop, in: shape)
-        .overlay(shape.strokeBorder(isInvalid ? theme.colors.errorBorder : theme.colors.border.subtle, lineWidth: 1))
-        .errorRing(isInvalid, cornerRadius: theme.radius.inputField, color: theme.colors.errorRing)
+        .overlay(shape.strokeBorder(isInvalid ? theme.colors.errorBorder : theme.colors.border.subtle,
+                                       lineWidth: theme.sizes.borderWidth))
+        .errorRing(isInvalid, cornerRadius: theme.radius.inputField, color: theme.colors.errorRing,
+                   width: theme.sizes.errorRingWidth, overhang: theme.sizes.errorRingWidth - theme.sizes.borderWidth)
         .shadow(color: .black.opacity(isInvalid ? 0 : 0.05), radius: 6, x: 0, y: 2)
     }
 }

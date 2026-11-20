@@ -19,7 +19,7 @@ struct FactorTextButton: View {
             .buttonStyle(.plain)
             .auth0TextStyle(FactorScreenStyle.action)
             .foregroundStyle(theme.colors.text.bold.opacity(isEnabled ? 1 : 0.5))
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: theme.sizes.tapTarget)
             .contentShape(Rectangle())
             .disabled(!isEnabled)
     }

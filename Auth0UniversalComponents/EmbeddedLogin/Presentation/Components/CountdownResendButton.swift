@@ -68,12 +68,13 @@ private struct FactorFilledButtonStyle: ButtonStyle {
             .auth0TextStyle(theme.typography.label)
             .foregroundStyle(theme.colors.text.onPrimary)
             .frame(maxWidth: .infinity)
-            .frame(height: 44)
+            .frame(height: theme.sizes.tapTarget)
             .background {
                 shape.fill(theme.colors.background.primary)
                     .overlay(shape.fill(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.04)],
                                                        startPoint: .top, endPoint: .bottom)))
-                    .overlay(shape.strokeBorder(theme.colors.background.primary, lineWidth: 1))
+                    .overlay(shape.strokeBorder(theme.colors.background.primary,
+                                                        lineWidth: theme.sizes.borderWidth))
                     // The design's greyed-out fill.
                     .opacity(isEnabled ? 1 : 0.45)
             }

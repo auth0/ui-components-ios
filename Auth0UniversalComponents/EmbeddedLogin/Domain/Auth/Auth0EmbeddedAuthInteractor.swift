@@ -40,14 +40,16 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
     }
 
     /// Reads `clientId`/`domain` from `Auth0.plist`. `additionalStepCapabilities` are the extra steps whatever runs the
-    /// additional step can render; without any, a tenant that asks for more can't be served.
+    /// additional step can render; without any, a tenant that asks for more can't be served. `offersSignup` tells the
+    /// server the app can send the user to sign-up, so the first screen can offer it.
     convenience init(credentialsDelivery: CredentialsDelivering, session: URLSession = .shared, bundle: Bundle = .main,
                      connection: String? = nil, preference: EmbeddedLoginPreference = .server,
-                     additionalStepCapabilities: [EmbeddedCapability] = []) {
+                     additionalStepCapabilities: [EmbeddedCapability] = [], offersSignup: Bool = false) {
+        let extra = additionalStepCapabilities + (offersSignup ? LiveEmbeddedAuthClient.signupCapabilities : [])
         self.init(
             client: LiveEmbeddedAuthClient(
                 auth: Auth0.embeddedAuth(session: session, bundle: bundle),
-                capabilities: LiveEmbeddedAuthClient.capabilities(adding: additionalStepCapabilities)),
+                capabilities: LiveEmbeddedAuthClient.capabilities(adding: extra)),
             credentialsDelivery: credentialsDelivery,
             connection: connection,
             preference: preference
@@ -308,6 +310,8 @@ final class Auth0EmbeddedAuthInteractor: AuthInteracting {
             return .phoneOTP(connection: connection)
         case .identifyUsername:
             return .password(connection: connection)
+        case .signup:
+            return .signup
         default:
             return .unsupported(String(describing: action))
         }

@@ -36,10 +36,11 @@ ui-components-ios/
 │   ├── SaveAuthenticators/             # Manage saved factors
 │   │   ├── Domain/                     # DeleteAuthMethodUseCase
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
-│   ├── EmbeddedLogin/                  # Native Email or SMS OTP, or username and password, sign-in; hands over to MFA when the tenant asks for more
+│   ├── EmbeddedLogin/                  # Native Email or SMS OTP, or username and password, sign-in and email sign-up; hands over to MFA when the tenant asks for more
 │   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
+│   │   ├── Signup/                     # SignupFlowCoordinator, Auth0SignupInteractor, host view (no MFA types)
 │   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
-│   │   └── Presentation/               # EmbeddedLoginView, login screens, shared factor-screen pieces
+│   │   └── Presentation/               # EmbeddedLoginView, login screens, Entry/ (composable first screen), shared factor-screen pieces
 │   ├── MFA/                            # Multi-factor engine (no login, no Auth0, no factor names)
 │   │   ├── Core/                       # MfaFlowReducer, MfaController, MfaStep, MfaError, factor contract
 │   │   ├── Configuration/              # MfaConfiguration, MfaMessages, MfaScreens, .onMfaError
@@ -259,6 +260,10 @@ the end).
 
 ### Theming & Styling
 
+- **Design tokens, no literals** (Embedded Login and sign-up; the My Account screens still have some): Read colours, fonts, spacing, radii, sizes and the brand logo from `@Environment(\.auth0Theme)`
+  (`theme.colors…`, `theme.typography…`, `theme.spacing…`, `theme.radius…`, `theme.sizes…`, `theme.brand…`). Don't write a
+  `Color` literal, a `.font(.system(size:))` or a bare point value in a view; if no token fits, add one (a new
+  requirement gets a default in the protocol extension, so existing custom themes keep compiling).
 - **Native SwiftUI styling**: Use built-in SwiftUI modifiers
 - **Dynamic Type**: Support for accessibility text sizes
 - **Dark Mode**: Full support for appearance switching
