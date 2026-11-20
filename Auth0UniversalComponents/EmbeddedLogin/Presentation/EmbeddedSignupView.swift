@@ -1,13 +1,13 @@
 import Auth0
 import SwiftUI
 
-/// Embedded sign-up against the tenant in `Auth0.plist`: the user enters their email, confirms it with a one-time
-/// code, and creates the account. The server decides what it asks for and in what order; a connection that needs
-/// something this view can't ask for yet shows "Sign-up isn't available".
+/// Embedded sign-up against the tenant in `Auth0.plist`: the user enters their email or phone number, confirms it with
+/// a one-time code, and creates the account. The server decides what it asks for and in what order; a connection that
+/// needs something this view can't ask for yet shows "Sign-up isn't available".
 ///
-/// The SDK stores nothing. When the account is created, the credentials go to `onAuthenticated`, once, and keeping
-/// them is the app's job. If the email already has an account, the server signs that user in instead, and
-/// `onAuthenticated` is called the same way.
+/// The SDK stores nothing. Once the account is created, the credentials go to `onAuthenticated`, once, when the user
+/// taps Continue on the screen that says so, and keeping them is the app's job. If the email or number already has an
+/// account, the server signs that user in instead, and `onAuthenticated` is called at once.
 public struct EmbeddedSignupView: View {
     private let connection: String?
     private let onAuthenticated: @MainActor (Credentials) throws -> Void
@@ -15,7 +15,8 @@ public struct EmbeddedSignupView: View {
 
     /// - Parameters:
     ///   - connection: Connection to authorize against. Required; `nil` shows the error screen.
-    ///   - onAuthenticated: Called on the main actor, once, with the credentials as soon as the account is created.
+    ///   - onAuthenticated: Called on the main actor, once, with the credentials when the user continues from the
+    ///     "account created" screen.
     ///     If the closure throws, the user sees the "couldn't save" error screen and can start again; nothing is kept
     ///     by the SDK.
     public init(connection: String? = nil,

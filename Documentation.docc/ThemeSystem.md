@@ -441,13 +441,15 @@ Fixed component dimensions that define the height, width, and icon scale of SDK 
 | `iconLarge` | 28 pt | Large icons — three-dots menu button |
 | `tapTarget` | 44 pt | The smallest side of anything the user taps; the height of the Embedded Login buttons and its top bar |
 | `logoHeight` | 40 pt | Height of the brand logo on the Embedded Login and sign-up entry screens |
+| `markHeight` | 60 pt | Height of the brand's shield on the screen that says an account is created |
 | `statusIcon` | 44 pt | The symbol on a status screen (signed in, nothing to sign in with) |
 | `navigationIcon` | 20 pt | The arrow in the Embedded Login top bar |
 | `borderWidth` | 1 pt | A hairline outline: a field, a button, a card |
+| `borderWidthStrong` | 2 pt | An emphasised outline: the choice the user has made among several |
 | `focusRingWidth` | 3 pt | The ring around a focused field |
 | `errorRingWidth` | 4 pt | The ring around an invalid field |
 
-The last seven were added after the first release. A custom ``Auth0SizeTokens`` written before them keeps compiling and gets these defaults.
+The last nine were added after the first release. A custom ``Auth0SizeTokens`` written before them keeps compiling and gets these defaults.
 
 ---
 
@@ -474,7 +476,8 @@ The brand's own assets. Today that is the logo shown above the title of the Embe
 | Token | Default | Usage |
 |---|---|---|
 | `logo` | The Auth0 logo | The image above the entry screen's title. A template image takes the colour of the text around it, so it reads in dark mode too; give your own image `.renderingMode(.original)` to keep its colours |
-| `logoLabel` | `"Auth0"` | What VoiceOver says for the logo |
+| `logoLabel` | `"Auth0"` | What VoiceOver says for the logo and the mark |
+| `mark` | The Auth0 shield | The shield shown large on the screen that says an account is created |
 
 Replace it once, in the theme, and every screen that shows the logo follows:
 

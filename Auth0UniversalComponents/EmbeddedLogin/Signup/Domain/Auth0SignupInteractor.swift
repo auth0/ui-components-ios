@@ -9,6 +9,10 @@ final class Auth0SignupInteractor: SignupInteracting {
     private let client: EmbeddedAuthClient
     private let credentialsDelivery: CredentialsDelivering
     private let connection: String?
+    /// The kinds this sign-up requires, so a menu that asks for more than one starts on a required one.
+    private var required: [SignupIdentifierKind] = []
+    /// What the account's creation answered with, until `finish` hands it to the app.
+    private var created: Credentials?
 
     init(client: EmbeddedAuthClient, credentialsDelivery: CredentialsDelivering, connection: String? = nil) {
         self.client = client
@@ -38,36 +42,39 @@ final class Auth0SignupInteractor: SignupInteracting {
     func open() async throws -> SignupMenu {
         guard let connection else { throw Auth0EmbeddedAuthError.discoveryConnectionMissing }
         let initial = try await nextActions { try await client.authorize(connection: connection) }
-        guard let offer = Self.offer(in: initial), offer.isSupported else { throw SignupUnavailable() }
-        return SignupMenu(try await nextActions { try await client.signup() })
+        guard let offer = SignupOffer(in: initial), offer.isSupported else { throw SignupUnavailable() }
+        required = offer.required
+        return menu(try await nextActions { try await client.signup() })
     }
 
     func identify(_ identifier: SignupIdentifierValue) async throws -> SignupMenu {
         let type = identifier.kind.identifierType
-        return SignupMenu(try await nextActions { try await client.identify(identifier.value, type: type) })
+        return menu(try await nextActions { try await client.identify(identifier.value, type: type) })
     }
 
-    func sendCode(_ challenge: SignupChallenge) async throws {
+    func sendCode(_ challenge: SignupChallenge, via delivery: CodeDelivery) async throws {
         _ = try await nextActions {
-            switch challenge.kind {
+            switch delivery {
             case .email: try await client.challengeEmail(index: challenge.index)
+            case .text: try await client.challengePhone(index: challenge.index, deliveryMethod: .text)
+            case .voice: try await client.challengePhone(index: challenge.index, deliveryMethod: .voice)
             }
         }
     }
 
     func verify(code: String) async throws -> SignupProgress {
         do {
-            // Credentials here mean the email already had an account: the server signed that user in (PRD Sc. 26).
+            // Credentials here mean the email already had an account: the server signed that user in.
             try deliver(try await client.verifyOtp(code, type: .oob))
             return .authenticated
         } catch let error as EmbeddedAuthError {
-            return .next(SignupMenu(try Self.continuation(of: error)))
+            return .next(menu(try Self.continuation(of: error)))
         }
     }
 
     func confirm() async throws {
         do {
-            try deliver(try await client.confirmSignup())
+            created = try await client.confirmSignup()
         } catch let error as EmbeddedAuthError {
             // A continuation here means the tenant wants more than sign-up gave (a second factor, say), which this
             // flow doesn't run. Sending the confirmation again would get the same answer.
@@ -76,7 +83,17 @@ final class Auth0SignupInteractor: SignupInteracting {
         }
     }
 
+    func finish() async throws {
+        guard let credentials = created else { throw SignupFailure.ended }
+        created = nil
+        try deliver(credentials)
+    }
+
     // MARK: Helpers
+
+    private func menu(_ actions: [NextAction]) -> SignupMenu {
+        SignupMenu(actions, preferring: required)
+    }
 
     /// Runs one step that always answers with the next menu, and returns it.
     private func nextActions(after step: () async throws -> Void) async throws -> [NextAction] {
@@ -105,10 +122,5 @@ final class Auth0SignupInteractor: SignupInteracting {
         } catch {
             throw CredentialsNotSavedError()
         }
-    }
-
-    private static func offer(in actions: [NextAction]) -> SignupOffer? {
-        for case let .signup(identifiers) in actions { return SignupOffer(identifiers) }
-        return nil
     }
 }

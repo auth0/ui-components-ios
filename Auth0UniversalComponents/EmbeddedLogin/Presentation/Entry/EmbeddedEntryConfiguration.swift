@@ -47,7 +47,8 @@ public struct EmbeddedEntryLayout {
     public static var top: EmbeddedEntryLayout { EmbeddedEntryLayout { StackedEntry(parts: $0, isCentered: false) } }
 }
 
-/// The words of the entry screen. A title or a prompt a brand doesn't set keeps its default.
+/// The words of the entry screen, and of the screen that ends a sign-up. A title, a prompt or a message a brand doesn't
+/// set keeps its default.
 public struct EmbeddedEntryMessages: Equatable, Sendable {
     /// The login's title when the tenant doesn't offer sign-up. `nil` keeps the way's own ("Enter your email to get
     /// started").
@@ -59,6 +60,9 @@ public struct EmbeddedEntryMessages: Equatable, Sendable {
     public var signUpAction: String
     public var logInPrompt: String
     public var logInAction: String
+    /// The title and the words under it on the screen that says a sign-up created the account.
+    public var accountCreatedTitle: String
+    public var accountCreatedMessage: String
 
     public init(loginTitle: String? = nil,
                 loginOrSignUpTitle: String = "Log in or sign up",
@@ -66,7 +70,10 @@ public struct EmbeddedEntryMessages: Equatable, Sendable {
                 signUpPrompt: String = "Don’t have an account?",
                 signUpAction: String = "Sign up",
                 logInPrompt: String = "Already have an account?",
-                logInAction: String = "Log in") {
+                logInAction: String = "Log in",
+                accountCreatedTitle: String = "Your account is created",
+                accountCreatedMessage: String = "Discover how to utilize auth0’s powerful native SDK and "
+                    + "account API in this app.") {
         self.loginTitle = loginTitle
         self.loginOrSignUpTitle = loginOrSignUpTitle
         self.signUpTitle = signUpTitle
@@ -74,6 +81,8 @@ public struct EmbeddedEntryMessages: Equatable, Sendable {
         self.signUpAction = signUpAction
         self.logInPrompt = logInPrompt
         self.logInAction = logInAction
+        self.accountCreatedTitle = accountCreatedTitle
+        self.accountCreatedMessage = accountCreatedMessage
     }
 }
 
@@ -158,7 +167,7 @@ private struct StackedEntry: View {
     var body: some View {
         VStack(spacing: 0) {
             if isCentered { Spacer(minLength: theme.spacing.lg) }
-            // The designs' gaps: 24 under the logo, 32 under the title, 16 above the link.
+            // The designs' gaps: roomy under the logo and the title, tighter above the link.
             if let logo = parts.logo {
                 logo.padding(.bottom, theme.spacing.lg)
             }

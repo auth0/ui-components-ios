@@ -8,16 +8,19 @@ public struct LoginScreenHeader: View {
     let subtitleLineLimit: Int?
     let isEditEnabled: Bool
     let onEdit: (() -> Void)?
+    let editColor: Color?
 
     @Environment(\.auth0Theme) private var theme
 
+    /// - Parameter editColor: The colour of "Edit". The default is the bold text colour.
     public init(title: String, subtitle: String? = nil, subtitleLineLimit: Int? = 1, isEditEnabled: Bool = true,
-                onEdit: (() -> Void)? = nil) {
+                onEdit: (() -> Void)? = nil, editColor: Color? = nil) {
         self.title = title
         self.subtitle = subtitle
         self.subtitleLineLimit = subtitleLineLimit
         self.isEditEnabled = isEditEnabled
         self.onEdit = onEdit
+        self.editColor = editColor
     }
 
     public var body: some View {
@@ -40,7 +43,7 @@ public struct LoginScreenHeader: View {
                         Button("Edit", action: onEdit)
                             .buttonStyle(.plain)
                             .auth0TextStyle(theme.typography.title)
-                            .foregroundStyle(theme.colors.text.bold)
+                            .foregroundStyle(editColor ?? theme.colors.text.bold)
                             .disabled(!isEditEnabled)
                             .opacity(isEditEnabled ? 1 : 0.4)
                     }

@@ -38,7 +38,7 @@ ui-components-ios/
 │   │   └── Presentation/               # SavedAuthenticatorsScreen(ViewModel)
 │   ├── EmbeddedLogin/                  # Native Email or SMS OTP, or username and password, sign-in and email sign-up; hands over to MFA when the tenant asks for more
 │   │   ├── Domain/                     # LoginFlowCoordinator, AdditionalStep contract (no MFA types)
-│   │   ├── Signup/                     # SignupFlowCoordinator, Auth0SignupInteractor, host view (no MFA types)
+│   │   ├── Signup/                     # Email or phone sign-up: coordinator, interactor, host view and its screens (no MFA types)
 │   │   ├── Mfa/                        # Adapter: EmbeddedMfaStep + one binding per factor (knows both sides)
 │   │   └── Presentation/               # EmbeddedLoginView, login screens, Entry/ (composable first screen), shared factor-screen pieces
 │   ├── MFA/                            # Multi-factor engine (no login, no Auth0, no factor names)

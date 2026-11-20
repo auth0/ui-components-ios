@@ -4,14 +4,15 @@ import Testing
 @testable import Auth0UniversalComponents
 
 /// The sign-up from the coordinator down to the SDK's calls: the real interactor over `SessionAwareEmbeddedAuthClient`,
-/// answering with the PRD's own menus. A retry against a session the server ended fails here as it would on a device.
+/// answering with the menus the server sends. A retry against a session the server ended fails here as it would on a
+/// device.
 @MainActor
 @Suite struct SignupFlowCoordinatorTests {
 
     typealias Fixtures = EmbeddedAuthFixtures
     private let email = SignupHarness.email
 
-    // MARK: Happy path (PRD Scenario 1)
+    // MARK: Happy path 
 
     @Test func anEmailSignup_runsFromTheEntryToACreatedAccount() async {
         let harness = SignupHarness()
@@ -22,13 +23,18 @@ import Testing
 
         await sut.send(.submitIdentifier(email))
         #expect(sut.step == .collectCode(SignupCodeStep(identifier: email,
-                                                        challenge: SignupChallenge(kind: .email, index: 1))))
+                                                        challenge: SignupChallenge(index: 1),
+                                                        delivery: .email)))
 
         await sut.send(.submitCode("123456"))
         #expect(sut.step == .confirm)
         #expect(harness.delivered.credentials.isEmpty, "nothing is handed over before the account exists")
 
         await sut.send(.confirm)
+        #expect(sut.step == .created)
+        #expect(harness.delivered.credentials.isEmpty, "the app waits for Continue on the created screen")
+
+        await sut.send(.finish)
         #expect(sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
         #expect(harness.client.calls == [
@@ -39,7 +45,8 @@ import Testing
 
     @Test func authorize_advertisesOnlyWhatThereAreScreensFor() {
         #expect(Auth0SignupInteractor.capabilities
-                == [.signup, .confirmSignup, .identifyEmail, .challengeEmail, .verifyOTP])
+                == [.signup, .confirmSignup, .identifyEmail, .challengeEmail, .verifyOTP, .identifyPhone,
+                    .challengePhone])
     }
 
     // MARK: A connection this flow can't finish
@@ -52,18 +59,18 @@ import Testing
         #expect(!harness.client.calls.contains(.signup))
     }
 
-    @Test func aRequiredPhone_isUnavailable_untilThereAreScreensForIt() async {
+    @Test func twoRequiredIdentifiers_areUnavailable_untilThereAreScreensForBoth() async {
         let harness = SignupHarness()
-        let phone: [String: Any] = ["action": "action:signup:v1", "identifiers": ["phone_number": ["required": true]]]
-        harness.client.scripted.authorizeResults = [Fixtures.needs([phone])]
+        harness.client.scripted.authorizeResults = [Fixtures.needs([Fixtures.signup(email: true, phone: true)])]
         await harness.sut.send(.start)
         #expect(harness.sut.step == .unavailable)
     }
 
-    @Test func aMissingConnection_failsWithAWayToTryAgain() async {
+    /// Opening again would give the same answer, so there is no "Try again".
+    @Test func aMissingConnection_failsWithoutAWayToTryAgain() async {
         let harness = SignupHarness(connection: nil)
         await harness.sut.send(.start)
-        guard case .failed(_, canRetry: true) = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
+        guard case .failed(_, canRetry: false) = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
     }
 
     @Test func aServerWordInAnError_isNeverShown() async {
@@ -79,7 +86,7 @@ import Testing
         #expect(!message.contains("xyz-secret-name"))
     }
 
-    // MARK: Invalid email (PRD Scenario 10)
+    // MARK: Invalid email 
 
     @Test func anInvalidEmail_staysOnTheEntry_withTheMessage_andTheNextTryWorks() async {
         let harness = SignupHarness()
@@ -131,7 +138,7 @@ import Testing
         #expect(code.identifier.value == "sarah@example.com")
     }
 
-    // MARK: An email that already has an account (PRD Scenario 26)
+    // MARK: An email that already has an account
 
     @Test func anExistingAccount_isSignedIn_withoutConfirming() async {
         let harness = SignupHarness()
@@ -143,5 +150,48 @@ import Testing
         #expect(harness.sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
         #expect(!harness.client.calls.contains(.confirmSignup))
+    }
+}
+
+/// The screen that says the account is created, and the app being given the credentials from it.
+@MainActor
+@Suite struct SignupCreatedTests {
+
+    private func created() async -> SignupHarness {
+        let harness = SignupHarness()
+        await harness.onTheCodeScreen()
+        await harness.sut.send(.submitCode("123456"))
+        await harness.sut.send(.confirm)
+        return harness
+    }
+
+    @Test func theCredentialsAreHandedOverOnce_whenTheUserContinues() async {
+        let harness = await created()
+        #expect(harness.sut.step == .created)
+        #expect(harness.delivered.credentials.isEmpty)
+
+        await harness.sut.send(.finish)
+        await harness.sut.send(.finish)
+
+        #expect(harness.sut.step == .authenticated)
+        #expect(harness.delivered.credentials.count == 1)
+    }
+
+    @Test func thereIsNoGoingBack_fromTheCreatedScreen() async {
+        let harness = await created()
+
+        #expect(harness.sut.goBack() == .ignored)
+
+        #expect(harness.sut.step == .created)
+    }
+
+    @Test func continuing_beforeTheAccountExists_doesNothing() async {
+        let harness = SignupHarness()
+        await harness.onTheCodeScreen()
+
+        await harness.sut.send(.finish)
+
+        guard case .collectCode = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
+        #expect(harness.delivered.credentials.isEmpty)
     }
 }

@@ -1,4 +1,3 @@
-import Auth0
 import Combine
 import Foundation
 
@@ -15,6 +14,8 @@ final class SignupFlowCoordinator: ObservableObject {
     @Published private(set) var isSubmitting = false
     /// What the user last submitted. Pre-fills its screen when they come back to it.
     private(set) var entered: SignupIdentifierValue?
+    /// The kind of what the user last submitted; the email's until they have submitted anything.
+    var enteredKind: SignupIdentifierKind { entered?.kind ?? .email }
 
     enum BackOutcome { case movedBack, exitFlow, ignored }
 
@@ -37,13 +38,17 @@ final class SignupFlowCoordinator: ObservableObject {
             await request { screen in try await self.identifyAndSendCode(value, from: screen) }
         case let .submitCode(code): await request { screen in try await self.verify(code, from: screen) }
         case .resend: await request { screen in try await self.resend(from: screen) }
-        case .confirm: await continueFromVerified()
+        case let .chooseDelivery(way): await request { screen in try await self.sendCode(via: way, from: screen) }
+        case .confirm: await request { screen in try await self.confirm(from: screen) }
+        case .finish: await request { screen in try await self.finish(from: screen) }
         case .retry: await retry()
         }
     }
 
-    /// Edit and Back on the code screen return to the entry, with what was typed. Anywhere else leaves the flow: a
-    /// verified identifier can't be changed, so there is nothing to go back to.
+    /// Edit and Back on the code screen, and on the one that asks how to get it, return to the entry, with what was
+    /// typed. Once the account exists there is no going back, and nothing to leave: the app has not been given the
+    /// credentials yet. Anywhere else leaves the flow: a verified identifier can't be changed, so there is nothing to
+    /// go back to.
     @discardableResult
     func goBack() -> BackOutcome {
         if isSubmitting { return .ignored }
@@ -52,6 +57,11 @@ final class SignupFlowCoordinator: ObservableObject {
         case let .collectCode(code):
             step = .collectIdentifier(code.identifier.kind)
             return .movedBack
+        case let .chooseDelivery(choice):
+            step = .collectIdentifier(choice.identifier.kind)
+            return .movedBack
+        case .created:
+            return .ignored
         default:
             return .exitFlow
         }
@@ -73,44 +83,79 @@ final class SignupFlowCoordinator: ObservableObject {
         } catch is SignupUnavailable {
             step = .unavailable
         } catch let failure as SignupFailure {
-            step = .failed(message: failure.message, canRetry: false)
+            step = .failed(message: failure.message(for: enteredKind), canRetry: false)
+        } catch Auth0EmbeddedAuthError.discoveryConnectionMissing {
+            // No connection was given: opening again can't change that.
+            step = .failed(message: Auth0EmbeddedAuthError.discoveryConnectionMissing.errorDescription
+                ?? Self.somethingWentWrong, canRetry: false)
         } catch {
             fail(error, returningTo: nil)
         }
     }
 
-    /// The design sends the code as soon as the identifier is accepted.
+    /// The code is sent as soon as the identifier is accepted. A number that takes both a text and a call asks first
+    /// how the user wants it.
     private func identifyAndSendCode(_ value: SignupIdentifierValue,
                                      from screen: SignupStep) async throws -> SignupStep {
         guard case .collectIdentifier = screen else { return screen }
         entered = value
-        guard let challenge = try await interactor.identify(value).challenge else { throw SignupFailure.codeNotSent }
-        try await interactor.sendCode(challenge)
-        return .collectCode(SignupCodeStep(identifier: value, challenge: challenge))
+        guard let challenge = try await interactor.identify(value).challenge,
+              let delivery = challenge.firstDelivery else { throw SignupFailure.codeNotSent }
+        if challenge.deliveries.count > 1 {
+            return .chooseDelivery(SignupDeliveryStep(identifier: value, challenge: challenge))
+        }
+        try await interactor.sendCode(challenge, via: delivery)
+        return .collectCode(SignupCodeStep(identifier: value, challenge: challenge, delivery: delivery))
+    }
+
+    /// Continue on the screen that asks how to get the code.
+    private func sendCode(via way: CodeDelivery, from screen: SignupStep) async throws -> SignupStep {
+        guard case let .chooseDelivery(choice) = screen, choice.challenge.deliveries.contains(way) else {
+            return screen
+        }
+        try await interactor.sendCode(choice.challenge, via: way)
+        return .collectCode(SignupCodeStep(identifier: choice.identifier, challenge: choice.challenge, delivery: way))
     }
 
     private func verify(_ code: String, from screen: SignupStep) async throws -> SignupStep {
-        guard case .collectCode = screen else { return screen }
+        guard case let .collectCode(current) = screen, !current.isExpired else { return screen }
         switch try await interactor.verify(code: code) {
         case .authenticated: return .authenticated
         case let .next(menu): return nextStep(after: menu)
         }
     }
 
+    /// A new code, the way the last one went. A code that timed out ended the server's sign-up with it, so the new
+    /// one starts it over for the same identifier first.
     private func resend(from screen: SignupStep) async throws -> SignupStep {
         guard case let .collectCode(code) = screen else { return screen }
-        try await interactor.sendCode(code.challenge)
-        return screen
+        let delivery = code.delivery
+        var challenge = code.challenge
+        if code.isExpired {
+            _ = try await interactor.open()
+            guard let fresh = try await interactor.identify(code.identifier).challenge else {
+                throw SignupFailure.codeNotSent
+            }
+            challenge = fresh
+        }
+        try await interactor.sendCode(challenge, via: delivery)
+        return .collectCode(SignupCodeStep(identifier: code.identifier, challenge: challenge, delivery: delivery))
     }
 
     /// Continue on the verified screen creates the account. Only from there: a repeated tap or a late event can't
     /// create it twice.
-    private func continueFromVerified() async {
-        await request { screen in
-            guard case .confirm = screen else { return screen }
-            try await self.interactor.confirm()
-            return .authenticated
-        }
+    private func confirm(from screen: SignupStep) async throws -> SignupStep {
+        guard case .confirm = screen else { return screen }
+        try await interactor.confirm()
+        return .created
+    }
+
+    /// Continue on the screen that says the account is created: the app receives the credentials now. Only from
+    /// there, so a repeated tap or a late event can't hand them over twice.
+    private func finish(from screen: SignupStep) async throws -> SignupStep {
+        guard case .created = screen else { return screen }
+        try await interactor.finish()
+        return .authenticated
     }
 
     /// One rule for every menu: the account can be created, or something is still to be entered.
@@ -133,8 +178,13 @@ final class SignupFlowCoordinator: ObservableObject {
         do {
             step = try await work(screen)
         } catch let failure as SignupFailure {
-            if failure.endsSignup {
-                step = .failed(message: failure.message, canRetry: false)
+            let kind = enteredKind
+            if case let .collectCode(code) = screen, failure == .codeExpired, kind.recoversExpiredCode {
+                // The screen stays: its buttons send a new code.
+                step = .collectCode(code.expired())
+                inputError = failure
+            } else if failure.endsSignup {
+                step = .failed(message: failure.message(for: kind), canRetry: false)
             } else {
                 inputError = failure
             }

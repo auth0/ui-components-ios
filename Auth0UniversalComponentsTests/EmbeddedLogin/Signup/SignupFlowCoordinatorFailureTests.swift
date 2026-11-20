@@ -11,7 +11,7 @@ import Testing
     private typealias Fixtures = SignupHarness.Fixtures
     private let email = SignupHarness.email
 
-    // MARK: Codes (PRD Scenarios 12 to 14)
+    // MARK: Codes 
 
     @Test func aWrongCode_staysOnTheCodeScreen_andTheRightOneContinues() async {
         let harness = SignupHarness()
@@ -51,7 +51,8 @@ import Testing
         await harness.onTheCodeScreen()
 
         await harness.sut.send(.submitCode("000000"))
-        #expect(harness.sut.step == .failed(message: SignupFailure.tooManyWrongCodes.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.tooManyWrongCodes.message(for: .email),
+                                                    canRetry: false))
 
         // The session is gone, and a retry would hit a dead one: only a new sign-up helps.
         harness.client.scripted.authorizeResults = [Fixtures.needs([Fixtures.signup()])]
@@ -69,7 +70,8 @@ import Testing
 
         await harness.sut.send(.resend)
 
-        #expect(harness.sut.step == .failed(message: SignupFailure.tooManyCodesRequested.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.tooManyCodesRequested.message(for: .email),
+                                                    canRetry: false))
     }
 
     /// The SDK closes its session on a rate limit, so the user can't carry on where they were: another try would hit
@@ -80,7 +82,8 @@ import Testing
         await harness.onTheCodeScreen()
 
         await harness.sut.send(.submitCode("123456"))
-        #expect(harness.sut.step == .failed(message: SignupFailure.tooManyAttempts.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.tooManyAttempts.message(for: .email),
+                                                    canRetry: false))
         #expect(!harness.client.hasSession)
 
         harness.client.scripted.authorizeResults = [Fixtures.needs([Fixtures.signup()])]
@@ -98,10 +101,12 @@ import Testing
 
         await harness.sut.send(.submitIdentifier(email))
 
-        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message(for: .email),
+                                                    canRetry: false))
         // "Try again" is not offered, and the session is gone: nothing but a new sign-up would work.
         await harness.sut.send(.retry)
-        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message(for: .email),
+                                                    canRetry: false))
     }
 
     @Test func aFailureOpeningTheSignup_thatTheServerEnded_isNotRetried() async {
@@ -109,7 +114,8 @@ import Testing
         harness.client.scripted.authorizeResults = [
             Fixtures.terminal("server_error", description: "x", statusCode: 500)]
         await harness.sut.send(.start)
-        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message(for: .email),
+                                                    canRetry: false))
     }
 
     @Test func startingAgain_whileAlreadyStarted_changesNothing() async {
@@ -183,6 +189,8 @@ import Testing
         #expect(harness.sut.step == .confirm)
 
         await harness.sut.send(.confirm)
+        #expect(harness.sut.step == .created)
+        await harness.sut.send(.finish)
         #expect(harness.sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
     }
@@ -196,7 +204,8 @@ import Testing
 
         await harness.sut.send(.confirm)
 
-        #expect(harness.sut.step == .failed(message: SignupFailure.denied.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.denied.message(for: .email),
+                                                    canRetry: false))
     }
 
     @Test func aConfirmThatNeedsMore_isAFailureNotAHang() async {
@@ -208,7 +217,8 @@ import Testing
         await harness.sut.send(.confirm)
 
         // Sending the confirmation again would get the same answer: only a new sign-up can help.
-        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message, canRetry: false))
+        #expect(harness.sut.step == .failed(message: SignupFailure.ended.message(for: .email),
+                                                    canRetry: false))
         #expect(harness.delivered.credentials.isEmpty)
     }
 
@@ -217,8 +227,21 @@ import Testing
         harness.delivered.failsToSave = true
         await harness.onTheCodeScreen()
         await harness.sut.send(.submitCode("123456"))
-
         await harness.sut.send(.confirm)
+
+        await harness.sut.send(.finish)
+
+        let message = CredentialsNotSavedError().errorDescription ?? ""
+        #expect(harness.sut.step == .failed(message: message, canRetry: false))
+    }
+
+    @Test func whenTheAppCantTakeTheCredentialsOfAnExistingAccount_theSignupEndsAsNotSaved() async {
+        let harness = SignupHarness()
+        harness.client.scripted.verifyOtpResults = [.success(Credentials())]
+        harness.delivered.failsToSave = true
+        await harness.onTheCodeScreen()
+
+        await harness.sut.send(.submitCode("123456"))
 
         let message = CredentialsNotSavedError().errorDescription ?? ""
         #expect(harness.sut.step == .failed(message: message, canRetry: false))

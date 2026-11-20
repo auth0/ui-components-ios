@@ -16,8 +16,13 @@ import Testing
         #expect(offer((.email, true), (.phone, false)).isSupported)
     }
 
+    @Test func aRequiredPhone_isSupported() {
+        #expect(offer((.phone, true)).isSupported)
+        #expect(offer((.email, false), (.phone, true)).required == [.phone])
+    }
+
     @Test(arguments: [
-        [(IdentifierType.phone, true)],                       // a kind with no screens yet
+        [(IdentifierType.username, true)],                    // a kind with no screens
         [(IdentifierType.email, true), (.phone, true)],       // two required: not before several are supported
         [(IdentifierType.email, false)],                      // nothing required
         []
@@ -39,7 +44,7 @@ import Testing
 
     @Test func theMenuAfterIdentify_offersACode_andStillAllowsEditing() {
         let menu = SignupMenu([.challengeEmail(index: 0, identifier: "us**@ex***.com"), .identifyEmail])
-        #expect(menu.challenge == SignupChallenge(kind: .email, index: 0))
+        #expect(menu.challenge == SignupChallenge(index: 0))
         #expect(menu.askedFor == [.email])
         #expect(!menu.canConfirm)
     }
@@ -52,7 +57,8 @@ import Testing
     }
 
     @Test func entriesThatAreNotSignups_areIgnored() {
-        let menu = SignupMenu([.verifyOTP(channel: .email, identifier: nil), .identifyPhone, .unknown(rawAction: "x")])
+        let menu = SignupMenu([.verifyOTP(channel: .email, identifier: nil), .identifyUsername,
+                               .unknown(rawAction: "x")])
         #expect(menu == SignupMenu([]))
     }
 }
@@ -63,6 +69,7 @@ import Testing
 
     @Test(arguments: [
         (Fixtures.needs([Fixtures.identifyEmail], subReason: "invalid_email"), SignupFailure.invalidEmail),
+        (Fixtures.needs([Fixtures.identifyPhone], subReason: "invalid_phone"), .invalidPhone),
         (Fixtures.needs([Fixtures.verifyEmail], subReason: "invalid_identifier_or_code"), .invalidCode),
         (Fixtures.needs([Fixtures.verifyEmail], subReason: "invalid_code"), .invalidCode),
         (Fixtures.rateLimited, .tooManyAttempts),
@@ -85,7 +92,7 @@ import Testing
 
     /// The SDK clears its session on every failure but a continuation or a network error, so only those can go on.
     @Test func onlyTheOnesTheUserCanFix_stayOnTheScreen() {
-        let stays: [SignupFailure] = [.invalidEmail, .invalidCode, .codeNotSent]
+        let stays: [SignupFailure] = [.invalidEmail, .invalidPhone, .invalidCode, .codeNotSent]
         let ends: [SignupFailure] = [.tooManyAttempts, .tooManyWrongCodes, .codeExpired, .tooManyCodesRequested,
                                      .denied, .ended]
         #expect(stays.allSatisfy { !$0.endsSignup })
