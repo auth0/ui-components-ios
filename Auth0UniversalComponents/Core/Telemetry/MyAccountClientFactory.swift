@@ -12,4 +12,10 @@ struct MyAccountClientFactory {
         client.using(inLibrary: libraryName, version: version)
         return client
     }
+
+    static func create(token: String, domain: String) -> MyAccount {
+        var client = Auth0.myAccount(token: token, domain: domain)
+        client.using(inLibrary: libraryName, version: version)
+        return client
+    }
 }

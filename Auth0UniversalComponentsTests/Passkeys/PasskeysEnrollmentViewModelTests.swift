@@ -131,6 +131,7 @@ struct PasskeysEnrollmentViewModelTests {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -157,6 +158,7 @@ struct PasskeysEnrollmentViewModelTests {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -194,6 +196,7 @@ struct PasskeysEnrollmentViewModelTests {
         guard #available(iOS 16.6, macOS 13.5, visionOS 1.0, *) else { return }
 
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),

@@ -147,6 +147,7 @@ struct TOTPPushQRCodeViewModelTests {
 
     @Test func testConfirmEnrollmentChallenge_TOTP_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await TOTPPushQRCodeViewModel(
@@ -190,6 +191,7 @@ struct TOTPPushQRCodeViewModelTests {
 
     @Test func testConfirmEnrollmentChallenge_Push_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await TOTPPushQRCodeViewModel(
@@ -230,6 +232,7 @@ struct TOTPPushQRCodeViewModelTests {
     @Test
     func testNavigationTitle() async {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
         let viewModel = await TOTPPushQRCodeViewModel(
             startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCase(session: makeMockSession()),

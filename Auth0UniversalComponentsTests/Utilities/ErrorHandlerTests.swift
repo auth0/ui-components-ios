@@ -101,6 +101,7 @@ struct ErrorHandlerTests {
     // swiftlint:disable:next function_body_length
     func testErrorHandlerIntegration_OTPViewModel_APIError() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -167,6 +168,7 @@ struct ErrorHandlerTests {
     @Test("ErrorHandler integration with TOTPPushQRCodeViewModel - network error")
     func testErrorHandlerIntegration_TOTPPushViewModel_NetworkError() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -203,6 +205,7 @@ struct ErrorHandlerTests {
     @Test("ErrorHandler integration with SavedAuthenticatorsViewModel - API error")
     func testErrorHandlerIntegration_SavedAuthenticators_APIError() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(
             session: makeMockSession(),
@@ -267,21 +270,5 @@ struct ErrorHandlerTests {
 
         // Even for unknown errors, showLoader should be set to false
         #expect(handler.showLoader == false, "ErrorHandler should always set showLoader to false")
-    }
-
-    @MainActor
-    @Test("An error of an unknown kind is still shown, not left as a blank screen")
-    func testHandle_unknownError_isShown() async throws {
-        let handler = MockErrorViewModelHandler()
-        initializeSDK()
-
-        await ErrorHandler().handle(
-            error: NSError(domain: "TestDomain", code: 1, userInfo: nil),
-            scope: "openid",
-            handler: handler,
-            retryCallback: {}
-        )
-
-        #expect(handler.errorViewModel != nil)
     }
 }

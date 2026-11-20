@@ -107,9 +107,9 @@ You can configure the SDK in two ways:
 
 Pass your credentials directly during initialization.
 
-### Step 2: Initialize the SDK in Your App
+### Step 2: Initialize Auth0Dependencies in Your App
 
-Call `Auth0UniversalComponentsSDKInitializer.initialize(...)` in your app's entry point. This **must be done before** using any UI components.
+Initialize `Auth0Dependencies` in your app's entry point. This **must be done before** using any UI components.
 
 ```swift
 import SwiftUI

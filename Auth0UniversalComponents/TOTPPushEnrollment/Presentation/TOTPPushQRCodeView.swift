@@ -12,6 +12,7 @@ struct TOTPPushQRCodeView: View {
     /// View model managing QR code generation and enrollment state
     @StateObject private var viewModel: TOTPPushQRCodeViewModel
     /// Controls visibility of the "code copied" alert
+    @State private var showCopiedAlert = false
 
     /// Initializes the TOTP/Push QR code view.
     ///
@@ -99,7 +100,11 @@ struct TOTPPushQRCodeView: View {
                         }
 
                         Button {
-                            SecretPasteboard.copy(manualInputCode)
+                            #if os(macOS)
+                            NSPasteboard.general.setString(manualInputCode, forType: .string)
+                            #else
+                            UIPasteboard.general.string = manualInputCode
+                            #endif
                             viewModel.toast = Toast(style: .notify, message: "Copied")
                         } label: {
                             HStack(alignment: .center, spacing: theme.spacing.xs) {
@@ -185,7 +190,7 @@ struct TOTPPushQRCodeView: View {
                 await viewModel.fetchEnrollmentChallenge()
             }
         }
-        .onChangeCompat(of: viewModel.navigationRoute) { _ in
+        .onChange(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }

@@ -118,6 +118,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_TOTP_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCase(session: makeMockSession()),
@@ -154,6 +155,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_Email_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCase(session: makeMockSession()),
@@ -190,6 +192,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_Phone_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(confirmPhoneEnrollmentUseCase: ConfirmPhoneEnrollmentUseCase(session: makeMockSession()),
@@ -268,6 +271,7 @@ struct OTPViewModelTests {
     @Test func testConfirmEnrollment_TOTP_callsDelegate() async throws {
         let mockTokenProvider = MockTokenProvider()
         let mockDelegate = MockRefreshDelegate()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(
@@ -307,6 +311,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_TOTP_handlesAPIError() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(
@@ -352,6 +357,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_Email_handlesAPIError() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(
@@ -397,6 +403,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_Phone_handlesAPIError() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await OTPViewModel(
@@ -442,6 +449,7 @@ struct OTPViewModelTests {
 
     @Test func testConfirmEnrollment_withoutChallenge() async {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
@@ -466,6 +474,7 @@ struct OTPViewModelTests {
 
     @Test func testApiCallInProgress_stateManagement() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
 
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 

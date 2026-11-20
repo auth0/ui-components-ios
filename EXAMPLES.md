@@ -235,7 +235,6 @@ struct CreateAccountScreen: View {
 - `EmbeddedLoginView` already links to this flow when the tenant offers sign-up, so a button of your own is only needed to start sign-up from somewhere else.
 - The server decides what it asks for. A connection that requires something this view can't ask for yet, such as a phone number, shows "Sign-up isn't available".
 - If the email already has an account, the server signs that user in, and `onAuthenticated` is called the same way.
-- A connection that requires a password at sign-up isn't supported yet: this flow can't send one, so the account can't be created. It needs an Auth0.swift release that can.
 - A wrong code stays on the code screen. Too many wrong codes, or too many codes requested, end the sign-up with **Start over**.
 
 ### Sign in with a Phone Number

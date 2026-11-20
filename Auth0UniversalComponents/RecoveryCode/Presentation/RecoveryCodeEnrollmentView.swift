@@ -69,7 +69,12 @@ struct RecoveryCodeEnrollmentView: View {
 
                     Button {
                         if let recoveryCodeChallenge = viewModel.recoveryCodeChallenge {
-                            SecretPasteboard.copy(recoveryCodeChallenge.recoveryCode)
+                            #if os(macOS)
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.writeObjects([recoveryCodeChallenge.recoveryCode as NSString])
+                            #elseif os(iOS) || os(visionOS)
+                                UIPasteboard.general.string = recoveryCodeChallenge.recoveryCode
+                            #endif
                             viewModel.toast = Toast(style: .notify, message: "Copied")
                         }
                     } label: {
@@ -131,7 +136,7 @@ struct RecoveryCodeEnrollmentView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .tint(theme.colors.text.bold)
         #endif
-        .onChangeCompat(of: viewModel.navigationRoute) { _ in
+        .onChange(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }

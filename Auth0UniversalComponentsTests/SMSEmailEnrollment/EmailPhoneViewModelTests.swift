@@ -65,6 +65,7 @@ struct EmailPhoneViewModelTests {
 
     @Test func testStartEnrollment_Phone_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await EmailPhoneEnrollmentViewModel(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCase(session: makeMockSession()),
@@ -88,6 +89,7 @@ struct EmailPhoneViewModelTests {
 
     @Test func testStartEnrollment_Email_Success() async throws {
         let mockTokenProvider = MockTokenProvider()
+        await NavigationStore.shared.reset()
         Auth0UniversalComponentsSDKInitializer.initialize(session: makeMockSession(), bundle: .main, domain: mockDomain, clientId: "", audience: "\(mockDomain)/me/", tokenProvider: mockTokenProvider)
 
         let viewModel = await EmailPhoneEnrollmentViewModel(startEmailEnrollmentUseCase: StartEmailEnrollmentUseCase(session: makeMockSession()),

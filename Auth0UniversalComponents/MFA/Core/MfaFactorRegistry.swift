@@ -9,6 +9,8 @@ struct MfaFactorRegistry {
         byID = Dictionary(factors.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
     }
 
+    var ids: Set<MfaFactorID> { Set(byID.keys) }
+
     func factor(for id: MfaFactorID) -> (any MfaFactor)? { byID[id] }
 
     /// Supported offers only, in rank order; the server's order breaks ties.

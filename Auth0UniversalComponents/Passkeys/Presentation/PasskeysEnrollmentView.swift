@@ -121,7 +121,7 @@ struct PasskeysEnrollmentView: View {
         }
         .background(theme.colors.background.layerBase)
         .ignoresSafeArea()
-        .onChangeCompat(of: viewModel.navigationRoute) { _ in
+        .onChange(of: viewModel.navigationRoute) { _ in
             guard let route = viewModel.navigationRoute else { return }
             router.navigate(to: route)
         }

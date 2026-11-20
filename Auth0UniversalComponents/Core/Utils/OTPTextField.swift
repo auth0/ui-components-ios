@@ -106,6 +106,7 @@ extension OTPTextField {
         /// Reference to the parent OTPTextField
         var parent: OTPTextField
         /// Flag to track if text change event was triggered
+        private var shouldChangeTriggered = false
 
         /// Initializes the coordinator with a reference to the parent field.
         init(_ control: OTPTextField) {

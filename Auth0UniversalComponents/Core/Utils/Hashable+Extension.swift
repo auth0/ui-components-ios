@@ -76,3 +76,44 @@ extension EmailEnrollmentChallenge: @retroactive Hashable {
         hasher.combine(authenticationId)
     }
 }
+
+/// Type-erased wrapper for TokenProvider conforming to Hashable.
+///
+/// This wrapper allows any TokenProvider that conforms to Hashable to be stored
+/// and compared in collections that require Hashable conformance. It preserves
+/// the original type's equality and hashing behavior.
+struct AnyTokenProvider: Hashable {
+    /// The underlying TokenProvider instance
+    private let base: any TokenProvider
+    /// Closure for hashing the wrapped provider
+    private let _hash: (inout Hasher) -> Void
+    /// Closure for comparing equality with another TokenProvider
+    private let _equals: (any TokenProvider) -> Bool
+
+    /// Initializes the wrapper with a hashable TokenProvider.
+    ///
+    /// - Parameter base: A TokenProvider that also conforms to Hashable
+    init<T: TokenProvider & Hashable>(_ base: T) {
+        self.base = base
+        self._hash = base.hash(into:)
+        self._equals = { other in
+            guard let other = other as? T else { return false }
+            return base == other
+        }
+    }
+
+    /// Hashes the wrapped token provider.
+    func hash(into hasher: inout Hasher) {
+        _hash(&hasher)
+    }
+
+    /// Compares two type-erased token providers.
+    static func == (lhs: AnyTokenProvider, rhs: AnyTokenProvider) -> Bool {
+        lhs._equals(rhs.base)
+    }
+
+    /// Extracts and returns the underlying TokenProvider.
+    func asTokenProvider() -> any TokenProvider {
+        base
+    }
+}
