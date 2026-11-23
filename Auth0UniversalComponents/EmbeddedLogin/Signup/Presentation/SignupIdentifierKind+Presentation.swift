@@ -13,24 +13,6 @@ extension SignupIdentifierKind {
     }
 }
 
-extension SignupIdentifierKind {
-    /// The title of the screen shown once this kind is verified.
-    var verifiedTitle: String {
-        switch self {
-        case .email: return "Email verified."
-        case .phone: return "Phone verified."
-        }
-    }
-
-    /// What that screen says about it.
-    var verifiedMessage: String {
-        switch self {
-        case .email: return "Your email has been verified."
-        case .phone: return "Your phone number has been verified."
-        }
-    }
-}
-
 extension SignupIdentifierValue {
     /// What was typed, as the login's entry screen takes it back.
     var loginIdentifier: LoginIdentifier {

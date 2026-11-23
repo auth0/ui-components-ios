@@ -7,8 +7,6 @@ enum SignupStep: Equatable {
     case chooseDelivery(SignupDeliveryStep)
     /// A code went out to `identifier`.
     case collectCode(SignupCodeStep)
-    /// Every required identifier is verified. Continue creates the account.
-    case confirm
     case authenticated
     /// The connection offers no sign-up this flow can finish.
     case unavailable
@@ -54,7 +52,5 @@ enum SignupEvent: Equatable {
     case resend
     /// Continue on the screen that asks how to get the code: send it that way.
     case chooseDelivery(CodeDelivery)
-    /// Continue on the verified screen.
-    case confirm
     case retry
 }

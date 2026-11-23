@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Renders the coordinator's step, animates screen changes and owns the nav bar. The entry, code and error screens are
 /// the login's own (`LoginIdentifierScreen`, `LoginCodeScreen`, `LoginErrorScreen`), with sign-up's words; the
-/// rest (`SignupDeliveryScreen`, `SignupVerifiedScreen`) are sign-up's.
+/// rest (`SignupDeliveryScreen`) is sign-up's.
 struct SignupRenderingHostView: View {
     @StateObject private var coordinator: SignupFlowCoordinator
     @Environment(\.auth0Theme) private var theme
@@ -68,9 +68,6 @@ struct SignupRenderingHostView: View {
                             isCodeExpired: code.isExpired, onVerify: { send(.submitCode($0)) },
                             onEdit: handleBack, onResend: { send(.resend) })
 
-        case .confirm:
-            verifiedScreen
-
         case .authenticated:
             LoginSuccessScreen()
 
@@ -82,14 +79,6 @@ struct SignupRenderingHostView: View {
             LoginErrorScreen(message: message, title: "Sign-up couldn't be completed.",
                              retryTitle: canRetry ? "Try again" : "Start over") { send(canRetry ? .retry : .restart) }
         }
-    }
-
-    private var verifiedScreen: some View {
-        let kind = coordinator.enteredKind
-        return SignupVerifiedScreen(
-            title: kind.verifiedTitle, message: kind.verifiedMessage,
-            isLoading: coordinator.isSubmitting, errorMessage: coordinator.inputError?.message(for: kind),
-            onContinue: { send(.confirm) })
     }
 
     /// The login's own entry screen for the kind's field, with sign-up's words.
@@ -118,7 +107,7 @@ struct SignupRenderingHostView: View {
         announceScreenChange(to: target)
     }
 
-    /// Moves VoiceOver to the new screen. The confirm, failure and success screens have no field to take focus, so
+    /// Moves VoiceOver to the new screen. The failure and success screens have no field to take focus, so
     /// without this it stays on a control that is gone, and an outcome is never read out.
     private func announceScreenChange(to step: SignupStep) {
         #if canImport(UIKit)
@@ -158,7 +147,6 @@ private extension SignupStep {
         case .loading: return "loading"
         case let .collectIdentifier(kind): return "identifier.\(kind)"
         case .collectCode: return "code"
-        case .confirm: return "confirm"
         case .chooseDelivery: return "delivery"
         case .authenticated: return "authenticated"
         case .unavailable: return "unavailable"
@@ -173,8 +161,7 @@ private extension SignupStep {
         case .collectIdentifier: return 1
         case .chooseDelivery: return 2
         case .collectCode: return 3
-        case .confirm: return 4
-        case .authenticated, .unavailable, .failed: return 5
+        case .authenticated, .unavailable, .failed: return 4
         }
     }
 }

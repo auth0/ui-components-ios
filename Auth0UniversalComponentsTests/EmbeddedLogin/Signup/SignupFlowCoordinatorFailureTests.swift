@@ -27,7 +27,7 @@ import Testing
         guard case .collectCode = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
 
         await harness.sut.send(.submitCode("123456"))
-        #expect(harness.sut.step == .confirm)
+        #expect(harness.sut.step == .authenticated)
         #expect(harness.sut.inputError == nil)
     }
 
@@ -130,11 +130,9 @@ import Testing
         #expect(harness.client.calls.filter { $0 == .authorize(connection: "db") }.count == 1)
     }
 
-    @Test func aConfirm_fromAnyOtherScreen_isIgnored() async {
+    @Test func theAccountIsNotCreated_beforeTheCodeIsVerified() async {
         let harness = SignupHarness()
         await harness.onTheCodeScreen()
-
-        await harness.sut.send(.confirm)
 
         #expect(!harness.client.calls.contains(.confirmSignup))
     }
@@ -177,20 +175,36 @@ import Testing
         #expect(harness.sut.step == .collectIdentifier(.email))
     }
 
-    @Test func aNetworkFailureCreatingTheAccount_keepsTheSession_soTryAgainConfirmsAgain() async {
+    /// The code is used and the session is alive: "Try again" creates the account, and doesn't ask for the code.
+    @Test func aNetworkFailureCreatingTheAccount_keepsTheSession_soTryAgainCreatesItWithoutTheCode() async {
         let harness = SignupHarness()
         harness.client.scripted.confirmSignupResults = [.failure(Fixtures.network), .success(Credentials())]
         await harness.onTheCodeScreen()
+
         await harness.sut.send(.submitCode("123456"))
-
-        await harness.sut.send(.confirm)
         guard case .failed(_, canRetry: true) = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
-        await harness.sut.send(.retry)
-        #expect(harness.sut.step == .confirm)
 
-        await harness.sut.send(.confirm)
+        await harness.sut.send(.retry)
+
         #expect(harness.sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)
+        let verifies = harness.client.calls.filter { if case .verifyOtp = $0 { return true } else { return false } }
+        #expect(verifies.count == 1, "the code is not sent again")
+        #expect(harness.client.calls.filter { $0 == .confirmSignup }.count == 2)
+    }
+
+    @Test func aSecondNetworkFailureCreatingTheAccount_stillOffersTryAgain() async {
+        let harness = SignupHarness()
+        harness.client.scripted.confirmSignupResults = [.failure(Fixtures.network), .failure(Fixtures.network),
+                                                        .success(Credentials())]
+        await harness.onTheCodeScreen()
+        await harness.sut.send(.submitCode("123456"))
+
+        await harness.sut.send(.retry)
+        guard case .failed(_, canRetry: true) = harness.sut.step else { Issue.record("\(harness.sut.step)"); return }
+        await harness.sut.send(.retry)
+
+        #expect(harness.sut.step == .authenticated)
     }
 
     @Test func aSignupTheServerDenies_endsWithoutARetry() async {
@@ -198,9 +212,8 @@ import Testing
         harness.client.scripted.confirmSignupResults = [
             .failure(Fixtures.terminal("access_denied", description: "denied"))]
         await harness.onTheCodeScreen()
-        await harness.sut.send(.submitCode("123456"))
 
-        await harness.sut.send(.confirm)
+        await harness.sut.send(.submitCode("123456"))
 
         #expect(harness.sut.step == .failed(message: SignupFailure.denied.message(for: .email),
                                                     canRetry: false))
@@ -210,9 +223,8 @@ import Testing
         let harness = SignupHarness()
         harness.client.scripted.confirmSignupResults = [.failure(Fixtures.needs([Fixtures.verifyEmail]))]
         await harness.onTheCodeScreen()
-        await harness.sut.send(.submitCode("123456"))
 
-        await harness.sut.send(.confirm)
+        await harness.sut.send(.submitCode("123456"))
 
         // Sending the confirmation again would get the same answer: only a new sign-up can help.
         #expect(harness.sut.step == .failed(message: SignupFailure.ended.message(for: .email),
@@ -224,9 +236,8 @@ import Testing
         let harness = SignupHarness()
         harness.delivered.failsToSave = true
         await harness.onTheCodeScreen()
-        await harness.sut.send(.submitCode("123456"))
 
-        await harness.sut.send(.confirm)
+        await harness.sut.send(.submitCode("123456"))
 
         let message = CredentialsNotSavedError().errorDescription ?? ""
         #expect(harness.sut.step == .failed(message: message, canRetry: false))

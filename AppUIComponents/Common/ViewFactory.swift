@@ -52,8 +52,8 @@ private struct EmbeddedLoginContainerView: View {
             // Throwing shows the SDK's "couldn't save" screen and lets the user start again.
             try credentialsManager.store(credentials: credentials)
             LoginSession.record(.embedded)
-            // One atomic swap; pop() + navigate() can be mis-diffed into a double push.
-            router.replaceTop(with: .welcome)
+            // A push, like every other way into Welcome. `replaceTop(with:)` swaps with no animation at all.
+            router.navigate(to: .welcome)
         }
     }
 }

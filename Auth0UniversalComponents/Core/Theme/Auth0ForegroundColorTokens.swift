@@ -14,7 +14,7 @@ public protocol Auth0ForegroundColorTokens: Sendable {
     /// The brand's primary link colour: "Sign up" and "Log in" under the Embedded Login field.
     var linkPrimary: Color { get }
 
-    /// A confirmation drawn over a surface: the check on the "verified" and "signed in" screens.
+    /// A confirmation drawn over a surface: the check on the "signed in" screen.
     var success: Color { get }
 
     /// Error text, digits and cursor in Embedded Login.

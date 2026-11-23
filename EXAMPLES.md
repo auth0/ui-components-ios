@@ -215,7 +215,7 @@ To keep the login to signing in, pass `signup: .hidden`: the first screen then h
 
 ### Sign up with an Email
 
-`EmbeddedSignupView` creates a new account: the user enters their email, confirms it with a one-time code, and taps **Continue** to create the account. It uses the same `Auth0.plist` as the login, and hands the credentials to `onAuthenticated` once, as `EmbeddedLoginView` does:
+`EmbeddedSignupView` creates a new account: the user enters their email, confirms it with a one-time code, and the account is created. It uses the same `Auth0.plist` as the login, and hands the credentials to `onAuthenticated` once, as `EmbeddedLoginView` does:
 
 ```swift
 struct CreateAccountScreen: View {

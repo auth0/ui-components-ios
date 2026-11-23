@@ -25,6 +25,9 @@ final class SignupFlowCoordinator: ObservableObject {
     /// The SDK allows one request at a time, and `.start` runs again whenever the screen reappears.
     private var isOpening = false
     private var hasStarted = false
+    /// The last code is verified and the account isn't created yet: a lost connection leaves the sign-up here, so
+    /// "Try again" creates it without asking for the code again.
+    private var accountPending = false
 
     init(interactor: SignupInteracting) {
         self.interactor = interactor
@@ -39,7 +42,6 @@ final class SignupFlowCoordinator: ObservableObject {
         case let .submitCode(code): await request { screen in try await self.verify(code, from: screen) }
         case .resend: await request { screen in try await self.resend(from: screen) }
         case let .chooseDelivery(way): await request { screen in try await self.sendCode(via: way, from: screen) }
-        case .confirm: await request { screen in try await self.confirm(from: screen) }
         case .retry: await retry()
         }
     }
@@ -73,9 +75,10 @@ final class SignupFlowCoordinator: ObservableObject {
         inputError = nil
         entered = nil
         retryStep = nil
+        accountPending = false
         step = .loading
         do {
-            step = nextStep(after: try await interactor.open())
+            step = try await advance(after: try await interactor.open())
         } catch is SignupUnavailable {
             step = .unavailable
         } catch let failure as SignupFailure {
@@ -117,7 +120,7 @@ final class SignupFlowCoordinator: ObservableObject {
         guard case let .collectCode(current) = screen, !current.isExpired else { return screen }
         switch try await interactor.verify(code: code) {
         case .authenticated: return .authenticated
-        case let .next(menu): return nextStep(after: menu)
+        case let .next(menu): return try await advance(after: menu)
         }
     }
 
@@ -138,19 +141,19 @@ final class SignupFlowCoordinator: ObservableObject {
         return .collectCode(SignupCodeStep(identifier: code.identifier, challenge: challenge, delivery: delivery))
     }
 
-    /// Continue on the verified screen creates the account. Only from there: a repeated tap or a late event can't
-    /// create it twice.
-    private func confirm(from screen: SignupStep) async throws -> SignupStep {
-        guard case .confirm = screen else { return screen }
-        try await interactor.confirm()
-        return .authenticated
-    }
-
-    /// One rule for every menu: the account can be created, or something is still to be entered.
-    private func nextStep(after menu: SignupMenu) -> SignupStep {
-        if menu.canConfirm { return .confirm }
+    /// One rule for every menu: the account is created once every required identifier is verified, or something is
+    /// still to be entered.
+    private func advance(after menu: SignupMenu) async throws -> SignupStep {
+        if menu.canConfirm { return try await createAccount() }
         if let kind = menu.askedFor.first { return .collectIdentifier(kind) }
         return .failed(message: Self.somethingWentWrong, canRetry: false)
+    }
+
+    private func createAccount() async throws -> SignupStep {
+        accountPending = true
+        try await interactor.confirm()
+        accountPending = false
+        return .authenticated
     }
 
     // MARK: Requests
@@ -191,7 +194,11 @@ final class SignupFlowCoordinator: ObservableObject {
 
     private func retry() async {
         guard case .failed(_, true) = step else { return }
-        if let retryStep {
+        if accountPending {
+            retryStep = nil
+            step = .loading
+            await request { _ in try await self.createAccount() }
+        } else if let retryStep {
             self.retryStep = nil
             step = retryStep
         } else {
