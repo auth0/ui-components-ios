@@ -55,6 +55,14 @@ public protocol Auth0ColorTokens: Sendable {
 
     /// All border colour tokens — strokes, dividers, and elevation shadows.
     var border: any Auth0BorderColorTokens { get }
+
+    /// Foreground colours for links and brand accents. Optional to implement: a theme written before these existed
+    /// gets the built-in ones.
+    var foreground: any Auth0ForegroundColorTokens { get }
+}
+
+public extension Auth0ColorTokens {
+    var foreground: any Auth0ForegroundColorTokens { DefaultAuth0ForegroundColorTokens() }
 }
 
 // MARK: - Default Implementation
@@ -82,6 +90,7 @@ public struct DefaultAuth0ColorTokens: Auth0ColorTokens {
     public var background: any Auth0BackgroundColorTokens
     public var text: any Auth0TextColorTokens
     public var border: any Auth0BorderColorTokens
+    public var foreground: any Auth0ForegroundColorTokens
 
     // MARK: - Init
 
@@ -94,13 +103,16 @@ public struct DefaultAuth0ColorTokens: Auth0ColorTokens {
     ///   - background: Background colour tokens. Defaults to ``DefaultAuth0BackgroundColorTokens``.
     ///   - text: Text colour tokens. Defaults to ``DefaultAuth0TextColorTokens``.
     ///   - border: Border colour tokens. Defaults to ``DefaultAuth0BorderColorTokens``.
+    ///   - foreground: Foreground colour tokens. Defaults to ``DefaultAuth0ForegroundColorTokens``.
     public init(
         background: any Auth0BackgroundColorTokens = DefaultAuth0BackgroundColorTokens(),
         text: any Auth0TextColorTokens       = DefaultAuth0TextColorTokens(),
-        border: any Auth0BorderColorTokens     = DefaultAuth0BorderColorTokens()
+        border: any Auth0BorderColorTokens     = DefaultAuth0BorderColorTokens(),
+        foreground: any Auth0ForegroundColorTokens = DefaultAuth0ForegroundColorTokens()
     ) {
         self.background = background
         self.text       = text
         self.border     = border
+        self.foreground = foreground
     }
 }

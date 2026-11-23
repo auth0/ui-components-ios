@@ -16,7 +16,7 @@ While fetching data, the card screens render animated **skeleton shimmer** place
 
 ## Customisation
 
-- <doc:ThemeSystem>: Inject a custom ``Auth0Theme`` to match the SDK's colours, typography, spacing, corner radii, and component sizes to your brand — with zero configuration required for the default Auth0 look.
+- <doc:ThemeSystem>: Inject a custom ``Auth0Theme`` to match the SDK's colours, typography, spacing, corner radii, component sizes and logo to your brand — with zero configuration required for the default Auth0 look.
 
 ## Topics
 

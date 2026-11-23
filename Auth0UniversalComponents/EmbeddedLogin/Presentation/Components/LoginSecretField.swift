@@ -47,9 +47,9 @@ struct LoginSecretField: View {
     @ViewBuilder
     private var field: some View {
         if isRevealed {
-            TextField(placeholder, text: $text)
+            TextField("", text: $text, prompt: theme.fieldPrompt(placeholder))
         } else {
-            SecureField(placeholder, text: $text)
+            SecureField("", text: $text, prompt: theme.fieldPrompt(placeholder))
         }
     }
 }

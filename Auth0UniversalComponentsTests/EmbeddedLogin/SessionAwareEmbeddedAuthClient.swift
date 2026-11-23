@@ -63,6 +63,14 @@ final class SessionAwareEmbeddedAuthClient: EmbeddedAuthClient {
         try await run { try await scripted.confirmRecoveryCode() }
     }
 
+    func signup() async throws {
+        try await run { try await scripted.signup() }
+    }
+
+    func confirmSignup() async throws -> Credentials {
+        try await run { try await scripted.confirmSignup() }
+    }
+
     /// A call needs a session; a failure that isn't a continuation or a network error ends it. A call refused for want
     /// of a session never reaches the script.
     private func run<T>(_ call: () async throws -> T) async throws -> T {

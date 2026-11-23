@@ -78,6 +78,13 @@ struct ArchitectureTests {
         #expect(found.isEmpty, "\(found)")
     }
 
+    @Test func signup_knowsNothingAboutMfa() throws {
+        let signup = try code(in: "EmbeddedLogin/Signup")
+        #expect(signup.count >= 8, "the rule would pass vacuously if the files weren't found")
+        let found = try violations(in: signup, matching: #"\bMfa\w*|\bMFA\b|\bPush[A-Z]\w*|Guardian"#)
+        #expect(found.isEmpty, "\(found)")
+    }
+
     @Test func core_knowsNeitherLoginNorAuth0NorAnySpecificFactor() throws {
         let core = try code(in: "MFA/Core") + code(in: "MFA/Configuration")
             + code(in: "MFA/Presentation", except: ["MfaScreenKit.swift"])

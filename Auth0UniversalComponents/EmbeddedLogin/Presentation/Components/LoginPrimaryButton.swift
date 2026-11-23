@@ -31,11 +31,12 @@ public struct LoginPrimaryButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 44)
+            .frame(height: theme.sizes.tapTarget)
             .background(fill, in: shape)
             .overlay(shape.fill(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.04)],
                                                startPoint: .top, endPoint: .bottom)))
-            .overlay(shape.strokeBorder(theme.colors.background.primary.opacity(isLoading ? 0 : 1), lineWidth: 1))
+            .overlay(shape.strokeBorder(theme.colors.background.primary.opacity(isLoading ? 0 : 1),
+                                       lineWidth: theme.sizes.borderWidth))
             .shadow(color: .black.opacity(isEnabled && !isLoading ? 0.12 : 0), radius: 4, x: 0, y: 2)
             .contentShape(shape)
         }

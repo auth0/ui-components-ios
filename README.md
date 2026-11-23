@@ -24,7 +24,7 @@ This library provides ready-to-use UI components for multi-factor authentication
 - 💬 **SMS OTP** - Phone number verification via one-time codes
 - 📧 **Email OTP** - Email-based verification, and its code as a step when signing in with Embedded Login
 - 🔑 **Recovery Codes** - Backup authentication codes for account recovery, enrolled in My Account and usable as a step when signing in with Embedded Login
-- 🔓 **Embedded Login (beta)** - Native email or SMS one-time-code sign-in with `EmbeddedLoginView`. When the tenant asks for more, multi-factor steps run in place: Guardian push, the code from an authenticator app, SMS, voice and email codes, and recovery codes. See [Examples](EXAMPLES.md#embedded-login)
+- 🔓 **Embedded Login (beta)** - Native email or SMS one-time-code sign-in, or a password, with `EmbeddedLoginView`, and sign-up with `EmbeddedSignupView`; the logo, layout and words of the entry screen follow your theme and can be replaced. When the tenant asks for more, multi-factor steps run in place: Guardian push, the code from an authenticator app, SMS, voice and email codes, and recovery codes. See [Examples](EXAMPLES.md#embedded-login)
 - 🔐 **Passkeys** - Passwordless authentication using FIDO2/WebAuthn standards (Requires iOS 16.6+, macOS 13.5+, visionOS 1.0+)
 - ✨ **Skeleton shimmer loading** - Card screens show animated, theme-aware skeleton placeholders while data loads (light/dark mode, Reduce Motion aware)
 

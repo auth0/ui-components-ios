@@ -11,8 +11,8 @@ struct FactorRowButtonStyle: ButtonStyle {
         return configuration.label
             .background(isPressed ? theme.colors.background.layerTop : theme.colors.background.layerMedium, in: shape)
             .overlay(shape.strokeBorder(isPressed ? theme.colors.border.bold : theme.colors.border.regular,
-                                        lineWidth: 1))
-            .shadow(color: .black.opacity(isPressed ? 0.08 : 0), radius: 6, x: 0, y: 2)
+                                        lineWidth: theme.sizes.borderWidth))
+            .shadow(color: theme.colors.border.elevation.opacity(isPressed ? 0.45 : 0), radius: 6, x: 0, y: 2)
             .contentShape(shape)
             .animation(.easeOut(duration: 0.12), value: isPressed)
     }

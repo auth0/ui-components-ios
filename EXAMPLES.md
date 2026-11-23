@@ -160,6 +160,83 @@ struct LoginView: View {
 
 `onAuthenticated` runs once, as soon as the user is signed in, and after any multi-factor step. If it throws (for example, the Keychain write fails), the user sees an error screen, and **Try again** restarts from the screen where the email or phone number was entered, because the code has already been used. Call `clear()` before `store` when you replace an earlier session: Auth0.swift keeps the previous session's pinned expiry until `clear()`, so a new sign-in could otherwise be judged expired. The credentials are yours, so never log them.
 
+### Customize the Entry Screen
+
+The first screen of `EmbeddedLoginView` and `EmbeddedSignupView` is built from pieces you can set: a logo, a title, the field with Continue, the link to the other flow ("Sign up" or "Log in"), and the other ways to continue. Set them on any view above the login:
+
+```swift
+EmbeddedLoginView(connection: "Username-Password-Authentication") { credentials in
+    // …
+}
+.embeddedEntryLogo {
+    Image("BrandLogo")
+        .resizable().scaledToFit()
+        .frame(height: 48)
+        .accessibilityLabel("Acme")
+}
+.embeddedEntryMessages(EmbeddedEntryMessages(loginOrSignUpTitle: "Welcome to Acme", signUpAction: "Join"))
+```
+
+`embeddedEntry(_:)` sets everything at once, including the colour of the links.
+
+**The logo comes from the theme.** Out of the box the entry screens show the Auth0 logo. To show yours on every screen that has a logo, set it once in the theme's brand tokens, together with the label VoiceOver reads:
+
+```swift
+var theme = Auth0Theme()
+theme.brand = DefaultAuth0BrandTokens(logo: Image("AcmeLogo"), logoLabel: "Acme")
+
+ContentView()
+    .auth0Theme(theme)
+```
+
+A logo is drawn as a template image, in the text colour, so it reads in dark mode too. Give yours `.renderingMode(.original)` to keep its own colours. `.embeddedEntryLogo { … }` replaces the logo on one screen, and `.embeddedEntryLogo(.hidden)` takes it off. The colour of the "Sign up" and "Log in" links is the theme's `colors.foreground.linkPrimary`; set it with `DefaultAuth0ForegroundColorTokens(linkPrimary:)`.
+
+To place the pieces yourself, give a layout. It gets each piece as a view, or `nil` when there is none (no logo set, or sign-up not offered):
+
+```swift
+let layout = EmbeddedEntryLayout { parts in
+    VStack(spacing: 24) {
+        HStack { parts.logo; Spacer() }     // the logo on the left, instead of above the title
+        parts.title
+        parts.form                          // the field and Continue stay together
+        parts.accountLink
+        parts.alternatives
+        Spacer()
+    }
+}
+
+EmbeddedLoginView(connection: "…") { _ in }
+    .embeddedEntryLayout(layout)
+```
+
+`EmbeddedEntryLayout.centered` (the default) puts the block in the middle of the screen, and `.top` starts it at the top.
+
+To keep the login to signing in, pass `signup: .hidden`: the first screen then has no sign-up link, and the login tells the server nothing about sign-up.
+
+### Sign up with an Email
+
+`EmbeddedSignupView` creates a new account: the user enters their email, confirms it with a one-time code, and taps **Continue** to create the account. It uses the same `Auth0.plist` as the login, and hands the credentials to `onAuthenticated` once, as `EmbeddedLoginView` does:
+
+```swift
+struct CreateAccountScreen: View {
+    let credentialsManager: CredentialsManager
+
+    var body: some View {
+        EmbeddedSignupView(connection: "Username-Password-Authentication") { credentials in
+            // Replace any earlier session: Auth0.swift keeps its pinned session expiry until `clear()`.
+            try? credentialsManager.clear()
+            try credentialsManager.store(credentials: credentials)
+            // Route to your signed-in screen.
+        }
+    }
+}
+```
+
+- `EmbeddedLoginView` already links to this flow when the tenant offers sign-up, so a button of your own is only needed to start sign-up from somewhere else.
+- The server decides what it asks for. A connection that requires something this view can't ask for yet, such as a phone number, shows "Sign-up isn't available".
+- If the email already has an account, the server signs that user in, and `onAuthenticated` is called the same way.
+- A wrong code stays on the code screen. Too many wrong codes, or too many codes requested, end the sign-up with **Start over**.
+
 ### Sign in with a Phone Number
 
 When the connection offers SMS OTP, `EmbeddedLoginView` signs users in with a code sent by text message. Nothing changes in your code: the screens follow what the tenant offers.
@@ -452,7 +529,7 @@ if credentialsManager.canRenew() {
 - **While a request is in flight,** Back and **Edit** are disabled and repeated submits are ignored. This stops a sign-in from finishing after the screen has been dismissed. During MFA, Back cancels it at once, and an approval already on its way is discarded.
 - **Email and phone entry keep what was typed** when the user comes back to them: Back or **Edit** from code entry, Back from push, **Try again**, or **Sign in again**. A phone number comes back with its country.
 - **Push checks right away** when the app returns to the foreground, so approving on the same phone signs in without waiting for the next check.
-- **During the initial loading screen,** Back still leaves the flow.
+- **The top bar has a back arrow and a title** ("Log in", or "Sign up"), on every screen. From the entry screen it leaves the flow with the environment's `dismiss`, so it pops the screen from a `NavigationStack` and closes a sheet or full-screen cover. From sign-up opened from the login, it goes back to the login. Later screens go back a step.
 
 ### Use the Screens Standalone
 
