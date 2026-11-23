@@ -218,7 +218,7 @@ import UIKit
         }
     }
 
-    @Test func success_isTheGreenOfTheVerifiedScreen() {
+    @Test func success_isGreen_andLighterInDarkMode() {
         let success = DefaultAuth0ColorTokens().foreground.success
         #expect(hex(success, dark: false) == "#218C4D")
         #expect(hex(success, dark: true) == "#34D399")

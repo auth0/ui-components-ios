@@ -127,7 +127,9 @@ struct WelcomeView: View {
     private func logoutButton() -> some View {
         Button {
             viewModel.performLogout {
-                router.pop()
+                // Back to Login Options, whatever is stacked between it and Welcome (Embedded Login, right after a
+                // sign-in in this run).
+                while router.path.count > 1 { router.pop() }
             }
         } label: {
             Text("Log out")

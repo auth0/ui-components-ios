@@ -50,8 +50,6 @@ import Testing
         #expect(code.subtitle == "Sent to +1******4567")
 
         await sut.send(.submitCode("123456"))
-        #expect(sut.step == .confirm)
-        await sut.send(.confirm)
 
         #expect(sut.step == .authenticated)
         #expect(harness.delivered.credentials.count == 1)

@@ -26,12 +26,10 @@ import Testing
                                                         challenge: SignupChallenge(index: 1),
                                                         delivery: .email)))
 
-        await sut.send(.submitCode("123456"))
-        #expect(sut.step == .confirm)
         #expect(harness.delivered.credentials.isEmpty, "nothing is handed over before the account exists")
 
-        await sut.send(.confirm)
-        #expect(sut.step == .authenticated)
+        await sut.send(.submitCode("123456"))
+        #expect(sut.step == .authenticated, "the account is created as soon as the code is verified")
         #expect(harness.delivered.credentials.count == 1)
         #expect(harness.client.calls == [
             .authorize(connection: "db"), .signup, .identify("sarah.doe@example.com", type: .email),
