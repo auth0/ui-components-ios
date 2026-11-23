@@ -17,6 +17,8 @@ import AppKit
 /// for users unable to scan QR codes.
 @MainActor
 final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
+    
+    // MARK: - Properties
     private let startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable
     private let startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable
     private let confirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCaseable
@@ -26,7 +28,9 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     private var totpEnrollmentChallenge: TOTPEnrollmentChallenge?
     private weak var delegate: RefreshAuthDataProtocol?
     private let errorHandler = ErrorHandler()
-    @Published var qrCodeURI: String?
+    
+    // MARK: - Published properties
+    @Published var qrCodeImage: Image?
     @Published var showLoader: Bool = true
     @Published var manualInputCode: String?
     @Published var showManualCodeText: Bool = false
@@ -34,7 +38,9 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     @Published var apiCallInProgress: Bool = false
     @Published var toast: Toast?
     @Published var navigationRoute: Route?
+    @Published var otpSheetConfig: OTPSheetConfig?
 
+    // MARK: - Init
     init(startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable = StartTOTPEnrollmentUseCase(),
          startPushEnrollmentUseCase: StartPushEnrollmentUseCaseable = StartPushEnrollmentUseCase(),
          confirmPushEnrollmentUseCase: ConfirmPushEnrollmentUseCase = ConfirmPushEnrollmentUseCase(),
@@ -88,7 +94,13 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
 
     func handleContinueButtonTap() async {
         if let totpEnrollmentChallenge {
-            navigationRoute = .otpScreen(type: type, totpEnrollmentChallege: totpEnrollmentChallenge)
+            otpSheetConfig = OTPSheetConfig(
+                type: type,
+                emailOrPhoneNumber: nil,
+                totpEnrollmentChallenge: totpEnrollmentChallenge,
+                phoneEnrollmentChallenge: nil,
+                emailEnrollmentChallenge: nil
+            )
         } else {
             apiCallInProgress = true
             await confirmEnrollment()
@@ -126,7 +138,19 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     }
 
     private func setAuthQRCodeImage() {
-        qrCodeURI = totpEnrollmentChallenge?.authenticatorQRCodeURI ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
+        let context = CIContext()
+        let filter = CIFilter.qrCodeGenerator()
+        filter.correctionLevel = "H"
+        let qrCodeURI: String? = totpEnrollmentChallenge?.authenticatorQRCodeURI ?? pushEnrollmentChallenge?.authenticatorQRCodeURI
+        if let qrCodeURI {
+            filter.message = Data(qrCodeURI.utf8)
+        }
+        
+        if let outputImage = filter.outputImage {
+            if let cgImage = context.createCGImage(outputImage, from: outputImage.extent) {
+                qrCodeImage = Image(decorative: cgImage, scale: 1.0)
+            }
+        }
     }
 
     private func setAuthManualSetupCode() {

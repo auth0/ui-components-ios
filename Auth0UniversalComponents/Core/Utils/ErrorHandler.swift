@@ -2,12 +2,14 @@ import Auth0
 import Foundation
 
 /// Protocol for ViewModels that handle errors with errorViewModel
+@MainActor
 protocol ErrorViewModelHandler: AnyObject {
     var showLoader: Bool { get set }
     var errorViewModel: ErrorScreenViewModel? { get set }
 }
 
 /// Protocol for ViewModels that handle errors with errorMessage
+@MainActor
 protocol ErrorMessageHandler: AnyObject {
     var errorMessage: String? { get set }
 }

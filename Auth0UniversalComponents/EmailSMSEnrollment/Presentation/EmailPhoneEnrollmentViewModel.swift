@@ -9,10 +9,15 @@ import Foundation
 /// and initiation of the enrollment flow.
 @MainActor
 final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler {
+    
+    // MARK: - Properties
     private let startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable
     private let startEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable
     private let dependencies: Auth0UniversalComponentsSDKInitializer
     private let errorHandler = ErrorHandler()
+    private let type: AuthMethodType
+    
+    // MARK: - Published Properties
     @Published var errorMessage: String?
     @Published var selectedCountry: Country? = Country(name: "United States", code: "+1",
                                                                          flag: "🇺🇸")
@@ -20,12 +25,27 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
     @Published var email: String = ""
     @Published var isPickerVisible = false
     @Published var apiCallInProgress = false
-    @Published var navigationRoute: Route?
+    @Published var otpSheetConfig: OTPSheetConfig?
+    
+    // MARK: - Computed Properties
     var isButtonEnabled: Bool {
         type == .email ? !email.isEmpty : !phoneNumber.isEmpty
     }
-    private let type: AuthMethodType
+    
 
+    var isPhoneAuthMethod: Bool {
+        type == .sms
+    }
+
+    var title: String {
+        if type == .email {
+            "Enter your email address"
+        } else {
+            "Enter your phone number"
+        }
+    }
+
+    // MARK: - Init
     init(startPhoneEnrollmentUseCase: StartPhoneEnrollmentUseCaseable = StartPhoneEnrollmentUseCase(),
          startEmailEnrollmentUseCase: StartEmailEnrollmentUseCaseable = StartEmailEnrollmentUseCase(),
          type: AuthMethodType,
@@ -36,6 +56,7 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
         self.type = type
     }
 
+    // MARK: - Helper methods
     func startEnrollment() async {
         apiCallInProgress = true
         errorMessage = nil
@@ -54,10 +75,12 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                     request: startPhoneEnrollmentRequest
                 )
                 apiCallInProgress = false
-                navigationRoute = .otpScreen(
+                otpSheetConfig = OTPSheetConfig(
                     type: .sms,
                     emailOrPhoneNumber: phoneNumber,
-                    phoneEnrollmentChallenge: phoneEnrollmentChallenge
+                    totpEnrollmentChallenge: nil,
+                    phoneEnrollmentChallenge: phoneEnrollmentChallenge,
+                    emailEnrollmentChallenge: nil
                 )
             } else if type == .email {
                 let startEmailEnrollmentRequest = StartEmailEnrollmentRequest(
@@ -69,9 +92,11 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                     request: startEmailEnrollmentRequest
                 )
                 apiCallInProgress = false
-                navigationRoute = .otpScreen(
+                otpSheetConfig = OTPSheetConfig(
                     type: .email,
                     emailOrPhoneNumber: email,
+                    totpEnrollmentChallenge: nil,
+                    phoneEnrollmentChallenge: nil,
                     emailEnrollmentChallenge: emailEnrollmentChallenge
                 )
             }
@@ -82,26 +107,6 @@ final class EmailPhoneEnrollmentViewModel: ObservableObject, ErrorMessageHandler
                     await self?.startEnrollment()
                 }
             }
-        }
-    }
-
-    var isPhoneAuthMethod: Bool {
-        type == .sms
-    }
-
-    var navigationTitle: String {
-        if type == .email {
-            "Add Email OTP"
-        } else {
-            "Add Phone for SMS OTP"
-        }
-    }
-
-    var title: String {
-        if type == .email {
-            "Enter your email address"
-        } else {
-            "Enter your phone number"
         }
     }
 
