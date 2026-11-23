@@ -1,6 +1,7 @@
 # Change Log
 
-## Unreleased
+## [1.0.0-beta.5](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.5) (2026-11-23)
+[Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.4...1.0.0-beta.5)
 
 **Added**
 
@@ -10,12 +11,18 @@
 - **New design tokens.** `colors.foreground` (`linkPrimary`, `success`, `error`), `border.elevation`, and the sizes `tapTarget`, `logoHeight`, `statusIcon`, `navigationIcon`, `borderWidth`, `borderWidthStrong`, `focusRingWidth` and `errorRingWidth`. A custom theme written before them keeps compiling. The Embedded Login screens now use tokens instead of fixed values. See "Theme System".
 - **Embedded sign-up with an email.** New `EmbeddedSignupView(connection:onAuthenticated:)`: the user enters their email, confirms it with a one-time code and creates the account. The credentials go to `onAuthenticated` once, and the SDK stores nothing. A connection that needs more than one identifier isn't supported yet.
 - **Embedded sign-up with a phone number.** `EmbeddedSignupView` also signs a user up with a phone number, when the connection takes one, with no change to your code. A number that takes both a text and a call first asks how the user wants the code ("Choose how to get your code": **Text message** or **Voice call**); a number that takes one is sent it at once. The code screen then works as the email's does, with **Resend Code** after the wait, by the way the user chose. A code that timed out is replaced from the same screen.
-
+- Pull requests: [\#94](https://github.com/auth0/ui-components-ios/pull/94), [\#95](https://github.com/auth0/ui-components-ios/pull/95) and [\#97](https://github.com/auth0/ui-components-ios/pull/97) ([Sudhanshu96](https://github.com/Sudhanshu96))
 
 **Changed**
 
 - `LoginErrorScreen`, `LoginNoMethodsScreen` and `LoginSuccessScreen` now follow the theme.
 - An `EmbeddedLoginView` that comes back on screen no longer restarts the sign-in.
+- **The error red and the "Sign up" / "Log in" link are lighter in dark mode**, so they read clearly on the dark background (`Foreground/Error` and `Foreground/LinkPrimary` have a dark variant).
+- **Sign-up creates the account as soon as the code is verified.** There is no "Email verified." or "Phone verified." screen to continue from, and the credentials go to `onAuthenticated` at that point. If the connection drops while the account is being created, **Try again** creates it without asking for the code again.
+
+**Fixed**
+
+- **The Resend countdown now reaches zero.** On code screens it stopped one second short, so **Resend Code** never came on, and the same happened to "Email me a code in Ns" on the password screen. Both come on when the wait is over.
 
 ## [1.0.0-beta.4](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.4) (2026-11-17)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.3...1.0.0-beta.4)
