@@ -126,10 +126,10 @@ struct WelcomeView: View {
     @ViewBuilder
     private func logoutButton() -> some View {
         Button {
-            // Welcome was pushed onto Embedded Login, which is still under it: leaving takes both off.
-            let screensToLeave = LoginSession.method == .embedded ? 2 : 1
             viewModel.performLogout {
-                for _ in 0..<screensToLeave { router.pop() }
+                // Back to Login Options, whatever is stacked between it and Welcome (Embedded Login, right after a
+                // sign-in in this run).
+                while router.path.count > 1 { router.pop() }
             }
         } label: {
             Text("Log out")
