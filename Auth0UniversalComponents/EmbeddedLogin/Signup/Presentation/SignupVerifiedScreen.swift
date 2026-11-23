@@ -1,36 +1,28 @@
 import SwiftUI
 
-/// What the user sees once an identifier is verified: a check, "Email verified.", what comes next, and the way on.
-/// Continue creates the account. Anything the server asks for first is collected before it.
+/// What the user sees once an identifier is verified: a check, "Email verified." and what it means. Continue creates
+/// the account.
 struct SignupVerifiedScreen: View {
     let title: String
     let message: String
-    let primaryTitle: String
-    /// "Skip for now", when the next step is optional. `nil` shows only the primary button.
-    let secondaryTitle: String?
     let isLoading: Bool
-    /// Shown above the buttons, and read out when it appears.
+    /// Shown above Continue, and read out when it appears.
     let errorMessage: String?
-    let onPrimary: () -> Void
-    let onSecondary: () -> Void
+    let onContinue: () -> Void
 
     @Environment(\.auth0Theme) private var theme
     @Environment(\.colorScheme) private var colorScheme
 
-    init(title: String, message: String, primaryTitle: String = "Continue", secondaryTitle: String? = nil,
-         isLoading: Bool = false, errorMessage: String? = nil, onPrimary: @escaping () -> Void,
-         onSecondary: @escaping () -> Void = {}) {
+    init(title: String, message: String, isLoading: Bool = false, errorMessage: String? = nil,
+         onContinue: @escaping () -> Void) {
         self.title = title
         self.message = message
-        self.primaryTitle = primaryTitle
-        self.secondaryTitle = secondaryTitle
         self.isLoading = isLoading
         self.errorMessage = errorMessage
-        self.onPrimary = onPrimary
-        self.onSecondary = onSecondary
+        self.onContinue = onContinue
     }
 
-    // The check, title and message sit in the middle and the buttons at the bottom, as the design places them.
+    // The check, title and message sit in the middle and Continue at the bottom, as the design places them.
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -51,11 +43,7 @@ struct SignupVerifiedScreen: View {
                 LoginInlineError(errorMessage)
                     .padding(.bottom, theme.spacing.sm)
             }
-            LoginPrimaryButton(primaryTitle, isLoading: isLoading, action: onPrimary)
-            if let secondaryTitle {
-                LoginSecondaryButton(secondaryTitle, isEnabled: !isLoading, action: onSecondary)
-                    .padding(.top, theme.spacing.sm)
-            }
+            LoginPrimaryButton("Continue", isLoading: isLoading, action: onContinue)
         }
         .announcing(errorMessage)
         .embeddedScreenChrome(theme: theme, scrolls: true)
@@ -81,12 +69,6 @@ struct SignupVerifiedScreen: View {
 
 #Preview("Verified") {
     SignupVerifiedScreen(title: "Email verified.", message: "Your email has been verified.") {}
-}
-
-#Preview("Verified – phone next, optional") {
-    SignupVerifiedScreen(title: "Email verified.",
-                         message: "Your email has been verified. We will continue to ask for your phone number.",
-                         primaryTitle: "Add your phone next", secondaryTitle: "Skip for now", onPrimary: {})
 }
 
 #Preview("Verified – failed") {

@@ -233,9 +233,17 @@ struct CreateAccountScreen: View {
 ```
 
 - `EmbeddedLoginView` already links to this flow when the tenant offers sign-up, so a button of your own is only needed to start sign-up from somewhere else.
-- The server decides what it asks for. A connection that requires something this view can't ask for yet, such as a phone number, shows "Sign-up isn't available".
+- The server decides what it asks for. A connection that requires something this view can't ask for yet, such as two identifiers, shows "Sign-up isn't available".
 - If the email already has an account, the server signs that user in, and `onAuthenticated` is called the same way.
 - A wrong code stays on the code screen. Too many wrong codes, or too many codes requested, end the sign-up with **Start over**.
+
+### Sign up with a Phone Number
+
+The same `EmbeddedSignupView` signs a user up with a phone number when the connection takes one: nothing changes in your code. The user picks a country and enters the number. A number that takes both a text and a call then asks "Choose how to get your code": **Text message** or **Voice call**, and **Continue** sends it. A number that takes only one is sent the code at once, by text, or by call when it only takes calls. The code screen shows the number as the server masked it, with **Edit**, and **Resend Code** once the wait is over, which sends it the same way again.
+
+- A connection that requires a phone number and allows an email starts on the phone number.
+- A code that timed out stays on the screen with "The code expired. Send a new one to continue." and **Resend Code** comes on at once. A new code starts the sign-up again for the same number, so the user doesn't type it again.
+- A number the server rejects stays on the entry screen with "Please enter a valid phone number."
 
 ### Sign in with a Phone Number
 

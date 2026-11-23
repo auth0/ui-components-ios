@@ -57,7 +57,7 @@ public struct LoginCodeField: View {
                 shape.strokeBorder(theme.colors.border.subtle, lineWidth: theme.sizes.focusRingWidth)
             }
         }
-        .errorRing(isError && isFocused, cornerRadius: theme.radius.medium, color: theme.colors.errorRing,
+        .softRing(isError && isFocused, cornerRadius: theme.radius.medium, color: theme.colors.errorRing,
                    width: theme.sizes.errorRingWidth, overhang: theme.sizes.errorRingWidth - theme.sizes.borderWidth)
         .shadow(color: .black.opacity(isError ? 0 : 0.07), radius: 4, x: 0, y: 2)
         .focused($focusedField, equals: index)

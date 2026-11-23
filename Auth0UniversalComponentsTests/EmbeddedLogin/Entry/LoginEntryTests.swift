@@ -100,7 +100,7 @@ import UIKit
         #expect(hidden.parts.last?.logo == nil)
     }
 
-    @Test func aThemeWithItsOwnLogo_changesEveryEntryScreenAtOnce() {
+    @Test func aThemeWithItsOwnBrand_stillDrawsTheLogo() {
         let seen = Seen()
         var theme = Auth0Theme()
         theme.brand = DefaultAuth0BrandTokens(logo: Image(systemName: "star"), logoLabel: "Acme")
@@ -109,7 +109,6 @@ import UIKit
             .embeddedEntryLayout(recordingLayout(seen)))
 
         #expect(seen.parts.last?.logo != nil)
-        #expect(theme.brand.logoLabel == "Acme")
     }
 
     @Test func withoutALinkOrOtherWays_thoseAreLeftOut() {

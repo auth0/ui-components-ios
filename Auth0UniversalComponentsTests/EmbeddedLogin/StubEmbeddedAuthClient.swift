@@ -127,9 +127,12 @@ enum EmbeddedAuthFixtures {
     static func confirmRecoveryCode(newCode: String = "N47HCYSDHRKWWSLJONYEQ7LXLV5XEMC5") -> [String: Any] {
         ["action": "action:confirm:recovery-code:v1", "new_code": newCode]
     }
-    /// The sign-up offer.
-    static func signup(email required: Bool = true) -> [String: Any] {
-        ["action": "action:signup:v1", "identifiers": ["email": ["required": required]]]
+    /// The sign-up offer: which identifiers the connection takes, and whether each is required. `nil` leaves it out.
+    static func signup(email: Bool? = true, phone: Bool? = nil) -> [String: Any] {
+        var identifiers: [String: Any] = [:]
+        if let email { identifiers["email"] = ["required": email] }
+        if let phone { identifiers["phone_number"] = ["required": phone] }
+        return ["action": "action:signup:v1", "identifiers": identifiers]
     }
     /// The last step of a sign-up.
     static let confirmSignup: [String: Any] = ["action": "action:signup:confirm:v1"]

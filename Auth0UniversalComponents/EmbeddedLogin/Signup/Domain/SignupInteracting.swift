@@ -5,8 +5,8 @@ protocol SignupInteracting {
     /// flow can finish.
     func open() async throws -> SignupMenu
     func identify(_ identifier: SignupIdentifierValue) async throws -> SignupMenu
-    /// Sends a code. A code sent again is the same call.
-    func sendCode(_ challenge: SignupChallenge) async throws
+    /// Sends a code the way given. A code sent again is the same call.
+    func sendCode(_ challenge: SignupChallenge, via delivery: CodeDelivery) async throws
     func verify(code: String) async throws -> SignupProgress
     /// Creates the account. The credentials are already with the app when it returns.
     func confirm() async throws

@@ -60,6 +60,9 @@ public protocol Auth0SizeTokens: Sendable {
     /// Width of a hairline: the outline of a field, a button, a card.
     var borderWidth: CGFloat { get }
 
+    /// Width of an emphasised outline: the choice the user has made among several.
+    var borderWidthStrong: CGFloat { get }
+
     /// Width of the ring around a focused field.
     var focusRingWidth: CGFloat { get }
 
@@ -74,6 +77,7 @@ public extension Auth0SizeTokens {
     var statusIcon: CGFloat { 44 }
     var navigationIcon: CGFloat { 20 }
     var borderWidth: CGFloat { 1 }
+    var borderWidthStrong: CGFloat { 2 }
     var focusRingWidth: CGFloat { 3 }
     var errorRingWidth: CGFloat { 4 }
 }
@@ -99,6 +103,7 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     public var statusIcon: CGFloat
     public var navigationIcon: CGFloat
     public var borderWidth: CGFloat
+    public var borderWidthStrong: CGFloat
     public var focusRingWidth: CGFloat
     public var errorRingWidth: CGFloat
 
@@ -118,6 +123,7 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     ///   - statusIcon: Default `44`.
     ///   - navigationIcon: Default `20`.
     ///   - borderWidth: Default `1`.
+    ///   - borderWidthStrong: Default `2`.
     ///   - focusRingWidth: Default `3`.
     ///   - errorRingWidth: Default `4`.
     public init(
@@ -134,6 +140,7 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
         statusIcon: CGFloat = 44,
         navigationIcon: CGFloat = 20,
         borderWidth: CGFloat = 1,
+        borderWidthStrong: CGFloat = 2,
         focusRingWidth: CGFloat = 3,
         errorRingWidth: CGFloat = 4
     ) {
@@ -150,6 +157,7 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
         self.statusIcon = statusIcon
         self.navigationIcon = navigationIcon
         self.borderWidth = borderWidth
+        self.borderWidthStrong = borderWidthStrong
         self.focusRingWidth = focusRingWidth
         self.errorRingWidth = errorRingWidth
     }
