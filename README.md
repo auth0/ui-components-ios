@@ -48,6 +48,7 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 
 | Universal Components | Auth0.swift | Notes |
 |---|---|---|
+| 1.0.0-beta.5 | 4.0.0-beta.3+ (< 5.0.0) | Adds sign-up with an email or a phone number to Embedded Login, and a composable entry screen with a brand logo. No breaking changes |
 | 1.0.0-beta.4 | 4.0.0-beta.3+ (< 5.0.0) | Adds password sign-in to Embedded Login, and email codes, the authenticator app's code and recovery codes as multi-factor steps. Breaking: needs Auth0.swift 4.0.0-beta.3 or later. A user whose only factor is an authenticator app now gets its code screen instead of `MfaError.noEligibleFactors` (see the [CHANGELOG](CHANGELOG.md)) |
 | 1.0.0-beta.3 | 4.0.0-beta.1+ (< 5.0.0) | Adds sign-in with a phone number (SMS OTP) to Embedded Login, and SMS and voice codes as multi-factor steps. No breaking changes |
 | 1.0.0-beta.2 | 4.0.0-beta.1+ (< 5.0.0) | Adds multi-factor authentication (Guardian push) to Embedded Login. Breaking: `EmbeddedLoginView` hands the credentials to `onAuthenticated` instead of storing them |
@@ -63,10 +64,10 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 Add the following to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0-beta.4")
+.package(url: "https://github.com/auth0/ui-components-ios.git", from: "1.0.0-beta.5")
 ```
 
-> **Note:** This range also accepts later `1.0.0` betas. To stay on one beta, use `exact: "1.0.0-beta.4"`.
+> **Note:** This range also accepts later `1.0.0` betas. To stay on one beta, use `exact: "1.0.0-beta.5"`.
 
 Or use Xcode: File → Add Packages → Enter the repository URL.
 
@@ -75,7 +76,7 @@ Or use Xcode: File → Add Packages → Enter the repository URL.
 Add the following to your `Cartfile`:
 
 ```
-github "auth0/ui-components-ios" "1.0.0-beta.4"
+github "auth0/ui-components-ios" "1.0.0-beta.5"
 ```
 
 ### Configure the SDK
