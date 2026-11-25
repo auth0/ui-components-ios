@@ -31,9 +31,13 @@ enum ToastBehavior {
     static let swipeDismissDistance: CGFloat = 24
 
     /// Seconds the toast rests, from when it is fully in to when it starts to fade out.
-    static func hold(lines: Int, voiceOverRunning: Bool) -> TimeInterval {
+    ///
+    /// `duration` is the app's own time for this toast, used as it is however many lines the message takes. Without
+    /// one, a toast rests 4 s, and 1 s more for a second line. While VoiceOver is running it rests at least 6 s
+    /// either way, so the announcement can be heard.
+    static func hold(lines: Int, voiceOverRunning: Bool, duration: TimeInterval? = nil) -> TimeInterval {
         let shown = min(max(lines, 1), maxLines)
-        let hold = baseHold + extraHoldPerLine * TimeInterval(shown - 1)
+        let hold = max(duration ?? baseHold + extraHoldPerLine * TimeInterval(shown - 1), 0)
         return voiceOverRunning ? max(hold, voiceOverHold) : hold
     }
 

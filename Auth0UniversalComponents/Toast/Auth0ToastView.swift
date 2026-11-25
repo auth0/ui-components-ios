@@ -10,6 +10,7 @@ import SwiftUI
 ///
 /// ```swift
 /// Auth0ToastView("Account created")
+/// Auth0ToastView("Link copied", icon: Image(systemName: "doc.on.doc"))
 /// ```
 ///
 /// Use it for a completed step that needs no decision ("Email verified"). Not for errors, or for anything the
@@ -19,16 +20,20 @@ public struct Auth0ToastView: View {
     @Environment(\.auth0Theme) private var theme
 
     private let message: String
+    private let icon: Image?
 
-    /// - Parameter message: Sentence case, no full stop: the object and the result ("Phone number verified").
-    public init(_ message: String) {
+    /// - Parameters:
+    ///   - message: Sentence case, no full stop: the object and the result ("Phone number verified").
+    ///   - icon: Shown instead of the check. It takes the theme's success colour when it is a template image (an SF
+    ///     Symbol, or an asset set to render as a template); any other image keeps its own colours. `nil` is the check.
+    public init(_ message: String, icon: Image? = nil) {
         self.message = message
+        self.icon = icon
     }
 
     public var body: some View {
         HStack(spacing: theme.spacing.sm) {
-            Image("toast_success", bundle: ResourceBundle.default)
-                .renderingMode(.template)
+            (icon ?? Image("toast_success", bundle: ResourceBundle.default))
                 .resizable()
                 .scaledToFit()
                 .frame(width: theme.sizes.iconMedium, height: theme.sizes.iconMedium)

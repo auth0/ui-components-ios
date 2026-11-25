@@ -1,5 +1,6 @@
 @testable import Auth0UniversalComponents
 import CoreGraphics
+import SwiftUI
 import Testing
 
 @Suite
@@ -25,6 +26,21 @@ struct ToastBehaviorTests {
     @Test func voiceOver_holdsAtLeast6Seconds() {
         #expect(ToastBehavior.hold(lines: 1, voiceOverRunning: true) == 6)
         #expect(ToastBehavior.hold(lines: 2, voiceOverRunning: true) == 6)
+    }
+
+    @Test func aCustomDuration_isUsedAsItIs_whateverTheLines() {
+        #expect(ToastBehavior.hold(lines: 1, voiceOverRunning: false, duration: 2) == 2)
+        #expect(ToastBehavior.hold(lines: 2, voiceOverRunning: false, duration: 2) == 2)
+        #expect(ToastBehavior.hold(lines: 1, voiceOverRunning: false, duration: 10) == 10)
+    }
+
+    @Test func aCustomDuration_stillHoldsForVoiceOver() {
+        #expect(ToastBehavior.hold(lines: 1, voiceOverRunning: true, duration: 2) == 6)
+        #expect(ToastBehavior.hold(lines: 1, voiceOverRunning: true, duration: 10) == 10)
+    }
+
+    @Test func aNegativeDuration_countsAsZero() {
+        #expect(ToastBehavior.hold(lines: 1, voiceOverRunning: false, duration: -3) == 0)
     }
 
     // MARK: Swipe to dismiss
@@ -66,6 +82,16 @@ struct ToastBehaviorTests {
         #expect(first.text == again.text)
         #expect(first != again)
         #expect(first.id != again.id)
+    }
+
+    @Test func message_keepsItsIconAndDuration() {
+        let plain = Auth0ToastMessage("Email verified")
+        #expect(plain.icon == nil)
+        #expect(plain.duration == nil)
+
+        let custom = Auth0ToastMessage("Link copied", icon: Image(systemName: "doc.on.doc"), duration: 2)
+        #expect(custom.icon != nil)
+        #expect(custom.duration == 2)
     }
 
     // MARK: Theme

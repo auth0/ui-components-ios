@@ -10,7 +10,8 @@ public extension View {
     /// The toast sits at the top of the screen, 8 pt below the safe area, over the content: it never moves it.
     /// Only one shows at a time, so setting a new message replaces the current one. It slides down and fades in
     /// over 250 ms, rests 4 s (1 s more for a second line, at least 6 s while VoiceOver is running), then fades out
-    /// over 200 ms. A swipe up dismisses it early. With Reduce Motion on it only fades.
+    /// over 200 ms. A swipe up dismisses it early. With Reduce Motion on it only fades. A message can set its own icon
+    /// and its own resting time.
     ///
     /// VoiceOver is sent an announcement of the message, and focus stays where it was.
     ///
@@ -46,7 +47,7 @@ struct Auth0ToastModifier: ViewModifier {
             // The ZStack is empty, and so takes no touches, while there is no toast.
             ZStack {
                 if let message {
-                    Auth0ToastView(message.text)
+                    Auth0ToastView(message.text, icon: message.icon)
                         .padding(.horizontal, theme.spacing.md)
                         .padding(.top, theme.spacing.xs)
                         .offset(y: dragOffset)
@@ -94,7 +95,7 @@ struct Auth0ToastModifier: ViewModifier {
         announce(shown.text)
         // The line count is known once the toast has been laid out, which the fade-in outlasts.
         await sleep(ToastBehavior.appearDuration)
-        let hold = ToastBehavior.hold(lines: lineCount, voiceOverRunning: voiceOverRunning)
+        let hold = ToastBehavior.hold(lines: lineCount, voiceOverRunning: voiceOverRunning, duration: shown.duration)
         await sleep(hold)
         guard !Task.isCancelled, message == shown else { return }
         message = nil
