@@ -68,10 +68,18 @@ public protocol Auth0SizeTokens: Sendable {
 
     /// Width of the ring around an invalid field.
     var errorRingWidth: CGFloat { get }
+
+    /// Height of a one-line toast. A longer message grows it.
+    var toastMinHeight: CGFloat { get }
+
+    /// Widest a toast gets, so it doesn't stretch across an iPad or a Mac window.
+    var toastMaxWidth: CGFloat { get }
 }
 
 /// Sizes added after the first release. A conforming type written before them gets Auth0's.
 public extension Auth0SizeTokens {
+    var toastMinHeight: CGFloat { 56 }
+    var toastMaxWidth: CGFloat { 370 }
     var tapTarget: CGFloat { 44 }
     var logoHeight: CGFloat { 40 }
     var statusIcon: CGFloat { 44 }
@@ -106,6 +114,8 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     public var borderWidthStrong: CGFloat
     public var focusRingWidth: CGFloat
     public var errorRingWidth: CGFloat
+    public var toastMinHeight: CGFloat
+    public var toastMaxWidth: CGFloat
 
     /// Creates the default Auth0 size scale with optional per-token overrides.
     ///
@@ -126,6 +136,8 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
     ///   - borderWidthStrong: Default `2`.
     ///   - focusRingWidth: Default `3`.
     ///   - errorRingWidth: Default `4`.
+    ///   - toastMinHeight: Default `56`.
+    ///   - toastMaxWidth: Default `370`.
     public init(
         buttonHeight: CGFloat = 48,
         inputHeight: CGFloat = 60,
@@ -142,7 +154,9 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
         borderWidth: CGFloat = 1,
         borderWidthStrong: CGFloat = 2,
         focusRingWidth: CGFloat = 3,
-        errorRingWidth: CGFloat = 4
+        errorRingWidth: CGFloat = 4,
+        toastMinHeight: CGFloat = 56,
+        toastMaxWidth: CGFloat = 370
     ) {
         self.buttonHeight = buttonHeight
         self.inputHeight = inputHeight
@@ -160,5 +174,7 @@ public struct DefaultAuth0SizeTokens: Auth0SizeTokens {
         self.borderWidthStrong = borderWidthStrong
         self.focusRingWidth = focusRingWidth
         self.errorRingWidth = errorRingWidth
+        self.toastMinHeight = toastMinHeight
+        self.toastMaxWidth = toastMaxWidth
     }
 }

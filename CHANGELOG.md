@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+**Added**
+
+- **A success toast.** New `Auth0ToastView`, a check and a short message on a raised surface, and `.auth0Toast(_:)`, which shows an `Auth0ToastMessage` over a screen and dismisses it on its own. New size tokens `toastMinHeight` and `toastMaxWidth`; a custom theme written before them keeps compiling.
+
 ## [1.0.0-beta.5](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.5) (2026-11-23)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.4...1.0.0-beta.5)
 
