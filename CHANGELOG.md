@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+**Fixed**
+
+- **Swift Package Manager no longer resolves Auth0.swift 4.0.0-beta.4.** `Package.swift` required Auth0.swift `from: "4.0.0-beta.3"`, so a fresh resolution picked up beta.4, which changed `confirmSignup` and `NextAction.signup` and doesn't build with this version. It now requires exactly `4.0.0-beta.3`, the version the Cartfile pins. If your app also depends on Auth0.swift directly, keep it at `4.0.0-beta.3`.
+
 ## [1.0.0-beta.5](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.5) (2026-11-23)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.4...1.0.0-beta.5)
 

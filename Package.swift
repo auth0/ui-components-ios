@@ -12,8 +12,10 @@ let package = Package(
     products: [.library(name: "Auth0UniversalComponents", targets: ["Auth0UniversalComponents"])],
     dependencies: [
         // Embedded Login needs the Flow 2 APIs (Guardian push, and signing in with a password). beta.3 is the
-        // version the Cartfile pins and this SDK is built and tested against, so Swift Package Manager requires it too.
-        .package(url: "https://github.com/auth0/Auth0.swift.git", from: "4.0.0-beta.3")
+        // version the Cartfile pins and this SDK is built and tested against, so Swift Package Manager pins exactly it
+        // too: 4.0.0-beta.4 changed `confirmSignup` and `NextAction.signup`, which this code doesn't build against.
+        // Move it together with the Cartfile.
+        .package(url: "https://github.com/auth0/Auth0.swift.git", exact: "4.0.0-beta.3")
     ],
     targets: [
         .target(

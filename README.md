@@ -55,6 +55,8 @@ All components are built on top of the [Auth0 Swift SDK](https://github.com/auth
 | 1.0.0-beta.1 | 4.0.0-beta.0+ (< 5.0.0) | Adds Embedded Login. Breaking: needs the Auth0.swift 4 beta |
 | 1.0.0-beta.0 | 2.21.0+ (< 3.0.0) | First beta |
 
+> ⚠️ **Auth0.swift is pinned.** Swift Package Manager uses exactly Auth0.swift `4.0.0-beta.3`, the version the Cartfile pins and this SDK is tested against, so a newer Auth0.swift pre-release can't change what it builds against. `1.0.0-beta.5` and earlier accepted any version from `4.0.0-beta.3` and don't build against `4.0.0-beta.4`: until you update to a release with this pin, keep Auth0.swift at `4.0.0-beta.3` in your `Package.resolved`.
+
 > ⚠️ **Breaking change in 1.0.0-beta.1:** This SDK now depends on the **pre-release Auth0.swift `4.0.0-beta.0`**, up from Auth0.swift 2.x. If your app also depends on Auth0.swift directly, move it to `4.0.0-beta.0` or later. If you aren't ready to move, pin this SDK with `exact: "1.0.0-beta.0"`. See the [CHANGELOG](CHANGELOG.md) for the migration notes.
 
 ### Installation
