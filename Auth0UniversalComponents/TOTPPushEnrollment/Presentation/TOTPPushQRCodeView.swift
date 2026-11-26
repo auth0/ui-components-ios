@@ -105,7 +105,7 @@ struct TOTPPushQRCodeView: View {
                             #else
                             UIPasteboard.general.string = manualInputCode
                             #endif
-                            viewModel.toast = Toast(style: .notify, message: "Copied")
+                            viewModel.toast = Auth0ToastMessage("Copied", style: .notice, edge: .bottom, duration: 3)
                         } label: {
                             HStack(alignment: .center, spacing: theme.spacing.xs) {
                                 Image("copy", bundle: ResourceBundle.default)
@@ -177,7 +177,8 @@ struct TOTPPushQRCodeView: View {
             }
         }
         .background(theme.colors.background.layerBase.ignoresSafeArea())
-        .toastView(toast: $viewModel.toast)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .auth0Toast($viewModel.toast)
         .themedNavigationTitle(viewModel.navigationTitle(), theme: theme)
         #if !os(macOS)
             .navigationBarTitleDisplayMode(.inline)

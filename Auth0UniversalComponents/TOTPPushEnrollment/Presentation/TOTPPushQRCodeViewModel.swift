@@ -32,7 +32,7 @@ final class TOTPPushQRCodeViewModel: ObservableObject, ErrorViewModelHandler {
     @Published var showManualCodeText: Bool = false
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var apiCallInProgress: Bool = false
-    @Published var toast: Toast?
+    @Published var toast: Auth0ToastMessage?
     @Published var navigationRoute: Route?
 
     init(startTOTPEnrollmentUseCase: StartTOTPEnrollmentUseCaseable = StartTOTPEnrollmentUseCase(),

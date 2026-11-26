@@ -7,6 +7,7 @@ This document provides code examples for using the Auth0 UI Components SDK.
 - [Initialization](#initialization)
 - [Authentication Methods Management](#authentication-methods-management)
 - [Embedded Login](#embedded-login)
+- [Toast](#toast)
 
 ## Initialization
 
@@ -605,3 +606,38 @@ The other screens and building blocks are also public and work the same way:
 
 - **Screens:** `LoginLoadingScreen`, `LoginErrorScreen`, `LoginSuccessScreen`, `LoginNoMethodsScreen`.
 - **Building blocks:** `LoginScreenHeader` (with `isEditEnabled`), `LoginInputField`, `LoginCodeField` (with `isEnabled`), `LoginPrimaryButton`, `LoginResendButton` (with `isAvailableNow`).
+
+## Toast
+
+`Auth0ToastView` is a toast: a short message (two lines at most), with an icon if its style has one, on a raised surface. `.auth0Toast(_:edge:)` shows one over a screen. By default it sits at the top, below the safe area, over the content, and one shows at a time: a new message replaces the current one.
+
+```swift
+struct ProfileScreen: View {
+    @State private var toast: Auth0ToastMessage?
+
+    var body: some View {
+        Button("Verify phone") { toast = Auth0ToastMessage("Phone number verified") }
+            .auth0Toast($toast)
+    }
+}
+```
+
+- **Words.** Sentence case, no full stop: the object and the result ("Phone number verified"). A toast is for a step that needs no decision. Use inline errors or an error screen for anything the user must read or act on.
+- **Time.** It slides in, rests 4 s (5 s when the message wraps, at least 6 s while VoiceOver is running), and fades out. A swipe away from its edge, or VoiceOver's escape gesture, dismisses it early. With Reduce Motion on it only fades. Pass `duration:` to set the rest yourself: it is kept between 0 and 60 s.
+- **Edge.** Toasts appear at the top by default. `.auth0Toast($toast, edge: .bottom)` makes the bottom the screen's default, and a message can choose its own, which wins: `Auth0ToastMessage("Copied", style: .notice, edge: .bottom)`. The edge sets where the toast rests, which way it slides in (from below at the bottom), and which swipe dismisses it (down at the bottom, up at the top). One screen can show both, one at a time.
+- **Icon.** `Auth0ToastMessage("Link copied", icon: Image(systemName: "doc.on.doc"))` replaces the check, and `icon: nil` removes it. A template image takes the style's icon colour. VoiceOver doesn't read the icon, so the words must say what it says.
+- **Style.** `Auth0ToastMessage("Copied", style: .notice, edge: .bottom)` is a small toast in the brand's primary colours with no icon, at the bottom. `.success` is the default. Start from either and change what you need, or build your own. Colours are closures that take the theme, so they follow a custom theme and dark mode:
+
+```swift
+var style = Auth0ToastStyle.success
+style.icon = Image(systemName: "exclamationmark.triangle.fill")
+style.iconColor = { _ in .orange }
+style.layout = .compact          // as big as its words; .card is the design's full-width toast
+
+toast = Auth0ToastMessage("Check your connection", style: style)
+```
+
+- **Screens.** The toast belongs to the screen it is on, and goes with it. Set the message on the screen the user lands on, not the one they are leaving.
+- **VoiceOver** is sent an announcement of the message, and focus stays where it was.
+- **Alone.** `Auth0ToastView("Account created")` is the toast with no placement or timing, to use inside your own layout. It takes `style:` or `icon:` too.
+- **Theme.** Colours, type, spacing and radius come from `Auth0Theme`; the card's sizes are `sizes.toastMinHeight` and `sizes.toastMaxWidth`.
