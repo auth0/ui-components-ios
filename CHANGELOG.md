@@ -4,7 +4,15 @@
 
 **Added**
 
-- **A success toast.** New `Auth0ToastView`, a check and a short message on a raised surface, and `.auth0Toast(_:)`, which shows an `Auth0ToastMessage` over a screen and dismisses it on its own. A message can set its own `icon` and `duration`. New size tokens `toastMinHeight` and `toastMaxWidth`; a custom theme written before them keeps compiling.
+- **A toast you can restyle.** New `Auth0ToastView`, a short message with an icon on a raised surface, and `.auth0Toast(_:edge:)`, which shows an `Auth0ToastMessage` over a screen and dismisses it on its own. The look is an `Auth0ToastStyle`: `.success` (the design's green check, the default) or `.notice` (a small dark toast with no icon), or your own icon, icon colour, background and text colour (given from the theme, so they follow dark mode) and `.card` or `.compact` layout. `Auth0ToastMessage("Copied", icon: nil)` drops the icon. `edge: .bottom`, on the modifier or on a single message (the message wins), shows it at the bottom, coming in from below and dismissed by a swipe down. A message can set its own `duration` (kept between 0 and 60 s; a value that isn't a number counts as none). The toast goes when its screen goes, and a swipe away from its edge dismisses it. New size tokens `toastMinHeight` and `toastMaxWidth`; a custom theme written before them keeps compiling.
+
+**Changed**
+
+- **One toast.** The My Account "Copied" message (recovery code, authenticator secret) now uses the new toast, in the `.notice` style at the bottom, so it looks as it did, and is also announced to VoiceOver and follows Reduce Motion. The older toast (`Toast`, `ToastView`, `ToastModifier`, `ToastStyle`, `toastView(toast:)`, all internal) is removed.
+
+**Fixed**
+
+- **Swift Package Manager no longer resolves Auth0.swift 4.0.0-beta.4.** `Package.swift` required Auth0.swift `from: "4.0.0-beta.3"`, so a fresh resolution picked up beta.4, which changed `confirmSignup` and `NextAction.signup` and doesn't build with this version. It now requires exactly `4.0.0-beta.3`, the version the Cartfile pins. If your app also depends on Auth0.swift directly, keep it at `4.0.0-beta.3`.
 
 ## [1.0.0-beta.5](https://github.com/auth0/ui-components-ios/tree/1.0.0-beta.5) (2026-11-23)
 [Full Changelog](https://github.com/auth0/ui-components-ios/compare/1.0.0-beta.4...1.0.0-beta.5)

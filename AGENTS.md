@@ -50,11 +50,11 @@ ui-components-ios/
 │   │   ├── Factors/RecoveryCode/       # Recovery code: check it, then save the new one: state machine, session, model, screen, transport protocol
 │   │   ├── Factors/EmailCode/          # Emailed code: its own model, words and screen over the PhoneCode engine (one seam file, `EmailCodeEngine.swift`)
 │   │   └── Factors/Totp/               # Authenticator app code: state machine, session, model, screen, transport protocol (nothing is sent first)
+│   ├── Toast/                          # The one toast (`Auth0ToastView`, `.auth0Toast`, `Auth0ToastStyle`), used by Embedded flows and My Account: behaviour rules, presenter (timing, announcement, dismissal), modifier
 │   ├── Core/Utils/                     # Shared utilities
 │   │   ├── OTPTextField.swift          # OTP code input component
 │   │   ├── CountryCodePicker/          # Phone number country selection
-│   │   ├── Error/                      # ErrorScreen & ViewModel
-│   │   └── Toast*.swift                # Toast notifications
+│   │   └── Error/                      # ErrorScreen & ViewModel
 │   ├── TokenProvider.swift             # Token management protocol
 │   └── Auth0UniversalComponentsSDKInitializer.swift  # SDK setup
 ├── Auth0UniversalComponentsTests/             # Unit Tests
@@ -560,9 +560,19 @@ Reusable components in `Core/Utils/`:
 - **OTPTextField** - Multi-digit OTP input with auto-focus
 - **CountryPickerView** - Country code selection for SMS
 - **ErrorScreen** - Standardized error display with retry
-- **Toast** - Transient notifications for success/info messages
 - **NavigationStore** - Navigation state management
 - **Auth0UIComponentError** - Unified error types
+
+### Toasts
+
+There is one toast: `Auth0ToastView` and `.auth0Toast(_:edge:)` in `Toast/`. It serves the Embedded flows and the My Account screens ("Copied"). Don't write a second one.
+
+- **Show one** by setting an `Auth0ToastMessage` on a `@State` or `@Published` binding that the screen passes to `.auth0Toast`. Set it on the screen the user lands on: the toast goes with its screen and doesn't come back with it.
+- **Look** is an `Auth0ToastStyle`: `.success` (the design's check, the default) and `.notice` (small, dark, no icon), or a copy of either with another icon, `iconColor`, `background`, `foreground` or `layout` (`.card`, `.compact`). Colours are closures over `Auth0Theme`, so they follow dark mode and custom themes. No `Color` literals except where a caller picks a fixed colour on purpose.
+- **Edge** is `.top` by default. The modifier's `edge:` is the screen's default, and a message's own `edge:` wins, so one screen can show both. The edge sets where the toast rests, which way it slides in, and which swipe dismisses it.
+- **Time** is 4 s (5 s when the message wraps, at least 6 s with VoiceOver). A message's `duration:` is kept between 0 and 60 s. Keep it that way: don't ask for a toast that stays.
+- **Structure:** the rules are in `ToastBehavior` and the life of a toast (announcement, timer, drag, replace, the screen leaving) is in `ToastPresenter`, both pure and tested on `ManualToastClock`. `Auth0ToastModifier` only draws and forwards events. A change to timing or lifecycle goes in the presenter with a test, not in the modifier.
+- A toast is for a step that needs no decision. Errors and anything the user must read or act on use inline errors or `ErrorScreen`.
 
 ## Security Guidelines
 
@@ -640,7 +650,7 @@ When assisting with this codebase:
 - **State machine**: Use enum-based states (idle → loading → success/error)
 - **Navigation**: Use `NavigationStore` for coordinated flows
 - **Validation**: Validate input (phone numbers, OTP codes) before API calls
-- **User feedback**: Use `Toast` for success messages, `ErrorScreen` for failures
+- **User feedback**: Use `.auth0Toast(_:edge:)` (`Toast/`) for success and "Copied"-style notices, `ErrorScreen` for failures
 - **Platform conventions**: Follow iOS/macOS/visionOS design guidelines
 
 ## Example Workflows

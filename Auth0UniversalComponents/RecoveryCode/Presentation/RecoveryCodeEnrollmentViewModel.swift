@@ -20,7 +20,7 @@ final class RecoveryCodeEnrollmentViewModel: ObservableObject, ErrorViewModelHan
     @Published var errorViewModel: ErrorScreenViewModel?
     @Published var recoveryCodeChallenge: RecoveryCodeEnrollmentChallenge?
     @Published var apiCallInProgress: Bool = false
-    @Published var toast: Toast?
+    @Published var toast: Auth0ToastMessage?
     @Published var navigationRoute: Route?
 
     init(

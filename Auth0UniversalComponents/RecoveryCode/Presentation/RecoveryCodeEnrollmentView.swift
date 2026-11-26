@@ -75,7 +75,7 @@ struct RecoveryCodeEnrollmentView: View {
                             #elseif os(iOS) || os(visionOS)
                                 UIPasteboard.general.string = recoveryCodeChallenge.recoveryCode
                             #endif
-                            viewModel.toast = Toast(style: .notify, message: "Copied")
+                            viewModel.toast = Auth0ToastMessage("Copied", style: .notice, edge: .bottom, duration: 3)
                         }
                     } label: {
                         Text("Copy Code")
@@ -128,7 +128,8 @@ struct RecoveryCodeEnrollmentView: View {
                 await viewModel.loadData()
             }
         }
-        .toastView(toast: $viewModel.toast)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .auth0Toast($viewModel.toast)
         .themedNavigationTitle("Recovery code", theme: theme)
         #if os(iOS) || os(watchOS)
         .navigationBarTitleDisplayMode(.inline)
